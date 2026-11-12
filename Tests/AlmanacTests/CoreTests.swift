@@ -155,7 +155,7 @@ private func demoStore() throws -> Store {
 
 @Test func assistantErrorsDropConfigWarningsAndExplainSignIn() {
     let warn = "Permission allow rule (/x/settings.json): Bash(foo *:*) mixes * with the trailing :* prefix syntax."
-    #expect(Assistant.explain(warn + "\nFailed to authenticate: OAuth session expired") == "Claude Code is signed out. Run `claude /login` in Terminal, then ask again.")
+    #expect(Assistant.explain(warn + "\nFailed to authenticate: OAuth session expired") == "Claude Code is signed out. Run claude /login in Terminal, then try again.")
     #expect(Assistant.explain(warn + "\nModel not found") == "Model not found")
     #expect(Assistant.explain(warn) == "The AI command failed without saying why.")
 }

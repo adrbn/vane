@@ -2,7 +2,7 @@ import AlmanacCore
 import SwiftUI
 import Translation
 
-struct ReviewsView: View {
+struct LegacyReviewsView: View {
     @Environment(AppModel.self) private var model
     @State private var rating = 0          // 0 = all
     @State private var unansweredOnly = false

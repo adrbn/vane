@@ -60,7 +60,7 @@ public struct Assistant: Sendable {
         let text = lines.joined(separator: "\n")
         let l = text.lowercased()
         if l.contains("authenticate") || l.contains("oauth") || l.contains("logged out") || l.contains("/login") || l.contains("not logged in") {
-            return "Claude Code is signed out. Run `claude /login` in Terminal, then ask again."
+            return "Claude Code is signed out. Run claude /login in Terminal, then try again."
         }
         return text.isEmpty ? "The AI command failed without saying why." : String(text.suffix(500))
     }
