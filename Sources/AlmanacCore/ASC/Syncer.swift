@@ -69,29 +69,44 @@ public struct Syncer: Sendable {
                 ])
             } catch ASCError.notFound { imported.insert(day); continue } // no sales that day, or not published yet
             let rows = parseDelimited(String(decoding: try data.gunzipped(), as: UTF8.self), separator: "\t")
-            var sales: [String: [String: Double]] = [:], proceeds: [String: [String: Double]] = [:]
-            for r in rows {
-                let appleId = r["Apple Identifier"] ?? ""
-                let app = byId.contains(appleId) ? appleId : bySku[r["Parent Identifier"] ?? ""]
-                guard let app else { continue }
-                let units = Double(r["Units"] ?? "") ?? 0
-                let country = r["Country Code"] ?? ""
-                let price = fx.toUSD(Double(r["Customer Price"] ?? "") ?? 0, r["Customer Currency"] ?? "USD")
-                let proc = fx.toUSD(Double(r["Developer Proceeds"] ?? "") ?? 0, r["Currency of Proceeds"] ?? "USD")
-                sales[app, default: [:]][country, default: 0] += units * price
-                proceeds[app, default: [:]][country, default: 0] += units * proc
-            }
+            let tally = Self.tallySales(rows, appIds: byId, bySku: bySku, fx: fx)
             var samples: [Store.Sample] = []
             for app in byId {
-                let s = sales[app] ?? [:], p = proceeds[app] ?? [:]
-                samples.append(.init(app, day, .sales, "", s.values.reduce(0, +)))
-                samples.append(.init(app, day, .proceeds, "", p.values.reduce(0, +)))
-                for (c, v) in s { samples.append(.init(app, day, .sales, c, v)) }
+                for m in [Metric.sales, .proceeds, .firstDownloads, .redownloads] {
+                    let byCountry = tally[app]?[m] ?? [:]
+                    samples.append(.init(app, day, m, "", byCountry.values.reduce(0, +)))
+                    if m != .proceeds { for (c, v) in byCountry { samples.append(.init(app, day, m, c, v)) } }
+                }
             }
             try store.write(samples)
             imported.insert(day)
         }
         store.setMeta("sales_days", imported.sorted().suffix(400).joined(separator: ","))
+    }
+
+    /// Apple's product type codes: 1x = first download (free or paid), 3x = redownload.
+    /// Updates (7x) are not downloads. In-app purchases only count toward sales.
+    static let firstDownloadTypes: Set<String> = ["1", "1F", "1T", "F1"]
+    static let redownloadTypes: Set<String> = ["3", "3F", "3T", "F3"]
+
+    /// Sales summary rows → app → metric → country → value (USD for money).
+    static func tallySales(_ rows: [[String: String]], appIds: Set<String>, bySku: [String: String], fx: ExchangeRates)
+        -> [String: [Metric: [String: Double]]] {
+        var out: [String: [Metric: [String: Double]]] = [:]
+        for r in rows {
+            let appleId = r["Apple Identifier"] ?? ""
+            guard let app = appIds.contains(appleId) ? appleId : bySku[r["Parent Identifier"] ?? ""] else { continue }
+            let units = Double(r["Units"] ?? "") ?? 0
+            let country = r["Country Code"] ?? ""
+            let type = r["Product Type Identifier"] ?? ""
+            let price = fx.toUSD(Double(r["Customer Price"] ?? "") ?? 0, r["Customer Currency"] ?? "USD")
+            let proc = fx.toUSD(Double(r["Developer Proceeds"] ?? "") ?? 0, r["Currency of Proceeds"] ?? "USD")
+            out[app, default: [:]][.sales, default: [:]][country, default: 0] += units * price
+            out[app, default: [:]][.proceeds, default: [:]][country, default: 0] += units * proc
+            if firstDownloadTypes.contains(type) { out[app, default: [:]][.firstDownloads, default: [:]][country, default: 0] += units }
+            if redownloadTypes.contains(type) { out[app, default: [:]][.redownloads, default: [:]][country, default: 0] += units }
+        }
+        return out
     }
 
     func syncSubscriptions(apps: [AppRecord]) async throws {

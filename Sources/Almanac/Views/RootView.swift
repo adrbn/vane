@@ -88,7 +88,8 @@ struct Sidebar: View {
 
     var body: some View {
         @Bindable var model = model
-        List(selection: Binding(get: { model.section }, set: { if let s = $0 { model.section = s } })) {
+        // Tags must be `Pane?` to match the optional selection, or rows never select.
+        List(selection: Binding<Pane?>(get: { model.section }, set: { if let s = $0 { model.section = s } })) {
             Section {
                 row("Insights", "lightbulb", .insights, badge: model.store.insights(model.appId ?? "").filter(\.needsAttention).count)
                 row("Listing", "text.page", .listing)
@@ -103,7 +104,7 @@ struct Sidebar: View {
             if !model.pinned.isEmpty {
                 Section("Pinned charts") {
                     ForEach(model.pinned) { m in
-                        Label(m.title, systemImage: "chart.xyaxis.line").tag(Pane.metric(m))
+                        Label(m.title, systemImage: "chart.xyaxis.line").tag(Pane.metric(m) as Pane?)
                             .contextMenu { Button("Unpin") { model.togglePin(m) } }
                     }
                 }
@@ -114,7 +115,7 @@ struct Sidebar: View {
     }
 
     private func row(_ title: String, _ symbol: String, _ s: Pane, badge: Int = 0) -> some View {
-        Label(title, systemImage: symbol).tag(s).badge(badge)
+        Label(title, systemImage: symbol).tag(s as Pane?).badge(badge)
     }
 }
 

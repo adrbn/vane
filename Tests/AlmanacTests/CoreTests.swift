@@ -127,3 +127,19 @@ private func demoStore() throws -> Store {
     #expect(Territories.alpha2("US") == "US")
     #expect(Territories.flag("FR") == "🇫🇷")
 }
+
+@Test func salesRowsCountDownloadsAndRevenue() {
+    let rows: [[String: String]] = [
+        ["Apple Identifier": "111", "Units": "5", "Country Code": "FR", "Product Type Identifier": "1F", "Customer Price": "0", "Customer Currency": "EUR", "Developer Proceeds": "0", "Currency of Proceeds": "EUR"],
+        ["Apple Identifier": "111", "Units": "2", "Country Code": "US", "Product Type Identifier": "3F", "Customer Price": "0", "Customer Currency": "USD", "Developer Proceeds": "0", "Currency of Proceeds": "USD"],
+        ["Apple Identifier": "111", "Units": "9", "Country Code": "US", "Product Type Identifier": "7F", "Customer Price": "0", "Customer Currency": "USD", "Developer Proceeds": "0", "Currency of Proceeds": "USD"],
+        ["Apple Identifier": "999", "Parent Identifier": "SKU1", "Units": "1", "Country Code": "US", "Product Type Identifier": "IA1", "Customer Price": "4.99", "Customer Currency": "USD", "Developer Proceeds": "3.49", "Currency of Proceeds": "USD"],
+    ]
+    let t = Syncer.tallySales(rows, appIds: ["111"], bySku: ["SKU1": "111"], fx: ExchangeRates())
+    #expect(t["111"]?[.firstDownloads]?["FR"] == 5)
+    #expect(t["111"]?[.redownloads]?["US"] == 2)
+    #expect(t["111"]?[.firstDownloads]?["US"] == nil)   // updates are not downloads
+    #expect(t["111"]?[.sales]?["US"] == 4.99)
+    #expect(t["111"]?[.proceeds]?["US"] == 3.49)
+}
+
