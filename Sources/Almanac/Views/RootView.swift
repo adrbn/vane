@@ -30,6 +30,11 @@ struct RootView: View {
                 .help(model.syncing ? model.syncStatus : "Fetch the latest data from App Store Connect")
                 .disabled(model.syncing)
             }
+            #if os(iOS)
+            ToolbarItem(placement: .primaryAction) {
+                Button { model.settingsOpen = true } label: { Label("Settings", systemImage: "gearshape") }
+            }
+            #endif
             ToolbarItem(placement: .primaryAction) {
                 Button { model.chatOpen.toggle() } label: { Label("Chat", systemImage: "bubble.left.and.text.bubble.right") }
                     .help("Ask about what's on screen")
@@ -69,7 +74,12 @@ struct RootView: View {
 }
 
 struct DemoBanner: View {
+    @Environment(AppModel.self) private var model
+    #if os(macOS)
     @Environment(\.openSettings) private var openSettings
+    #else
+    private func openSettings() { model.settingsOpen = true }
+    #endif
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "sparkles")

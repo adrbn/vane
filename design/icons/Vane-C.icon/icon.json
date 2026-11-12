@@ -1,0 +1,53 @@
+{
+  "fill": {
+    "automatic-gradient": "display-p3:0.17,0.16,0.42,1"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "needle.svg",
+          "name": "needle",
+          "glass": true,
+          "fill": {
+            "solid": "display-p3:1.0,0.42,0.36,1"
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.4
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "star.svg",
+          "name": "star",
+          "glass": true,
+          "fill": {
+            "solid": "display-p3:0.92,0.92,1,1"
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.4
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

@@ -21,13 +21,43 @@ extension InsightCategory {
     }
 }
 
+extension Color {
+    #if os(macOS)
+    static let cardFill = Color(nsColor: .controlBackgroundColor)
+    static let fieldFill = Color(nsColor: .textBackgroundColor)
+    #else
+    static let cardFill = Color(uiColor: .secondarySystemGroupedBackground)
+    static let fieldFill = Color(uiColor: .systemBackground)
+    #endif
+}
+
+extension View {
+    /// Checkbox on the Mac, switch on iOS.
+    @ViewBuilder func checkboxStyle() -> some View {
+        #if os(macOS)
+        toggleStyle(.checkbox)
+        #else
+        self
+        #endif
+    }
+
+    /// Link-looking button on the Mac, borderless on iOS.
+    @ViewBuilder func linkButtonStyle() -> some View {
+        #if os(macOS)
+        buttonStyle(.link)
+        #else
+        buttonStyle(.borderless)
+        #endif
+    }
+}
+
 /// Card surface shared by insights, tiles and report KPIs: one radius, one fill, one hairline.
 struct Card: ViewModifier {
     var padding: CGFloat = 14
     func body(content: Content) -> some View {
         content
             .padding(padding)
-            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6), lineWidth: 0.5))
     }
 }

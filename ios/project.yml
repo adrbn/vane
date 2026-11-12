@@ -1,0 +1,33 @@
+name: Vane
+options:
+  bundleIdPrefix: com.adrbn
+  deploymentTarget: { iOS: "26.0" }
+packages:
+  AlmanacCore: { path: .. }
+targets:
+  Vane:
+    type: application
+    platform: iOS
+    sources:
+      - path: VaneApp.swift
+      - path: AppIcon.icon
+      - path: ../Resources/countries.json
+      - path: ../Sources/Almanac
+        excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift]
+    dependencies:
+      - package: AlmanacCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.adrbn.vane
+        PRODUCT_NAME: Vane
+        INFOPLIST_KEY_CFBundleDisplayName: Vane
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: 5.0
+        DEVELOPMENT_TEAM: 2TWQF4T93E
+        CODE_SIGN_STYLE: Automatic

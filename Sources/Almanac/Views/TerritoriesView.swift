@@ -119,7 +119,7 @@ struct WorldMap: View {
                             let path = self.path(c, size)
                             let v = values[c.iso] ?? 0
                             ctx.fill(path, with: .color(color(v, buckets)))
-                            ctx.stroke(path, with: .color(Color(nsColor: .controlBackgroundColor)), lineWidth: 0.5)
+                            ctx.stroke(path, with: .color(Color.cardFill), lineWidth: 0.5)
                         }
                         if let h = hovered { ctx.stroke(self.path(h, size), with: .color(.primary.opacity(0.7)), lineWidth: 1) }
                     }

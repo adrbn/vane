@@ -72,7 +72,7 @@ struct MetricDetailView: View {
             }
             .labelsHidden().fixedSize()
         }
-        Toggle("Compare with last year", isOn: $compare).toggleStyle(.checkbox).fixedSize()
+        Toggle("Compare with last year", isOn: $compare).checkboxStyle().fixedSize()
     }
 
     @ViewBuilder private func actions(data: [Point]) -> some View {

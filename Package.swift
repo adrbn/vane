@@ -3,7 +3,8 @@ import PackageDescription
 
 let package = Package(
     name: "Almanac",
-    platforms: [.macOS("26.0")],
+    platforms: [.macOS("26.0"), .iOS("26.0")],
+    products: [.library(name: "AlmanacCore", targets: ["AlmanacCore"])],
     targets: [
         .target(name: "AlmanacCore", path: "Sources/AlmanacCore"),
         .executableTarget(name: "Almanac", dependencies: ["AlmanacCore"], path: "Sources/Almanac"),

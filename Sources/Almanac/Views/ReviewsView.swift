@@ -23,7 +23,7 @@ struct ReviewsView: View {
                     ForEach((1...5).reversed(), id: \.self) { Text("\($0) star\($0 == 1 ? "" : "s")").tag($0) }
                 }
                 .labelsHidden().fixedSize()
-                Toggle("Unanswered only", isOn: $unansweredOnly).toggleStyle(.checkbox)
+                Toggle("Unanswered only", isOn: $unansweredOnly).checkboxStyle()
             }
             .padding(.horizontal, 20).padding(.vertical, 12)
             Divider()
@@ -82,7 +82,7 @@ struct ReviewRow: View {
                 }
                 Button(review.response == nil ? "Reply…" : "Edit reply…") { replying = review }
             }
-            .buttonStyle(.link).font(.caption)
+            .linkButtonStyle().font(.caption)
         }
         .padding(.vertical, 6)
         .translationTask(config) { session in
@@ -112,7 +112,7 @@ struct ReplySheet: View {
             .padding(10).frame(maxWidth: .infinity, alignment: .leading)
             .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
             TextEditor(text: $text).font(.body).frame(minHeight: 120).scrollContentBackground(.hidden)
-                .padding(6).background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+                .padding(6).background(Color.fieldFill, in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.separator))
             HStack {
                 Text("\(text.count) / 5,970").font(.caption).foregroundStyle(.secondary).monospacedDigit()

@@ -19,7 +19,9 @@ struct AccountSettings: View {
     @State private var status: String?
     @State private var testing = false
     @State private var importing = false
+    #if os(macOS)
     @State private var agentOn = BackgroundAgent.isEnabled
+    #endif
 
     var body: some View {
         Form {
@@ -37,6 +39,7 @@ struct AccountSettings: View {
                 Text("Create a key in App Store Connect › Users and Access › Integrations. The Sales and Reports role is enough for analytics and sales; replying to reviews and editing keywords need Customer Support / App Manager. The key is stored in your Keychain and only sent to Apple.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            #if os(macOS)
             Section {
                 Toggle("Check for new data in the background", isOn: $agentOn)
                     .onChange(of: agentOn) { _, on in
@@ -45,6 +48,7 @@ struct AccountSettings: View {
                 Text("Every 6 hours, even when Almanac is closed. You'll get a notification when something needs attention.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            #endif
             HStack {
                 if let status { Text(status).font(.callout).foregroundStyle(.secondary).lineLimit(3) }
                 Spacer()

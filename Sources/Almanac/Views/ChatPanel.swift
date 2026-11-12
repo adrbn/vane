@@ -55,7 +55,7 @@ struct ChatPanel: View {
             Text("Ask about the chart, table or report you're looking at. The answer comes from your own \(AISettings.provider.title) subscription; your data goes straight from this Mac to it.")
                 .font(.callout).foregroundStyle(.secondary)
             ForEach(["Explain this to me", "What changed recently, and why?", "What should I do next?"], id: \.self) { q in
-                Button(q) { send(q) }.buttonStyle(.link)
+                Button(q) { send(q) }.linkButtonStyle()
             }
         }
     }
@@ -72,8 +72,16 @@ struct ChatPanel: View {
             Text((try? AttributedString(markdown: m.text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(m.text))
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .contextMenu { Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(m.text, forType: .string) } }
+                .contextMenu { Button("Copy") { copy(m.text) } }
         }
+    }
+
+    private func copy(_ s: String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(s, forType: .string)
+        #else
+        UIPasteboard.general.string = s
+        #endif
     }
 
     private func consumeSeed() {

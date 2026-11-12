@@ -56,7 +56,10 @@ public struct Assistant: Sendable {
     static func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 
     static func shell(_ command: String, stdin: String) async throws -> String {
-        try await Task.detached {
+        #if !os(macOS)
+        throw AssistantError.failed("AI chat runs in the Mac app, with your own Claude Code or Codex.")
+        #else
+        return try await Task.detached {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/bin/zsh")
             p.arguments = ["-lc", command]
@@ -81,5 +84,6 @@ public struct Assistant: Sendable {
             }
             return out
         }.value
+        #endif
     }
 }

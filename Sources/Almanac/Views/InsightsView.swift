@@ -42,7 +42,7 @@ struct InsightsView: View {
             }
             .labelsHidden().fixedSize()
             Spacer()
-            Toggle("Needs attention first", isOn: $attentionFirst).toggleStyle(.checkbox)
+            Toggle("Needs attention first", isOn: $attentionFirst).checkboxStyle()
             Menu {
                 Toggle("Show dismissed", isOn: $showDismissed)
                 Button("Restore all dismissed") { try? model.store.restoreDismissed(model.appId ?? ""); model.revision += 1 }
