@@ -8,8 +8,9 @@ struct AlmanacApp: App {
         WindowGroup("Almanac") {
             RootView()
                 .environment(model)
-                .frame(minWidth: 980, minHeight: 620)
+                .frame(minWidth: 1100, minHeight: 760)
         }
+        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1240, height: 820)
         .commands {
             CommandGroup(after: .newItem) {

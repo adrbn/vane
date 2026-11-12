@@ -50,11 +50,14 @@ final class AppModel {
     var lastSync: Date? { store.meta("last_sync").flatMap { ISO8601DateFormatter().date(from: $0) } }
 
     init() {
-        do { store = try Store() } catch { fatalError("Can't open the database: \(error)") }
+        // `--demo` opens a throwaway database with the demo apps (screenshots), never touching the real one.
+        let demo = CommandLine.arguments.contains("--demo")
+        let path = demo ? NSTemporaryDirectory() + "almanac-demo.sqlite" : Store.defaultPath
+        do { store = try Store(path: path) } catch { fatalError("Can't open the database: \(error)") }
         pinned = (UserDefaults.standard.stringArray(forKey: "pinned") ?? ["unique_impressions", "ttr", "downloads", "first_downloads", "active_subs"])
             .compactMap(Metric.init(rawValue:))
         reload()
-        if apps.isEmpty && !Keychain.credentials().isComplete { loadDemo() }
+        if apps.isEmpty && (demo || !Keychain.credentials().isComplete) { loadDemo() }
         appId = UserDefaults.standard.string(forKey: "selectedApp").flatMap { id in apps.contains { $0.id == id } ? id : nil } ?? apps.first?.id
     }
 

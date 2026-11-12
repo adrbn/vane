@@ -10,6 +10,7 @@ struct SettingsView: View {
         TabView {
             AccountSettings().tabItem { Label("App Store Connect", systemImage: "key") }
             AISettingsView().tabItem { Label("AI", systemImage: "sparkles") }
+            AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }
         }
         .padding(20)
         .frame(width: 560, height: 620)
@@ -99,6 +100,21 @@ struct AccountSettings: View {
             await model.refresh()
             status = model.syncErrors.isEmpty ? "All set." : model.syncErrors.joined(separator: "\n")
         } catch { status = error.localizedDescription }
+    }
+}
+
+struct AppearanceSettings: View {
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    var body: some View {
+        Form {
+            Picker("Theme", selection: $themeId) {
+                ForEach(AlmanacTheme.all, id: \.id) { Text($0.name).tag($0.id) }
+            }
+            .pickerStyle(.inline)
+            Text("Ticker and Nocturne are dark, Color Blocks and Candy Glass are light. The theme applies to every window.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
     }
 }
 

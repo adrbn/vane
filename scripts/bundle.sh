@@ -21,6 +21,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>CFBundleIdentifier</key><string>dev.almanac.app</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array><string>en</string></array>
   <key>CFBundleName</key><string>Almanac</string>
   <key>CFBundleDisplayName</key><string>Almanac</string>
   <key>CFBundleExecutable</key><string>Almanac</string>

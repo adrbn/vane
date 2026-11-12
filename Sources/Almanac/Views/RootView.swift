@@ -1,6 +1,7 @@
 import AlmanacCore
 import SwiftUI
 
+#if os(iOS)
 struct RootView: View {
     @Environment(AppModel.self) private var model
 
@@ -72,6 +73,8 @@ struct RootView: View {
         }
     }
 }
+
+#endif
 
 struct DemoBanner: View {
     @Environment(AppModel.self) private var model
