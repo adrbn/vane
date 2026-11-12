@@ -271,6 +271,30 @@ public struct Syncer: Sendable {
         try store.upsert(listing: l)
     }
 
+    /// Sends only the fields that changed: name/subtitle live on the app info, the rest on the version.
+    /// Apple rejects edits to fields that are locked for the live version; that error is passed through.
+    public func updateListing(from old: ListingLocale, to new: ListingLocale) async throws {
+        var version: [String: String] = [:], info: [String: String] = [:]
+        if new.keywords != old.keywords { version["keywords"] = new.keywords }
+        if new.promoText != old.promoText { version["promotionalText"] = new.promoText }
+        if new.description != old.description { version["description"] = new.description }
+        if new.name != old.name { info["name"] = new.name }
+        if new.subtitle != old.subtitle { info["subtitle"] = new.subtitle }
+        if !version.isEmpty {
+            guard let id = old.versionLocalizationId else { throw ASCError.decoding("missing version localization id") }
+            _ = try await client.json("v1/appStoreVersionLocalizations/\(id)", method: "PATCH", body: ["data": [
+                "type": "appStoreVersionLocalizations", "id": id, "attributes": version,
+            ]])
+        }
+        if !info.isEmpty {
+            guard let id = old.infoLocalizationId else { throw ASCError.decoding("missing app info localization id") }
+            _ = try await client.json("v1/appInfoLocalizations/\(id)", method: "PATCH", body: ["data": [
+                "type": "appInfoLocalizations", "id": id, "attributes": info,
+            ]])
+        }
+        try store.upsert(listing: new)
+    }
+
     // MARK: ratings + icon (public iTunes lookup; no auth)
 
     func syncRatings(app: String) async throws {

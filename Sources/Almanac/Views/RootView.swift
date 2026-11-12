@@ -62,7 +62,7 @@ struct RootView: View {
         } else {
             switch model.section {
             case .insights: LegacyInsightsView()
-            case .listing: ListingView()
+            case .listing: LegacyListingView()
             case .reviews: LegacyReviewsView()
             case .appStore: OverviewView(kind: .appStore)
             case .usage: OverviewView(kind: .usage)

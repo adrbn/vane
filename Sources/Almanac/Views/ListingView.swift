@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Read-and-check view of the store listing per locale, with the character budgets
 /// Apple enforces and repeated-word warnings.
-struct ListingView: View {
+struct LegacyListingView: View {
     @Environment(AppModel.self) private var model
     @State private var locale = ""
     @State private var keywords = ""
