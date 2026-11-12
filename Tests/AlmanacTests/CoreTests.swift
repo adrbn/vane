@@ -143,3 +143,12 @@ private func demoStore() throws -> Store {
     #expect(t["111"]?[.proceeds]?["US"] == 3.49)
 }
 
+
+@Test func setupLinkRoundTrips() {
+    let c = ASCCredentials(issuerId: "00000000-…", keyId: "ABCD123456", privateKeyPEM: "-----BEGIN PRIVATE KEY-----\nab+/c=\n-----END PRIVATE KEY-----", vendorNumber: "12345678")
+    let url = SetupLink.url(for: c)
+    #expect(url.scheme == "vane")
+    #expect(SetupLink.credentials(from: url) == c)
+    #expect(SetupLink.credentials(from: URL(string: "vane://setup#garbage")!) == nil)
+    #expect(SetupLink.credentials(from: URL(string: "https://example.com")!) == nil)
+}

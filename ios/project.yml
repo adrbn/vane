@@ -16,6 +16,12 @@ targets:
         excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift]
     dependencies:
       - package: AlmanacCore
+    info:
+      path: Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: com.adrbn.vane.setup
+            CFBundleURLSchemes: [vane]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.adrbn.vane
@@ -23,7 +29,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Vane
         GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: 0.1.0
-        CURRENT_PROJECT_VERSION: 1
+        CURRENT_PROJECT_VERSION: 2
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
