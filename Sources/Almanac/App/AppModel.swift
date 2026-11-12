@@ -28,7 +28,11 @@ final class AppModel {
     let store: Store
     var apps: [AppRecord] = []
     var appId: String? { didSet { UserDefaults.standard.set(appId, forKey: "selectedApp") } }
-    var section: Pane = Pane.fromLaunchArgument ?? .insights
+    var selection: Pane? = Pane.fromLaunchArgument ?? .insights   // bound straight to the sidebar List
+    var section: Pane {
+        get { selection ?? .insights }
+        set { selection = newValue }
+    }
     var chatOpen = CommandLine.arguments.contains("--chat")
     var settingsOpen = false   // iOS only: the Mac uses the Settings scene
     var chatContext = ""

@@ -98,8 +98,8 @@ struct Sidebar: View {
 
     var body: some View {
         @Bindable var model = model
-        // Tags must be `Pane?` to match the optional selection, or rows never select.
-        List(selection: Binding<Pane?>(get: { model.section }, set: { if let s = $0 { model.section = s } })) {
+        // ponytail: plain buttons, List(selection:) never selected anything on macOS 27 (no highlight, no clicks).
+        List {
             Section {
                 row("Insights", "lightbulb", .insights, badge: model.store.insights(model.appId ?? "").filter(\.needsAttention).count)
                 row("Listing", "text.page", .listing)
@@ -114,7 +114,7 @@ struct Sidebar: View {
             if !model.pinned.isEmpty {
                 Section("Pinned charts") {
                     ForEach(model.pinned) { m in
-                        Label(m.title, systemImage: "chart.xyaxis.line").tag(Pane.metric(m) as Pane?)
+                        row(m.title, "chart.xyaxis.line", .metric(m))
                             .contextMenu { Button("Unpin") { model.togglePin(m) } }
                     }
                 }
@@ -125,7 +125,17 @@ struct Sidebar: View {
     }
 
     private func row(_ title: String, _ symbol: String, _ s: Pane, badge: Int = 0) -> some View {
-        Label(title, systemImage: symbol).tag(s as Pane?).badge(badge)
+        let on = model.section == s
+        return Button { model.section = s } label: {
+            Label(title, systemImage: symbol)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .fontWeight(on ? .semibold : .regular)
+        .badge(badge)
+        .listRowBackground(RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(on ? Color.primary.opacity(0.09) : .clear).padding(.horizontal, 10))
     }
 }
 
