@@ -61,7 +61,7 @@ struct RootView: View {
             EmptyHint(title: "No apps yet", message: "Add your App Store Connect key in Settings, then refresh.", symbol: "app.dashed")
         } else {
             switch model.section {
-            case .insights: InsightsView()
+            case .insights: LegacyInsightsView()
             case .listing: ListingView()
             case .reviews: ReviewsView()
             case .appStore: OverviewView(kind: .appStore)

@@ -2,7 +2,7 @@ import AlmanacCore
 import Charts
 import SwiftUI
 
-struct InsightsView: View {
+struct LegacyInsightsView: View {
     @Environment(AppModel.self) private var model
     @State private var category: InsightCategory?
     @State private var attentionFirst = false
@@ -167,6 +167,8 @@ struct KeywordFixSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     var insight: Insight
+    /// Set when shown as a centered overlay instead of a system sheet.
+    var close: (() -> Void)? = nil
     @State private var keywords = ""
     @State private var busy = false
     @State private var error: String?
@@ -188,7 +190,7 @@ struct KeywordFixSheet: View {
             HStack {
                 Button("Suggest words with AI") { Task { await suggest(listing) } }.disabled(busy)
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Cancel") { done() }.keyboardShortcut(.cancelAction)
                 Button(model.isDemo ? "Apply (demo)" : "Apply to App Store Connect") { Task { await apply(listing) } }
                     .keyboardShortcut(.defaultAction).disabled(busy || keywords.count > 100 || listing == nil)
             }
@@ -197,6 +199,8 @@ struct KeywordFixSheet: View {
         .frame(width: 520)
         .onAppear { if case .fixKeywords(_, let k)? = insight.action { keywords = k } }
     }
+
+    private func done() { if let close { close() } else { dismiss() } }
 
     private func suggest(_ l: ListingLocale?) async {
         guard let l else { return }
@@ -217,7 +221,7 @@ struct KeywordFixSheet: View {
             else { l.keywords = keywords; try model.store.upsert(listing: l) }
             try model.store.dismiss(insight: insight.id)
             model.runEngine(); model.revision += 1
-            dismiss()
+            done()
         } catch { self.error = error.localizedDescription }
     }
 }

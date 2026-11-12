@@ -20,8 +20,8 @@ struct RootView: View {
                         .id("\(model.appId ?? "")-\(model.revision)")
                 }
                 if model.chatOpen {
-                    ChatPanel()
-                        .frame(width: 320)
+                    InspectorPanel()
+                        .frame(width: 304)
                         .background(t.side, in: RoundedRectangle(cornerRadius: t.r - 4, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: t.r - 4, style: .continuous).strokeBorder(t.sideBorder, lineWidth: 1))
                         .padding(8)
