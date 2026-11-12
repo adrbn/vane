@@ -10,6 +10,8 @@ struct Screen<Controls: View, Content: View>: View {
     var subtitle: String
     var inspector = false
     var scrolls = true
+    /// false: the content brings its own padding (Sales and Usage, kept from the previous design).
+    var padded = true
     @ViewBuilder var controls: Controls
     @ViewBuilder var content: Content
 
@@ -26,14 +28,16 @@ struct Screen<Controls: View, Content: View>: View {
                     GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
                 }
             }
-            .padding(.top, 12).padding(.leading, 28).padding(.trailing, 20)
-            .frame(height: 72)
+            .padding(.top, 20).padding(.leading, 28).padding(.trailing, 20)
+            .frame(height: 80)
             Group {
                 if scrolls {
                     ScrollView { content.padding(.top, 12).padding(.leading, 28).padding([.trailing, .bottom], 24) }
                         .scrollIndicators(.never)
-                } else {
+                } else if padded {
                     content.padding(.top, 12).padding(.leading, 28).padding([.trailing, .bottom], 24)
+                } else {
+                    content.padding(.leading, 8)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

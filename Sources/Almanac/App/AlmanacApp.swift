@@ -23,10 +23,11 @@ struct AlmanacApp: App {
 
         WindowGroup("Report", id: "report", for: ReportRef.self) { $ref in
             if let ref {
-                ReportView(ref: ref).environment(model).frame(minWidth: 760, minHeight: 600)
+                ReportView(ref: ref).environment(model).frame(minWidth: 960, minHeight: 600)
             }
         }
-        .defaultSize(width: 980, height: 860)
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1240, height: 820)
 
         Settings {
             SettingsView().environment(model).frame(width: 540)

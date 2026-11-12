@@ -42,7 +42,6 @@ struct ListingView: View {
                     localizations(live, selected: l.locale)
                     editor(live: l)
                 }
-                .padding(.bottom, 24)
                 .onAppear { if locale != l.locale { locale = l.locale } }
             } else {
                 VStack(alignment: .leading, spacing: 4) {

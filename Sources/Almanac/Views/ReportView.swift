@@ -1,88 +1,112 @@
+#if os(macOS)
 import AlmanacCore
+import AppKit
 import SwiftUI
 
+/// Weekly / Monthly / Yearly report: its own window, no sidebar. Only complete periods are shown.
 struct ReportView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
     @State var ref: ReportRef
-    @State private var aiText: String?
-    @State private var busy = false
-    @State private var error: String?
+    @State private var section = "Summary"
 
     var body: some View {
+        let t = AlmanacTheme.named(themeId)
         let report = ReportBuilder(store: model.store, app: ref.appId).build(ref.period, start: ref.start)
-        let app = model.apps.first { $0.id == ref.appId }
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                header(report, app)
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 12)], spacing: 12) {
-                    ForEach(report.kpis) { kpiCard($0, tint: app?.tint ?? .accentColor) }
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Summary").font(.title3.weight(.semibold))
-                    Text(report.summary)
-                    if let aiText {
-                        Text(aiText).padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 8)).textSelection(.enabled)
+        let span = dataSpan
+        ZStack {
+            ThemeBackground()
+            VStack(spacing: 0) {
+                header(report, span)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        ReportBody(report: report, span: span, section: $section) { id in
+                            section = id
+                            withAnimation { proxy.scrollTo(id, anchor: .top) }
+                        }
+                        .frame(maxWidth: 880).frame(maxWidth: .infinity)
+                        .padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 24)
                     }
-                    if let error { Text(error).font(.caption).foregroundStyle(.red) }
-                }
-                ForEach(report.sections) { s in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(s.heading).font(.title3.weight(.semibold))
-                        ForEach(s.paragraphs, id: \.self) { Text($0).fixedSize(horizontal: false, vertical: true) }
-                    }
-                }
-            }
-            .textSelection(.enabled)
-            .padding(28)
-            .frame(maxWidth: 900, alignment: .leading)
-            .frame(maxWidth: .infinity)
-        }
-        .navigationTitle("\(report.appName) — \(report.period.title) report — \(report.periodLabel)")
-        .toolbar {
-            ToolbarItemGroup {
-                Picker("Period", selection: Binding(get: { ref.period }, set: { p in ref = ReportRef(appId: ref.appId, period: p, start: Self.start(p, ref.start)); aiText = nil })) {
-                    ForEach(ReportPeriod.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                Button { step(-1) } label: { Image(systemName: "chevron.left") }.help("Previous")
-                Button { step(1) } label: { Image(systemName: "chevron.right") }.help("Next")
-                Button { Task { await narrate(report) } } label: { Label("Write with AI", systemImage: "text.badge.star") }
-                    .disabled(busy)
-                Button { model.chatContext = report.plainText; model.ask("Walk me through this report. What stands out and what should I do next?") } label: {
-                    Label("Chat about this", systemImage: "bubble.left")
+                    .scrollIndicators(.never)
+                    .clipped()
                 }
             }
         }
+        .background(WindowChrome())
+        .ignoresSafeArea()
+        .foregroundStyle(t.label)
+        .font(t.font(13))
+        .tint(t.accent)
+        .environment(\.theme, t)
+        .preferredColorScheme(t.scheme)
+        .onAppear { ref = complete(ref) }
     }
 
-    private func header(_ r: Report, _ app: AppRecord?) -> some View {
-        HStack(spacing: 16) {
-            if let app { AppIconView(app: app, size: 64) }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(r.appName).font(.largeTitle.weight(.bold))
-                Text("\(r.period.title) report · \(r.periodLabel)").font(.title3).foregroundStyle(.secondary)
+    private func header(_ r: Report, _ span: ClosedRange<String>?) -> some View {
+        let t = AlmanacTheme.named(themeId)
+        let next = shifted(ref, 1)
+        // Title line and controls share the traffic lights' center line (26 pt); the subtitle hangs below.
+        return HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("\(r.period.title) Report").font(t.titleFont).tracking(-0.2).lineLimit(1).frame(height: 26)
+                Text("\(r.appName) · \(r.periodLabel)").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
             }
-            Spacer()
+            .padding(.top, 4)
+            Spacer(minLength: 12)
+            GlassSegments(options: ReportPeriod.allCases.map { ($0, $0.title) }, selection: Binding(
+                get: { ref.period },
+                set: { p in ref = complete(ReportRef(appId: ref.appId, period: p, start: Self.start(p, ref.start))); section = "Summary" }))
+            GlassGroup {
+                chevron("chevron.left", help: "Previous", enabled: span.map { ref.start > $0.lowerBound } ?? false) { ref = shifted(ref, -1) }
+                chevron("chevron.right", help: "Next", enabled: span.map { end(next) <= $0.upperBound } ?? false) { ref = next }
+            }
+            GlassGroup {
+                ShareLink(item: r.plainText, subject: Text("\(r.appName) \(r.period.title.lowercased()) report, \(r.periodLabel)")) {
+                    Label("Share", systemImage: "square.and.arrow.up").labelStyle(.titleAndIcon)
+                        .font(t.font(13, .semibold)).foregroundStyle(t.label)
+                        .padding(.horizontal, 12).frame(height: 28).contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                GlassItem(label: "Export PDF") { exportPDF(r, span, t) }
+            }
+            .fixedSize()
         }
+        .padding(.top, 9).padding(.leading, 88).padding(.trailing, 20)
+        .frame(height: 60, alignment: .top)
     }
 
-    private func kpiCard(_ k: Report.KPI, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(k.metric == .activeSubs ? "Active subscriptions" : k.metric.title).font(.caption.weight(.medium)).foregroundStyle(.secondary)
-            Text(k.metric.format(k.value)).font(.title2.weight(.semibold)).monospacedDigit()
-            ChangeLabel(change: k.change)
-            Sparkline(points: k.spark, tint: tint).frame(height: 40)
+    private func chevron(_ symbol: String, help: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        let t = AlmanacTheme.named(themeId)
+        return Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 12, weight: .bold)).foregroundStyle(enabled ? t.label : t.label3)
+                .frame(width: 32, height: 28).contentShape(Capsule())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card(padding: 12)
+        .buttonStyle(.plain).disabled(!enabled).help(help)
     }
 
-    private func step(_ dir: Int) {
-        let c: Calendar.Component = ref.period == .week ? .weekOfYear : ref.period == .month ? .month : .year
-        let d = Day.calendar.date(byAdding: c, value: dir, to: Day.date(ref.start))!
-        ref = ReportRef(appId: ref.appId, period: ref.period, start: Day.string(d))
-        aiText = nil
+    // MARK: Periods
+
+    /// First and last day with sales or analytics for this app.
+    private var dataSpan: ClosedRange<String>? {
+        guard let last = model.store.lastDay(ref.appId),
+              let first = model.store.series(ref.appId, .downloads, from: "2000-01-01", to: last).first?.day, first <= last else { return nil }
+        return first...last
+    }
+
+    private func end(_ r: ReportRef) -> String { ReportBuilder(store: model.store, app: r.appId).build(r.period, start: r.start).end }
+
+    private func shifted(_ r: ReportRef, _ dir: Int) -> ReportRef {
+        let c: Calendar.Component = r.period == .week ? .weekOfYear : r.period == .month ? .month : .year
+        let d = Day.calendar.date(byAdding: c, value: dir, to: Day.date(r.start))!
+        return ReportRef(appId: r.appId, period: r.period, start: Day.string(d))
+    }
+
+    /// Steps back until the whole period is covered by data, so a report never compares half a week.
+    private func complete(_ r: ReportRef) -> ReportRef {
+        guard let last = model.store.lastDay(r.appId) else { return r }
+        var r = r
+        for _ in 0..<3 where end(r) > last { r = shifted(r, -1) }
+        return r
     }
 
     static func start(_ p: ReportPeriod, _ day: String) -> String {
@@ -93,12 +117,138 @@ struct ReportView: View {
         }
     }
 
-    private func narrate(_ r: Report) async {
-        busy = true; defer { busy = false }
-        do {
-            aiText = try await AISettings.assistant.ask(
-                "Write a 120-word narrative of this report for the developer: what happened, the most likely cause, and one thing to do next. Use only these numbers.",
-                context: r.plainText)
-        } catch { self.error = error.localizedDescription }
+    // MARK: PDF
+
+    private func exportPDF(_ r: Report, _ span: ClosedRange<String>?, _ t: AlmanacTheme) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = "\(r.appName) \(r.period.title) Report \(r.start).pdf"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let page = ReportBody(report: r, span: span, section: .constant(""), printable: true) { _ in }
+            .frame(width: 720).padding(40)
+            .background(t.c("bg"))
+            .foregroundStyle(t.label).font(t.font(13)).tint(t.accent)
+            .environment(\.theme, t).environment(\.colorScheme, t.scheme)
+        let renderer = ImageRenderer(content: page)
+        renderer.render { size, draw in
+            var box = CGRect(origin: .zero, size: size)
+            guard let ctx = CGContext(url as CFURL, mediaBox: &box, nil) else { return }
+            ctx.beginPDFPage(nil); draw(ctx); ctx.endPDFPage(); ctx.closePDF()
+        }
     }
 }
+
+/// KPI row, table of contents and reading column. Shared by the window and the PDF export.
+private struct ReportBody: View {
+    @Environment(\.theme) private var t
+    let report: Report
+    let span: ClosedRange<String>?
+    @Binding var section: String
+    var printable = false
+    let jump: (String) -> Void
+
+    var body: some View {
+        let ids = ["Summary"] + report.sections.map(\.heading)
+        VStack(alignment: .leading, spacing: 32) {
+            if printable {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(report.appName) · \(report.period.title) Report").font(t.font(22, .bold))
+                    Text(report.periodLabel).font(t.font(13)).foregroundStyle(t.label2)
+                }
+            }
+            HStack(alignment: .top, spacing: 12) {
+                ForEach(report.headline) { kpi($0) }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .top, spacing: 40) {
+                if !printable {
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(ids, id: \.self) { id in
+                                let on = id == section
+                                Button { jump(id) } label: {
+                                    Text(id).font(t.font(13, on ? .semibold : .regular)).foregroundStyle(on ? t.label : t.label2).lineLimit(2)
+                                        .padding(.horizontal, 10).padding(.vertical, 6).frame(minHeight: 28).frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        Text(caption).font(t.font(11)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 10)
+                    }
+                    .frame(width: 176)
+                }
+                VStack(alignment: .leading, spacing: 32) {
+                    block("Summary", [report.summary])
+                    ForEach(Array(report.sections.enumerated()), id: \.offset) { i, s in
+                        VStack(alignment: .leading, spacing: 16) {
+                            block(s.heading, s.paragraphs)
+                            if i == 0, let first = report.headline.first, first.spark.contains(where: { $0.value > 0 }) {
+                                bars(first.spark, year: report.period == .year)
+                            }
+                        }
+                    }
+                    if printable { Text(caption).font(t.font(11)).foregroundStyle(t.label2) }
+                }
+                .frame(maxWidth: 640, alignment: .leading)
+                .textSelection(.enabled)
+            }
+        }
+    }
+
+    private var caption: String {
+        let through = span.map { " Figures through \(Day.date($0.upperBound).formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US"))))." } ?? ""
+        return "Written on this Mac from your App Store Connect data.\(through)"
+    }
+
+    private func block(_ heading: String, _ paragraphs: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(heading).font(t.font(20, .bold))
+            ForEach(paragraphs, id: \.self) {
+                Text($0).font(t.font(15)).lineSpacing(7).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .id(heading)
+    }
+
+    private func kpi(_ k: Report.KPI) -> some View {
+        let fill = t.tileFill(k.metric == .proceeds ? .redownloads : k.metric)
+        let c = Change(k.metric, value: k.value, previous: k.previous, arrows: false)
+        let vs = c.text == "No earlier data" ? "" : " vs last \(report.period.rawValue)"
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(MetricCard.label(k.metric)).font(t.font(12, .semibold)).foregroundStyle(fill?.fg2 ?? t.label2).lineLimit(1)
+            Text(Num.value(k.metric, k.value)).font(t.font(30, t.numWeight)).tracking(-0.8).monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(c.text + vs).font(t.font(11, .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                .foregroundStyle(fill?.fg ?? c.color(t))
+        }
+        .foregroundStyle(fill?.fg ?? t.label)
+        .themedCard(padding: 16, fill: fill?.bg)
+    }
+
+    /// Daily bars for a week or month, monthly bars for a year. Peak in accent.
+    private func bars(_ points: [Point], year: Bool) -> some View {
+        let peak = points.map(\.value).max() ?? 1
+        let few = points.count <= 12
+        let en = Locale(identifier: "en_US")
+        return HStack(alignment: .bottom, spacing: few ? 8 : 3) {
+            ForEach(points) { p in
+                VStack(spacing: 4) {
+                    if few { Text(Num.k(p.value)).font(t.font(10, .semibold)).foregroundStyle(t.label2).monospacedDigit() }
+                    RoundedRectangle(cornerRadius: few ? 4 : 2, style: .continuous)
+                        .fill(p.value == peak ? t.accent : t.accent.opacity(0.35))
+                        .frame(height: max(3, 96 * p.value / max(peak, 1)))
+                    Text(year ? p.date.formatted(.dateTime.month(.abbreviated).locale(en))
+                         : few ? p.date.formatted(.dateTime.weekday(.abbreviated).locale(en))
+                         : (Int(p.day.suffix(2)) ?? 0) % 5 == 1 ? String(Int(p.day.suffix(2)) ?? 0) : " ")
+                        .font(t.font(10)).foregroundStyle(t.label2).lineLimit(1).fixedSize()
+                }
+                .frame(maxWidth: .infinity)
+                .help("\(p.date.formatted(.dateTime.month(.abbreviated).day().locale(en))): \(Num.int(p.value))")
+            }
+        }
+        .frame(height: 140, alignment: .bottom)
+    }
+}
+#endif

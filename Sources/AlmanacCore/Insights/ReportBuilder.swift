@@ -26,6 +26,9 @@ public struct Report: Sendable {
     public var end: String
     public var periodLabel: String
     public var kpis: [KPI]
+    /// What the report window leads with: the analytics funnel when Apple's analytics exist, sales figures otherwise.
+    public var headline: [KPI]
+    public var hasAnalytics: Bool
     public var summary: String
     public var sections: [Section]
 
@@ -66,6 +69,10 @@ public struct ReportBuilder {
         }
         let k = [kpi(.downloads), kpi(.pageCR), kpi(.newRatings), kpi(.sales), kpi(.activeSubs)]
         let (dl, cr, ratings, sales, subs) = (k[0], k[1], k[2], k[3], k[4])
+        let analytics = store.lastDay(app, .impressions) != nil
+        let headline = analytics
+            ? [kpi(.firstDownloads), kpi(.impressions), kpi(.ttr), cr, kpi(.proceeds)]
+            : [dl, kpi(.proceeds), ratings, subs].enumerated().filter { $0.offset == 0 || $0.element.value > 0 || $0.element.previous > 0 }.map(\.element)
         let name = store.apps().first { $0.id == app }?.name ?? "Your app"
 
         func change(_ x: Report.KPI) -> String {
@@ -78,7 +85,9 @@ public struct ReportBuilder {
         if let c = sales.change, c > 0.15 { tone = "A strong \(period.rawValue) for revenue." }
         else if let c = sales.change, c < -0.15 { tone = "A softer \(period.rawValue) for revenue." }
         else if let c = dl.change, c > 0.15 { tone = "A busy \(period.rawValue) for downloads." }
-        var summary = "\(tone) Downloads were \(dl.metric.format(dl.value)), \(change(dl)), and sales reached \(sales.metric.format(sales.value)), \(change(sales))."
+        let sold = sales.value > 0 || sales.previous > 0
+        var summary = "\(tone) Downloads were \(dl.metric.format(dl.value)), \(change(dl))"
+            + (sold ? ", and sales reached \(sales.metric.format(sales.value)), \(change(sales))." : ".")
         if let ds = dl.change, let ss = sales.change, abs(ds) < 0.05, ss > 0.05 {
             summary += " With downloads nearly unchanged, the growth came from what people bought rather than from more visitors."
         }
@@ -87,17 +96,21 @@ public struct ReportBuilder {
         let views = store.total(app, .pageViews, from: start, to: end)
         let first = store.total(app, .firstDownloads, from: start, to: end), redl = store.total(app, .redownloads, from: start, to: end)
         let ttr = store.total(app, .ttr, from: start, to: end)
-        var sections = [Report.Section(heading: "Downloads & visibility", paragraphs: [
+        var sections = [Report.Section(heading: "Downloads & visibility", paragraphs: !analytics ? [
+            "Downloads were \(dl.metric.format(dl.value)), \(change(dl)). Impressions, product page views and first-time downloads arrive with Apple's first analytics report.",
+        ] : [
             "Impressions were \(Metric.impressions.format(imp))\(impPrev > 0 ? String(format: " (%@%.1f%%)", imp >= impPrev ? "+" : "−", abs(imp / impPrev - 1) * 100) : ""), product page views \(Metric.pageViews.format(views)). Page conversion finished at \(cr.metric.format(cr.value)) and tap-through at \(Metric.ttr.format(ttr)).",
             "First-time downloads: \(Metric.firstDownloads.format(first)). Redownloads: \(Metric.redownloads.format(redl)).",
         ])]
         let proceeds = store.total(app, .proceeds, from: start, to: end)
-        sections.append(.init(heading: "Sales & subscriptions", paragraphs: [
-            "Proceeds were \(Metric.proceeds.format(proceeds)) on \(sales.metric.format(sales.value)) of sales. Active subscriptions ended at \(Metric.activeSubs.format(subs.value)), \(change(subs)).",
+        sections.append(.init(heading: "Sales & subscriptions", paragraphs: !sold && subs.value == 0 ? ["No sales or subscriptions this \(period.rawValue)."] : [
+            "Proceeds were \(Metric.proceeds.format(proceeds)) on \(sales.metric.format(sales.value)) of sales."
+                + (subs.value > 0 || subs.previous > 0 ? " Active subscriptions ended at \(Metric.activeSubs.format(subs.value)), \(change(subs))." : ""),
         ]))
         let perK = first > 0 ? ratings.value / first * 1000 : 0
-        sections.append(.init(heading: "Ratings", paragraphs: [
-            "\(Int(ratings.value)) new ratings, \(change(ratings)). That is \(String(format: "%.1f", perK)) ratings per 1,000 first-time downloads.",
+        sections.append(.init(heading: "Ratings", paragraphs: ratings.value == 0 && ratings.previous == 0 ? ["No new ratings this \(period.rawValue)."] : [
+            "\(Int(ratings.value)) new rating\(Int(ratings.value) == 1 ? "" : "s"), \(change(ratings))."
+                + (first > 0 && ratings.value > 0 ? " That is \(String(format: "%.1f", perK)) ratings per 1,000 first-time downloads." : ""),
         ]))
         let terr = store.byTerritory(app, .downloads, from: start, to: end)
         let tot = terr.values.reduce(0, +)
@@ -108,20 +121,20 @@ public struct ReportBuilder {
         }
         let releases = store.versions(app).filter { $0.day >= start && $0.day <= end }
         if !releases.isEmpty {
-            sections.append(.init(heading: "Releases", paragraphs: releases.map { "Version \($0.version) shipped on \(Day.date($0.day).formatted(.dateTime.month(.abbreviated).day()))\($0.title.isEmpty ? "" : " — " + $0.title)." }))
+            sections.append(.init(heading: "Releases", paragraphs: releases.map { "Version \($0.version) shipped on \(Day.date($0.day).formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US"))))\($0.title.isEmpty ? "" : " — " + $0.title)." }))
         }
         return Report(appName: name, period: period, start: start, end: end, periodLabel: Self.label(period, start, end),
-                      kpis: k, summary: summary, sections: sections)
+                      kpis: k, headline: headline, hasAnalytics: analytics, summary: summary, sections: sections)
     }
 
     static func label(_ p: ReportPeriod, _ start: String, _ end: String) -> String {
-        let s = Day.date(start), e = Day.date(end)
+        let s = Day.date(start), e = Day.date(end), en = Locale(identifier: "en_US")
         switch p {
         case .week:
             let sameMonth = start.prefix(7) == end.prefix(7)
-            return "\(s.formatted(.dateTime.month(.abbreviated).day())) – \(sameMonth ? e.formatted(.dateTime.day()) : e.formatted(.dateTime.month(.abbreviated).day())), \(e.formatted(.dateTime.year()))"
-        case .month: return s.formatted(.dateTime.month(.wide).year())
-        case .year: return s.formatted(.dateTime.year())
+            return "\(s.formatted(.dateTime.month(.abbreviated).day().locale(en))) – \(sameMonth ? e.formatted(.dateTime.day().locale(en)) : e.formatted(.dateTime.month(.abbreviated).day().locale(en))), \(e.formatted(.dateTime.year().locale(en)))"
+        case .month: return s.formatted(.dateTime.month(.wide).year().locale(en))
+        case .year: return s.formatted(.dateTime.year().locale(en))
         }
     }
 }

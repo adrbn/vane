@@ -37,6 +37,17 @@ struct RootView: View {
         .environment(\.theme, t)
         .preferredColorScheme(t.scheme)
         .animation(.default, value: model.chatOpen)
+        .task { openLaunchReport() }
+    }
+
+    @Environment(\.openWindow) private var openWindow
+
+    /// `--report week|month|year` opens that report for the current app (screenshots).
+    private func openLaunchReport() {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "--report"), let app = model.appId, let last = model.store.lastDay(app) else { return }
+        let p = i + 1 < args.count ? ReportPeriod(rawValue: args[i + 1]) ?? .week : .week
+        openWindow(id: "report", value: ReportRef(appId: app, period: p, start: ReportView.start(p, last)))
     }
 
     @ViewBuilder private var detail: some View {
@@ -50,8 +61,15 @@ struct RootView: View {
             case .listing: ListingView()
             case .reviews: ReviewsView()
             case .appStore: AppStoreView()
-            case .usage: OverviewView(kind: .usage)
-            case .sales: SalesView()
+            // Sales and Usage are not in the redesign: kept as they were, under the shared header.
+            case .usage:
+                Screen(title: "Usage", subtitle: "\(model.app?.name ?? "") · Sessions, crashes and ratings", inspector: true, scrolls: false, padded: false) {} content: {
+                    OverviewView(kind: .usage)
+                }
+            case .sales:
+                Screen(title: "Sales", subtitle: "\(model.app?.name ?? "") · Units and proceeds from Apple's sales reports", inspector: true, scrolls: false, padded: false) {} content: {
+                    SalesView()
+                }
             case .territories: TerritoriesView()
             case .metric(let m): MetricDetailView(metric: m)
             }
