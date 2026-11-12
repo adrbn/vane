@@ -42,7 +42,7 @@ public struct InsightEngine {
                        title: "Your best download day in \(months) months",
                        body: "You got \(Int(last.value).formatted()) downloads on \(Day.date(asOf).formatted(.dateTime.month(.wide).day())), more than any day since \(Day.date(s[0].day).formatted(.dateTime.month(.wide).year())).",
                        day: asOf, chart: InsightChart(label: "Daily downloads", points: s.suffix(30).map(ChartPoint.init),
-                                                      baselineLabel: "Previous best", baseline: previousBest, headline: Int(last.value).formatted()))
+                                                      baselineLabel: "Previous best: \(Int(previousBest).formatted())", baseline: previousBest, headline: Int(last.value).formatted()))
     }
 
     func downloadMilestones() -> [Insight] {
@@ -95,7 +95,7 @@ public struct InsightEngine {
                        title: "Your app may be featured" + (lead.map { " " + Territories.flag($0) } ?? ""),
                        body: "Browse traffic is \(Int(recent / usual))× its usual level\(where_). An App Store feature or chart placement would explain it.",
                        day: peakDay, chart: InsightChart(label: "Daily browse impressions", points: s.map(ChartPoint.init),
-                                                         baselineLabel: "Usual", baseline: usual, headline: Int(recent).formatted()))
+                                                         baselineLabel: "Usual: \(Int(usual).formatted())", baseline: usual, headline: Int(recent).formatted()))
     }
 
     func listingIssues() -> [Insight] {
@@ -108,19 +108,19 @@ public struct InsightEngine {
                 let fixed = kws.filter { !repeated.contains($0) }.joined(separator: ",")
                 out.append(Insight(id: id("kw-repeat", l.locale + repeated.joined()), appId: app, kind: "kw-repeat", category: .discovery,
                                    title: "Your keywords repeat words from your name or subtitle",
-                                   body: "\(Locale.current.localizedString(forIdentifier: l.locale) ?? l.locale): \(repeated.map { "“\($0)”" }.joined(separator: ", ")) already \(repeated.count == 1 ? "appears" : "appear") in the name or subtitle, so \(repeated.count == 1 ? "it earns" : "they earn") nothing in the keyword field. Free up \(repeated.joined(separator: ",").count) characters for new words.",
+                                   body: "\(Locale(identifier: "en").localizedString(forIdentifier: l.locale) ?? l.locale): \(repeated.map { "“\($0)”" }.joined(separator: ", ")) already \(repeated.count == 1 ? "appears" : "appear") in the name or subtitle, so \(repeated.count == 1 ? "it earns" : "they earn") nothing in the keyword field. Free up \(repeated.joined(separator: ",").count) characters for new words.",
                                    day: asOf, needsAttention: true, action: .fixKeywords(locale: l.locale, keywords: fixed)))
             }
             let used = l.keywords.count
             if !l.keywords.isEmpty && used < 80 {
                 out.append(Insight(id: id("kw-short", l.locale), appId: app, kind: "kw-short", category: .discovery,
                                    title: "\(100 - used) keyword characters unused",
-                                   body: "\(Locale.current.localizedString(forIdentifier: l.locale) ?? l.locale) uses \(used) of 100 characters. Every free character is a search term you aren't ranking for.",
+                                   body: "\(Locale(identifier: "en").localizedString(forIdentifier: l.locale) ?? l.locale) uses \(used) of 100 characters. Every free character is a search term you aren't ranking for.",
                                    day: asOf, needsAttention: true, action: .openMetric("listing")))
             }
             if l.subtitle.isEmpty && !l.name.isEmpty {
                 out.append(Insight(id: id("no-subtitle", l.locale), appId: app, kind: "no-subtitle", category: .discovery,
-                                   title: "No subtitle in \(Locale.current.localizedString(forIdentifier: l.locale) ?? l.locale)",
+                                   title: "No subtitle in \(Locale(identifier: "en").localizedString(forIdentifier: l.locale) ?? l.locale)",
                                    body: "The subtitle is indexed for search and shown under your name. 30 free characters are going unused.",
                                    day: asOf, needsAttention: true, action: .openMetric("listing")))
             }
@@ -140,7 +140,7 @@ public struct InsightEngine {
                        body: m == .ttr ? "Fewer people who saw your app tapped through to its page. Check your icon, name and first screenshots, and any Search Ads changes."
                                        : "Fewer visitors to your product page downloaded. Check your screenshots, price and recent ratings.",
                        day: asOf, needsAttention: true,
-                       chart: InsightChart(label: m.title, points: weekly.map(ChartPoint.init), baselineLabel: "Before", baseline: before,
+                       chart: InsightChart(label: m.title, points: weekly.map(ChartPoint.init), baselineLabel: "Before: \(m.format(before))", baseline: before,
                                            headline: m.format(recent)), action: .openMetric(m.rawValue))
     }
 

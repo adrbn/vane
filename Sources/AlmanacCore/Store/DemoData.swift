@@ -95,14 +95,15 @@ public enum DemoData {
                     .init(a, day, .activeSubs, "", subs.rounded()), .init(a, day, .sessions, "", sessions),
                     .init(a, day, .crashes, "", crashes), .init(a, day, .ratingsTotal, "", ratingsTotal.rounded()),
                 ]
-                for (code, share) in shares {
+                for (i, (code, share)) in shares.enumerated() {
                     var s = share * rng.noise(0.2)
+                    let cv = 0.75 + Double((i * 37) % 11) / 20   // stable per-country conversion, 0.75–1.25×
                     if code == spec.featureTerritory && featureBoost > 0 { s *= 1 + featureBoost * 0.8 }
                     if code == spec.surgeTerritory && back < 7 { s *= 2.6 }
                     samples += [
                         .init(a, day, .impressions, code, impressions * s), .init(a, day, .pageViews, code, views * s),
-                        .init(a, day, .firstDownloads, code, first * s), .init(a, day, .redownloads, code, re * s),
-                        .init(a, day, .sales, code, sales * s),
+                        .init(a, day, .firstDownloads, code, first * s * cv), .init(a, day, .redownloads, code, re * s * cv),
+                        .init(a, day, .sales, code, sales * s * cv),
                     ]
                 }
             }
@@ -144,20 +145,29 @@ public enum DemoData {
 
     // rating, title, body, reviewer, territory(alpha-3), day, response
     static func reviews(for n: Int, lastDay: String) -> [(Int, String, String, String, String, String, String?)] {
-        let good: [(String, String, String, String)] = [
-            ("Finally organised", "I used to keep glaze notes on scraps of paper. This replaced all of it.", "mudhands", "USA"),
+        let own: [(String, String, String, String)] = [
+            [("Finally organised", "I used to keep glaze notes on scraps of paper. This replaced all of it.", "mudhands", "USA"),
+             ("Bellissima", "La uso per ogni cottura, chiara e veloce. Grazie!", "ceramica_roma", "ITA")],
+            [("Spot on", "Tide times match the harbour board to the minute.", "saltyskipper", "GBR"),
+             ("Muy útil", "La uso cada mañana antes de salir a pescar.", "pescador_cadiz", "ESP")],
+            [("Finally practising daily", "The streaks keep me honest. Scales every morning now.", "cellolea", "USA"),
+             ("Bellissima", "La uso per studiare il pianoforte ogni giorno. Grazie!", "pianista_roma", "ITA")],
+        ][n]
+        let good = own + [
             ("Exactly what I needed", "Simple, fast, and the widgets are lovely.", "kpw", "GBR"),
-            ("Super app", "Endlich habe ich alle meine Notizen an einem Ort. Sehr gut gemacht.", "töpferin_berlin", "DEU"),
-            ("Bellissima", "Uso questa app ogni giorno, chiara e veloce. Grazie!", "ceramica_roma", "ITA"),
-            ("Très pratique", "Simple et efficace, je recommande.", "atelier_lyon", "FRA"),
+            ("Super App", "Endlich alles an einem Ort. Sehr gut gemacht.", "lena_b", "DEU"),
+            ("Très pratique", "Simple et efficace, je recommande.", "camille.l", "FRA"),
             ("Love it", "Worth every cent. The developer actually listens.", "j.ortega", "MEX"),
             ("Great", "Does one thing very well.", "sam_k", "AUS"),
         ]
-        let bad: [(String, String, String, String)] = [
+        let bad: [(String, String, String, String)] = n == 2 ? [
             ("Crashes on launch", "Since the last update it crashes every time I open the tuner.", "violin_dad", "USA"),
             ("Broken after update", "The new tuner doesn't work on my iPad. Please fix.", "mkr", "CAN"),
             ("Lost my log", "Practice history disappeared after updating. Very frustrating.", "grace.h", "GBR"),
             ("Too many prompts", "Stop asking me to subscribe every session.", "noel", "USA"),
+        ] : [
+            ("Too many prompts", "Stop asking me to subscribe every time I open it.", "noel", "USA"),
+            ("Sync is slow", "Takes ages to show up on my iPad.", "mkr", "CAN"),
         ]
         var out: [(Int, String, String, String, String, String, String?)] = []
         var rng = RNG(state: UInt64(n + 11) * 104729)
