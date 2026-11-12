@@ -68,7 +68,7 @@ struct RootView: View {
             case .usage: OverviewView(kind: .usage)
             case .sales: SalesView()
             case .territories: TerritoriesView()
-            case .metric(let m): MetricDetailView(metric: m)
+            case .metric(let m): LegacyMetricDetailView(metric: m)
             }
         }
     }

@@ -254,7 +254,7 @@ struct IconRail: View {
             }
             Spacer()
         }
-        .frame(width: 80)
+        .frame(width: 92)
         .overlay(alignment: .trailing) { t.sep.frame(width: 1) }
     }
 }

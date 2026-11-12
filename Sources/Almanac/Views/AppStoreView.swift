@@ -38,7 +38,14 @@ struct AppStoreData {
 
     func value(_ m: Metric) -> Double { store.total(app, m, from: from, to: to) }
     func previous(_ m: Metric) -> Double { store.total(app, m, from: pFrom, to: pTo) }
-    func change(_ m: Metric, arrows: Bool = true) -> Change { Change(m, value: value(m), previous: previous(m), arrows: arrows) }
+    func change(_ m: Metric, arrows: Bool = true) -> Change {
+        hasPrevious(m) ? Change(m, value: value(m), previous: previous(m), arrows: arrows) : .noHistory
+    }
+    /// History reaches back to the start of the previous period.
+    func hasPrevious(_ m: Metric) -> Bool {
+        guard let first = store.series(app, m, from: pFrom, to: pTo).first?.day else { return false }
+        return Day.between(pFrom, first) <= 1
+    }
     /// Daily, or weekly sums past 90 days.
     func spark(_ m: Metric) -> [Double] {
         let p = store.series(app, m, from: from, to: to)
@@ -51,7 +58,7 @@ struct AppStoreData {
     var per: String { days == 365 ? "year" : "\(days) days" }
     static func md(_ d: String) -> String { Day.date(d).formatted(.dateTime.month(.abbreviated).day()) }
 
-    func was(_ m: Metric) -> String { "was " + Num.value(m, previous(m)) }
+    func was(_ m: Metric) -> String { hasPrevious(m) ? "was " + Num.value(m, previous(m)) : "" }
 
     func chatContext(_ name: String) -> String {
         "Screen: App Store overview for \(name), \(from) to \(to) vs \(pFrom) to \(pTo)\n" +

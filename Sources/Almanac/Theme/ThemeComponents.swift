@@ -21,7 +21,7 @@ struct Screen<Controls: View, Content: View>: View {
                     Text(subtitle).font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
                 }
                 Spacer(minLength: 12)
-                controls
+                controls.fixedSize()
                 if inspector {
                     GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
                 }
@@ -202,6 +202,13 @@ struct Change {
             up = true; flat = true; text = "No earlier data"
         }
     }
+
+    /// The earlier period isn't fully covered by history: say so instead of a misleading percentage.
+    static let noHistory: Change = {
+        var c = Change(.downloads, value: 0, previous: 0)
+        c.text = "No earlier data"
+        return c
+    }()
 
     /// Down is good for crashes.
     func color(_ t: AlmanacTheme, invert: Bool = false) -> Color { flat ? t.label2 : (up != invert) ? t.pos : t.neg }

@@ -3,7 +3,7 @@ import Charts
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct MetricDetailView: View {
+struct LegacyMetricDetailView: View {
     @Environment(AppModel.self) private var model
     var metric: Metric
     @State private var days = 90
