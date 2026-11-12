@@ -35,7 +35,7 @@ struct SalesView: View {
                             change: change(sales.suffix(30).total, sales.dropLast(30).suffix(30).total),
                             points: sales.bucketed(granularity == .day ? .day : .week).suffix(40), tint: tint)
                 let subs = model.store.series(app, .activeSubs, from: from, to: last)
-                summaryTile("Active subscriptions", value: Int(subs.last?.value ?? 0).formatted(), caption: "Latest day",
+                summaryTile("Active subscriptions", value: Num.int(subs.last?.value ?? 0), caption: "Latest day",
                             change: change(subs.last?.value ?? 0, subs.dropLast(30).last?.value ?? 0),
                             points: subs.bucketed(.week, average: true).suffix(40), tint: tint)
             }
@@ -50,9 +50,9 @@ struct SalesView: View {
                 }
                 TableColumn("Sales") { r in Text(Metric.sales.format(r.sales)).monospacedDigit() }
                 TableColumn("Proceeds") { r in Text(Metric.sales.format(r.proceeds)).monospacedDigit().foregroundStyle(.secondary) }
-                TableColumn("Downloads") { r in Text(Int(r.downloads).formatted()).monospacedDigit() }
+                TableColumn("Downloads") { r in Text(Num.int(r.downloads)).monospacedDigit() }
                 TableColumn("Sales per download") { r in Text(r.downloads > 0 ? Metric.sales.format(r.sales / r.downloads) : "—").monospacedDigit() }
-                TableColumn("Active subs") { r in Text(r.subs > 0 ? Int(r.subs).formatted() : "—").monospacedDigit() }
+                TableColumn("Active subs") { r in Text(r.subs > 0 ? Num.int(r.subs) : "—").monospacedDigit() }
             }
         }
         .onAppear {

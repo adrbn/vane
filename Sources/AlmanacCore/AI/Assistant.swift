@@ -53,6 +53,18 @@ public struct Assistant: Sendable {
         return trimmed
     }
 
+    /// CLI failure text without config warnings (they mask the real cause), sign-in problems spelled out.
+    static func explain(_ raw: String) -> String {
+        let lines = raw.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty && !$0.hasPrefix("Permission allow rule") && !$0.hasPrefix("Permission deny rule") && !$0.hasPrefix("Permission ask rule") }
+        let text = lines.joined(separator: "\n")
+        let l = text.lowercased()
+        if l.contains("authenticate") || l.contains("oauth") || l.contains("logged out") || l.contains("/login") || l.contains("not logged in") {
+            return "Claude Code is signed out. Run `claude /login` in Terminal, then ask again."
+        }
+        return text.isEmpty ? "The AI command failed without saying why." : String(text.suffix(500))
+    }
+
     static func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 
     static func shell(_ command: String, stdin: String) async throws -> String {
@@ -79,8 +91,7 @@ public struct Assistant: Sendable {
             p.waitUntilExit()
             errDone.wait()
             guard p.terminationStatus == 0 else {
-                let err = String(decoding: errData, as: UTF8.self)
-                throw AssistantError.failed(err.isEmpty ? out : String(err.suffix(500)))
+                throw AssistantError.failed(Self.explain(String(decoding: errData, as: UTF8.self) + "\n" + out))
             }
             return out
         }.value

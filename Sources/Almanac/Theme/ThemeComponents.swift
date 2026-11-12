@@ -217,7 +217,7 @@ struct Change {
 // MARK: - Compact number formatting used across the redesign (5,412 · 48.2K · 1.3M).
 
 enum Num {
-    static func int(_ v: Double) -> String { Int(v.rounded()).formatted() }
+    static func int(_ v: Double) -> String { Int(v.rounded()).formatted(.number.locale(Locale(identifier: "en_US"))) }
     static func k(_ v: Double) -> String {
         if v >= 1e6 { return String(format: "%.1fM", v / 1e6) }
         if v >= 1e4 { return String(format: "%.1fK", v / 1e3) }

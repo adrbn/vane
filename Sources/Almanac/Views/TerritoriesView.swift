@@ -10,7 +10,7 @@ struct TerritoryRow: Identifiable {
     var conversion: Double { pageViews > 0 ? (firstDownloads + redownloads) / pageViews : 0 }
 }
 
-struct TerritoriesView: View {
+struct LegacyTerritoriesView: View {
     @Environment(AppModel.self) private var model
     @State private var days = 7
     @State private var sortOrder = [KeyPathComparator(\TerritoryRow.impressions, order: .reverse)]

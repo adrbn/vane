@@ -55,8 +55,10 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
 
     public func format(_ v: Double) -> String {
         if isRate { return String(format: "%.2f%%", v * 100) }
-        if isCurrency { return v.formatted(.currency(code: "USD")) }
-        return Int(v.rounded()).formatted()
+        // The app is English-only: keep 1,234 and $1,234.00 whatever the Mac's region.
+        let en = Locale(identifier: "en_US")
+        if isCurrency { return v.formatted(.currency(code: "USD").locale(en)) }
+        return Int(v.rounded()).formatted(.number.locale(en))
     }
 }
 
