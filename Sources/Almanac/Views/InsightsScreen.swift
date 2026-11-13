@@ -158,6 +158,7 @@ struct InsightCardView: View {
         }
         .frame(maxHeight: .infinity, alignment: .topLeading)
         .themedCard(padding: lead ? 24 : 20, highlighted: highlighted || (lead && insight.needsAttention))
+        .opens({ if case .openMetric(let m)? = insight.action { return { open(m) } }; return nil }())
         .opacity(insight.dismissed ? 0.55 : 1)
     }
 
@@ -476,6 +477,7 @@ private struct WatchCard: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .themedCard(padding: 16)
+        .opens { model.section = .metric(metric) }
     }
 
     private func fmt(_ v: Double) -> String { metric.isRate ? Num.pct(v) : Num.k(v) }

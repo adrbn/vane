@@ -279,9 +279,11 @@ private struct ReviewContext: View {
             }
             HStack(spacing: 0) {
                 stat(reviews.isEmpty ? "—" : Num.int(total / Double(reviews.count)), "downloads per written review")
+                    .opens { model.section = .metric(.downloads) }
                 stat("\(replied) of \(reviews.count)", "answered")
                 stat(last.map { "\(Day.between($0, Day.today())) days" } ?? "—", "since the last review")
                 stat(ratings.map(Num.int) ?? "—", "ratings on the App Store")
+                    .opens { model.section = .usage }
             }
             Chart {
                 ForEach(weeks, id: \.day) { w in

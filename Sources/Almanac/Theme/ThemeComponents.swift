@@ -166,6 +166,16 @@ extension View {
     func themedCard(padding: CGFloat = 20, fill: Color? = nil, highlighted: Bool = false) -> some View {
         modifier(ThemedCard(padding: padding, fill: fill, highlighted: highlighted))
     }
+    /// Makes a whole tile a link to its screen: click anywhere (inner buttons keep their own action), pointing-hand cursor.
+    @ViewBuilder func opens(_ action: (() -> Void)?) -> some View {
+        if let action {
+            Button(action: action) { contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                #if os(macOS)
+                .onHover { $0 ? NSCursor.pointingHand.push() : NSCursor.pop() }
+                #endif
+        } else { self }
+    }
 }
 
 /// Rounded square holding a white glyph (sidebar sections, metric tiles).

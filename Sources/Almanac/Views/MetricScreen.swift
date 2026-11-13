@@ -354,9 +354,14 @@ struct MetricData {
         }
         if funnel {
             let e = end(of: r.day)
-            out.append((Num.k(store.total(app, .impressions, territory: territory, from: r.day, to: e)), nil))
-            out.append((Num.int(store.total(app, .pageViews, territory: territory, from: r.day, to: e)), nil))
-            out.append((Num.pct(store.total(app, .pageCR, territory: territory, from: r.day, to: e)), nil))
+            // No analytics for this period (before Apple's first report): missing, not zero.
+            if store.series(app, .impressions, territory: territory, from: r.day, to: e).isEmpty {
+                out += [("—", nil), ("—", nil), ("—", nil)]
+            } else {
+                out.append((Num.k(store.total(app, .impressions, territory: territory, from: r.day, to: e)), nil))
+                out.append((Num.int(store.total(app, .pageViews, territory: territory, from: r.day, to: e)), nil))
+                out.append((Num.pct(store.total(app, .pageCR, territory: territory, from: r.day, to: e)), nil))
+            }
         }
         return out.map { (text: $0.0, change: $0.1) }
     }

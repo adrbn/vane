@@ -14,6 +14,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
+- Tiles are links: a Watching card or a Usage card opens its metric (Ratings opens Reviews), an insight card opens what its Open button opens, and the Reviews context numbers open Downloads / Usage.
 - Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages").
 - Opening the chat widens the window by the panel's width (as far as the display allows) and closing it gives the width back, so screens keep their layout. A screen still too wide is clipped on the right, never pushing the sidebar off.
 - Fixed-layout screens (Territories, Reviews, Listing, quiet Insights) fill the window at any size, full screen included: Territories gives ~45% of the height to the map and fits as many table rows as the rest allows; Reviews is two full-height panes (the list scrolls inside its own; with 4 reviews or fewer, the room under them shows "Reviews against downloads": downloads per review, answered, days since the last one, ratings count, and weekly downloads with each review pinned on its week); quiet Insights stretches the Watching cards.
@@ -36,6 +37,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Values that aren't available yet read "Expected in 24–48 hours". No skeletons.
 - Before Apple's first analytics report, App Store keeps the kit layout with "—" tiles and a pending banner; downloads already come from sales reports.
 - Sparse Insights (≤ 3, nothing new) show "Recent" plus a "Watching" grid of the metrics being tracked, instead of a half-empty page.
+- Metric detail table: Impressions, Page views and Conversion read "—" for periods without analytics, never 0.
 - Usual range = p10 to p90 of the 63 prior days.
 - Insights:
   - Dismissed insights are shown as "Recently resolved".

@@ -89,6 +89,7 @@ private struct UsageCard: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .themedCard()
+        .opens { model.section = metric == .ratingsTotal ? .reviews : .metric(metric) }
     }
 
     private var title: String { metric == .ratingsTotal ? "Ratings" : metric.title }
