@@ -61,23 +61,32 @@ struct ListingView: View {
     // MARK: Localizations
 
     private func localizations(_ live: [ListingLocale], selected: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // An issue every language shares is said once under the list, not repeated on each row.
+        let sets = live.map { Set(ListingCheck(drafts[$0.locale] ?? $0).issues) }
+        let shared = sets.dropFirst().reduce(sets.first ?? []) { $0.intersection($1) }
+        let sel = live.first { $0.locale == selected }.map { drafts[$0.locale] ?? $0 }
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Localizations").font(t.font(13, .semibold))
             VStack(spacing: 2) {
                 ForEach(live) { l in
                     let d = drafts[l.locale] ?? l
-                    let check = ListingCheck(d)
-                    let sel = l.locale == selected
+                    let own = ListingCheck(d).issues.filter { !shared.contains($0) || live.count == 1 }
+                    let on = l.locale == selected
                     Button { locale = l.locale; message = nil } label: {
-                        VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 8) {
                             Text(Self.languageName(l.locale)).font(t.font(13, .semibold)).foregroundStyle(t.label).lineLimit(1)
-                            Text(d != l ? "Edited" + (check.issues.isEmpty ? "" : " · \(check.issues[0])") : check.issues.first ?? "Ready")
-                                .font(t.font(11)).lineLimit(1)
-                                .foregroundStyle(check.issues.isEmpty ? (d != l ? t.accentText : t.label2) : t.warn)
+                            Spacer(minLength: 4)
+                            if d != l {
+                                Text("Edited").font(t.font(11, .semibold)).foregroundStyle(t.accentText)
+                            } else if let issue = own.first {
+                                Circle().fill(t.warn).frame(width: 6, height: 6).help(own.joined(separator: "\n"))
+                                    .accessibilityLabel(issue)
+                            } else {
+                                Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(t.label3)
+                            }
                         }
-                        .padding(.horizontal, 10).padding(.vertical, 7)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(sel ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+                        .padding(.horizontal, 10).frame(height: 32)
+                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -85,11 +94,53 @@ struct ListingView: View {
             }
             .padding(6)
             .themedCard(padding: 0)
+            if live.count > 1, let issue = shared.sorted().first {
+                Label("\(issue) in every language", systemImage: "exclamationmark.circle")
+                    .font(t.font(11)).foregroundStyle(t.warn).padding(.horizontal, 4)
+            }
             if let m = message {
                 Text(m.text).font(t.font(11)).foregroundStyle(m.error ? t.neg : t.label2).fixedSize(horizontal: false, vertical: true)
             }
+            if let sel { preview(sel) }
         }
-        .frame(width: 208)
+        .frame(width: 240)
+    }
+
+    /// How the name and subtitle read in App Store search, plus the keywords as Apple indexes them.
+    private func preview(_ l: ListingLocale) -> some View {
+        let words = l.keywords.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let repeats = Set(ListingCheck.repeated(l))
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("In search").font(t.font(11, .semibold)).foregroundStyle(t.label2)
+            HStack(spacing: 10) {
+                if let app = model.app { AppIconView(app: app, size: 44) }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold)).lineLimit(1)
+                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Text("Get").font(t.font(12, .bold)).foregroundStyle(t.accentText)
+                    .padding(.horizontal, 12).frame(height: 24).background(t.fill, in: Capsule())
+            }
+            if !words.isEmpty {
+                Text("Keywords · \(words.count)").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
+                FlowLayout(spacing: 4) {
+                    ForEach(words, id: \.self) { w in
+                        Text(w).font(t.font(11)).lineLimit(1)
+                            .foregroundStyle(repeats.contains(w) ? t.warn : t.label)
+                            .padding(.horizontal, 7).frame(height: 20)
+                            .background(repeats.contains(w) ? t.warn.opacity(0.14) : t.fill, in: Capsule())
+                    }
+                }
+            }
+            // What shows under the screenshots: the promotional text, else the start of the description.
+            Text(l.promoText.isEmpty ? "Product page · description" : "Product page · promotional text").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
+            Text(l.promoText.isEmpty ? l.description : l.promoText).font(t.font(12)).foregroundStyle(t.label2).lineSpacing(2)
+                .frame(maxHeight: .infinity, alignment: .top).clipped()
+                .mask(LinearGradient(stops: [.init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .themedCard(padding: 14)
     }
 
     static func languageName(_ code: String) -> String { Locale(identifier: "en").localizedString(forIdentifier: code) ?? code }
@@ -140,7 +191,7 @@ struct ListingView: View {
                 if let caption { Text(caption).font(t.font(11)).foregroundStyle(t.label2) }
                 Spacer()
                 Text("\(Num.int(Double(n))) / \(Num.int(Double(limit)))").font(t.font(11)).monospacedDigit()
-                    .foregroundStyle(n > limit ? t.neg : t.label2)
+                    .foregroundStyle(n > limit ? t.neg : n > limit * 9 / 10 ? t.warn : t.label3)
             }
             Group {
                 if lines == 1 && !fill {
@@ -151,15 +202,8 @@ struct ListingView: View {
                 }
             }
             .font(t.font(13))
-            .background(t.field, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(n > limit ? t.neg : t.sep2, lineWidth: 1))
-            GeometryReader { g in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(t.fill)
-                    Capsule().fill(n > limit ? t.neg : t.accent).frame(width: g.size.width * min(1, Double(n) / Double(limit)))
-                }
-            }
-            .frame(height: 2)
+            .background(t.field, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: t.rS, style: .continuous).strokeBorder(n > limit ? t.neg : t.sep, lineWidth: 1))
             if compare && text.wrappedValue != live {
                 Text("Live: " + (live.isEmpty ? "empty" : live)).font(t.font(11)).foregroundStyle(t.label2).lineLimit(2).textSelection(.enabled)
             }
@@ -187,6 +231,29 @@ struct ListingView: View {
         _ = model.runEngine()
         model.revision += 1
         message = ("Uploaded \(done) language\(done == 1 ? "" : "s")\(model.isDemo ? " (demo, nothing left this Mac)" : "").", false)
+    }
+}
+
+/// Wraps its children onto as many lines as the width needs.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 4
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        rows(proposal.width ?? .infinity, subviews).size
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (i, p) in rows(bounds.width, subviews).points.enumerated() {
+            subviews[i].place(at: CGPoint(x: bounds.minX + p.x, y: bounds.minY + p.y), proposal: .unspecified)
+        }
+    }
+    private func rows(_ width: CGFloat, _ subviews: Subviews) -> (points: [CGPoint], size: CGSize) {
+        var points: [CGPoint] = [], x: CGFloat = 0, y: CGFloat = 0, line: CGFloat = 0, widest: CGFloat = 0
+        for v in subviews {
+            let s = v.sizeThatFits(.unspecified)
+            if x > 0 && x + s.width > width { x = 0; y += line + spacing; line = 0 }
+            points.append(CGPoint(x: x, y: y))
+            x += s.width + spacing; line = max(line, s.height); widest = max(widest, x - spacing)
+        }
+        return (points, CGSize(width: widest, height: y + line))
     }
 }
 

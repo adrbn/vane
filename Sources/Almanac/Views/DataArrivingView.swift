@@ -140,8 +140,12 @@ struct AnalyticsPending: View {
     static let expected = "Expected in 24–48 hours"
 
     var body: some View {
-        let title = Text("App Store analytics arrive in 24–48 hours").font(t.font(compact ? 15 : 17, .bold))
-        let sub = Text("Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report.")
+        // Apple publishes each analytics report on its own schedule: sessions often land days before impressions.
+        let sessions = model.store.series(model.appId ?? "", .sessions).first?.day
+        let title = Text(sessions == nil ? "App Store analytics arrive in 24–48 hours" : "Impressions and conversion are still on their way").font(t.font(compact ? 15 : 17, .bold))
+        let sub = Text(sessions == nil
+            ? "Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report."
+            : "Apple’s sessions report has arrived and is in Usage. Its App Store engagement report, which holds impressions and page views, usually follows within a few days.")
             .font(t.font(13)).foregroundStyle(t.label2)
         let check = SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
         let icon = Image(systemName: "clock").font(.system(size: 15, weight: .semibold)).foregroundStyle(t.accentText)
@@ -165,8 +169,9 @@ struct AnalyticsPending: View {
                 Spacer(minLength: 16)
                 HStack(spacing: 16) {
                     step("Sales history imported", true)
-                    step("Analytics report requested", true)
-                    step("First analytics report", false)
+                    if sessions == nil { step("Analytics report requested", true) }
+                    step(sessions.map { "Sessions since \(AppStoreData.md($0))" } ?? "First analytics report", sessions != nil)
+                    if sessions != nil { step("Impressions report", false) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

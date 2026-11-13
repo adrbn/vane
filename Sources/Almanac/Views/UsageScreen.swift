@@ -23,7 +23,8 @@ struct UsageScreen: View {
                 // Until Apple's report lands, sessions and crashes stay compact and the real data (ratings) takes the room.
                 HStack(spacing: 16) {
                     UsageCard(metric: .sessions, from: from, to: to, days: days, pending: analytics ? nil : "Arrives with Apple's first analytics report")
-                    UsageCard(metric: .crashes, from: from, to: to, days: days, pending: analytics ? nil : "Arrives with Apple's first analytics report")
+                    UsageCard(metric: .crashes, from: from, to: to, days: days, pending: !analytics ? "Arrives with Apple's first analytics report"
+                              : model.store.lastDay(app, .crashes) == nil ? "No crash report from Apple yet." : nil)
                 }
                 .frame(height: analytics ? nil : 132)
                 .frame(maxHeight: analytics ? .infinity : nil)

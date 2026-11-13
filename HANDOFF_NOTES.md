@@ -36,6 +36,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Comparisons ("vs last week") appear only when the previous period has full history. Otherwise "No earlier data" in reports and "—" in App Store pills.
 - The recomputed lead change was removed.
 - Values that aren't available yet read "Expected in 24–48 hours". No skeletons.
+- Apple sends each analytics report separately. Once sessions have arrived, the App Store banner says so ("Sessions since …") and waits only for the impressions report; Crashes reads "No crash report from Apple yet" instead of 0.
 - Before Apple's first analytics report, App Store keeps the kit layout with "—" tiles and a pending banner; downloads already come from sales reports.
 - Sparse Insights (≤ 3, nothing new) show "Recent" plus a "Watching" grid of the metrics being tracked, instead of a half-empty page.
 - Metric detail table: Impressions, Page views and Conversion read "—" for periods without analytics, never 0.
@@ -53,6 +54,8 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Upload sends only the fields that changed.
 - "Add Language…" is omitted: it needs a create call to the API, out of scope.
 - Selected locale, compare toggle and the upload message live in scene storage, because the detail view is re-created after each store change.
+
+- Listing: languages show a check, "Edited" or a warning dot. An issue every language shares is said once under the list. Fields have no progress bars, and the counter turns orange past 90%. Under the list, an "In search" preview shows icon, name and subtitle, the keyword chips (repeats in orange) and the product-page text.
 
 ## Report window
 - Its own themed window with no sidebar. It shows complete periods only; prev/next are disabled outside the data span.
