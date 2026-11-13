@@ -1,6 +1,7 @@
-#if os(macOS)
 import AlmanacCore
+#if os(macOS)
 import AppKit
+#endif
 import SwiftUI
 
 /// Building blocks shared by Settings and the onboarding: titled card groups, rows, text fields.
@@ -115,11 +116,13 @@ struct ConnectForm: View, SettingsBlocks {
                     .disabled(!creds.isComplete).opacity(!creds.isComplete ? 0.5 : 1)
             }
             .padding(.horizontal, 12).frame(minHeight: 44)
+            #if os(macOS)
             if saved.isComplete {
                 row(t, "Vane on iPhone", "Shows a QR code the iPhone's Camera can scan to connect with this key.") {
                     SmallButton(label: "Show Setup Code…") { showingQR = true }
                 }
             }
+            #endif
         }
         .dropDestination(for: URL.self) { urls, _ in
             guard let url = urls.first(where: { $0.pathExtension.lowercased() == "p8" }) else { return false }
@@ -129,7 +132,9 @@ struct ConnectForm: View, SettingsBlocks {
         .fileImporter(isPresented: $importing, allowedContentTypes: AccountSettings.keyTypes) { result in
             if case .success(let url) = result { AccountSettings.load(url, into: &creds) }
         }
+        #if os(macOS)
         .sheet(isPresented: $showingQR) { SetupQR(url: SetupLink.url(for: Keychain.credentials())) }
+        #endif
     }
 
     private func connectionText(_ t: AlmanacTheme, saved: ASCCredentials, dirty: Bool) -> some View {
@@ -161,6 +166,7 @@ struct ConnectForm: View, SettingsBlocks {
     }
 }
 
+#if os(macOS)
 /// Background refresh and insight notifications.
 struct RefreshSettings: View, SettingsBlocks {
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
@@ -184,6 +190,8 @@ struct RefreshSettings: View, SettingsBlocks {
         }
     }
 }
+
+#endif
 
 /// A miniature window in a theme's own colors: sidebar (or Ticker's rail), a hero number, two cards.
 struct ThemePreview: View {
@@ -253,4 +261,3 @@ struct Separated: _VariadicView_MultiViewRoot {
         }
     }
 }
-#endif

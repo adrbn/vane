@@ -85,8 +85,14 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Removed the "Write with AI" and "Chat about this" buttons. Share sends plain text; Export PDF renders the report.
 
 ## iOS
-- Vane keeps the Legacy views until its own redesign. Mac-only screens are wrapped in `#if os(macOS)`.
-- After adding Swift files, run `xcodegen generate` in `ios/`.
+- iPhone screens live in `ios/Phone/` (tabs Today, App Store, Reviews, Listing, plus Ask). They reuse the shared data types (`AppStoreData`, `MetricData`, `TerritoryData`, `ReportBuilder`, `ListingCheck`) and themed parts (`ThemedReviewRow`, `ThemedWorldMap`, `ThemePreview`). Mac-only pieces inside shared files are wrapped in `#if os(macOS)`.
+- First launch: pick a look (Color Blocks preselected), then scan the Mac's `vane://setup` code, type your own key, or try the demo. The look can be changed in Settings.
+- The phone has no AI: replies are typed by hand, Ask explains that it runs on the Mac.
+- Widgets (`ios/Widget/`): Downloads (small, medium, Lock Screen rectangular and inline) and Reviews (small, Lock Screen circular). The app writes `widget.json` to the App Group `group.com.adrbn.vane` whenever the data, the app or the look changes, then reloads the timelines. The widget has no access to the database.
+- The widget's `CFBundleVersion` must match the app's, or iOS silently drops the extension.
+- A device build needs the App Group registered for both bundle ids (`com.adrbn.vane`, `com.adrbn.vane.widgets`): Xcode's automatic signing does it, or `xcodebuild -allowProvisioningUpdates`.
+- After adding Swift files, run `xcodegen generate` in `ios/`. Simulator: `xcodebuild … CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM=` so the App Group entitlement is applied.
+- Launch flags `--demo` and `--onboarding` work on the phone too.
 
 ## Launch flags (screenshots and testing)
 `open -n build/Vane.app --args …`

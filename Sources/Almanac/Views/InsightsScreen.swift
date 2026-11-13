@@ -1,4 +1,3 @@
-#if os(macOS)
 import AlmanacCore
 import Charts
 import SwiftUI
@@ -529,4 +528,3 @@ private struct BandSpark: View {
         }
     }
 }
-#endif

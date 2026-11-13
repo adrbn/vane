@@ -10,15 +10,23 @@ targets:
     platform: iOS
     sources:
       - path: VaneApp.swift
+      - path: Phone
+      - path: Widget/VaneSnapshot.swift
       - path: AppIcon.icon
       - path: ../Resources/countries.json
       - path: ../Sources/Almanac
         excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift]
     dependencies:
       - package: AlmanacCore
+      - target: VaneWidgets
+    entitlements:
+      path: Vane.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.adrbn.vane]
     info:
       path: Info.plist
       properties:
+        NSCameraUsageDescription: Scans the setup code that Vane shows on your Mac.
         CFBundleURLTypes:
           - CFBundleURLName: com.adrbn.vane.setup
             CFBundleURLSchemes: [vane]
@@ -33,6 +41,33 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: 5.0
+        DEVELOPMENT_TEAM: 2TWQF4T93E
+        CODE_SIGN_STYLE: Automatic
+  VaneWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget
+    entitlements:
+      path: Widget/VaneWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.adrbn.vane]
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Vane
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.adrbn.vane.widgets
+        PRODUCT_NAME: VaneWidgets
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 2
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: 5.0
         DEVELOPMENT_TEAM: 2TWQF4T93E

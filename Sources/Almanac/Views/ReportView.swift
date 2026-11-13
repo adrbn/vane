@@ -1,8 +1,10 @@
-#if os(macOS)
 import AlmanacCore
+#if os(macOS)
 import AppKit
+#endif
 import SwiftUI
 
+#if os(macOS)
 /// Weekly / Monthly / Yearly report: its own window, no sidebar. Only complete periods are shown.
 struct ReportView: View {
     @Environment(AppModel.self) private var model
@@ -137,9 +139,10 @@ struct ReportView: View {
         }
     }
 }
+#endif
 
 /// KPI row, table of contents and reading column. Shared by the window and the PDF export.
-private struct ReportBody: View {
+struct ReportBody: View {
     @Environment(\.theme) private var t
     let report: Report
     let span: ClosedRange<String>?
@@ -252,4 +255,3 @@ private struct ReportBody: View {
         .frame(height: 140, alignment: .bottom)
     }
 }
-#endif

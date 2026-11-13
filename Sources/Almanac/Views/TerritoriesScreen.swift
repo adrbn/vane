@@ -1,4 +1,3 @@
-#if os(macOS)
 import AlmanacCore
 import SwiftUI
 
@@ -365,4 +364,3 @@ struct ThemedWorldMap: View {
         }
     }
 }
-#endif

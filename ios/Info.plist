@@ -29,5 +29,7 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Scans the setup code that Vane shows on your Mac.</string>
 </dict>
 </plist>

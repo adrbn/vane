@@ -119,7 +119,7 @@ swift test
 scripts/bundle.sh release    # produit build/Vane.app
 ```
 
-Il faut Xcode 26. L'app iPhone se trouve dans `ios/` (`cd ios && xcodegen generate`) ; elle garde encore l'ancien design. Les images du README sont générées à partir de vraies captures : `python3 docs/assets/make_svgs.py blocks`.
+Il faut Xcode 26. L'app iPhone se trouve dans `ios/` (`cd ios && xcodegen generate`), avec les quatre mêmes looks et des widgets pour l'écran d'accueil et l'écran verrouillé. Les images du README sont générées à partir de vraies captures : `python3 docs/assets/make_svgs.py blocks`.
 
 Le code dit encore Almanac, le premier nom de l'app. L'identifiant `dev.almanac.app` est resté pour que les données existantes suivent.
 

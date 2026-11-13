@@ -1,4 +1,3 @@
-#if os(macOS)
 import AlmanacCore
 import SwiftUI
 
@@ -314,4 +313,3 @@ struct ListingCheck {
             .filter { !$0.isEmpty && !drop.contains($0.lowercased()) }.joined(separator: ",")
     }
 }
-#endif

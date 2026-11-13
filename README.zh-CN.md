@@ -119,7 +119,7 @@ swift test
 scripts/bundle.sh release    # 生成 build/Vane.app
 ```
 
-需要 Xcode 26。iPhone App 位于 `ios/`（`cd ios && xcodegen generate`），目前仍是旧版设计。README 中的图片由真实截图生成：`python3 docs/assets/make_svgs.py blocks`。
+需要 Xcode 26。iPhone App 位于 `ios/`（`cd ios && xcodegen generate`），提供同样的四种外观，以及主屏幕和锁定屏幕小组件。README 中的图片由真实截图生成：`python3 docs/assets/make_svgs.py blocks`。
 
 代码里仍叫 Almanac，这是 App 最初的名字。Bundle ID `dev.almanac.app` 保持不变，以便沿用已有数据。
 

@@ -1,4 +1,3 @@
-#if os(macOS)
 import AlmanacCore
 import NaturalLanguage
 import Charts
@@ -524,4 +523,3 @@ struct ThemedReplySheet: View {
         } catch { self.error = error.localizedDescription }
     }
 }
-#endif

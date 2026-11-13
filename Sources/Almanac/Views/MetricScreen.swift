@@ -1,6 +1,7 @@
-#if os(macOS)
 import AlmanacCore
+#if os(macOS)
 import AppKit
+#endif
 import Charts
 import SwiftUI
 
@@ -256,6 +257,7 @@ struct MetricDetailView: View {
     // MARK: Export
 
     private func export(_ d: MetricData) {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "\(model.app?.name ?? "Vane") \(metric.title).csv"
         panel.allowedContentTypes = [.commaSeparatedText]
@@ -263,6 +265,7 @@ struct MetricDetailView: View {
         do { try d.csv(lastYear: lastYear).write(to: url, atomically: true, encoding: .utf8) } catch {
             NSAlert(error: error).runModal()
         }
+        #endif
     }
 }
 
@@ -404,4 +407,3 @@ struct MetricData {
 private extension Metric {
     var isAppStore: Bool { AlmanacTheme.key(self) != nil || self == .ttr || self == .pageCR }
 }
-#endif

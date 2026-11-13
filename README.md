@@ -117,7 +117,7 @@ swift test
 scripts/bundle.sh release    # builds build/Vane.app
 ```
 
-Needs Xcode 26. The iPhone companion lives in `ios/` (`cd ios && xcodegen generate`); it still uses the earlier design. The README art is generated from real captures: `python3 docs/assets/make_svgs.py blocks`.
+Needs Xcode 26. The iPhone companion lives in `ios/` (`cd ios && xcodegen generate`), with the same four looks and Home and Lock Screen widgets. The README art is generated from real captures: `python3 docs/assets/make_svgs.py blocks`.
 
 The code still says Almanac, the app's first name. The bundle identifier stayed `dev.almanac.app` so existing data carries over.
 
