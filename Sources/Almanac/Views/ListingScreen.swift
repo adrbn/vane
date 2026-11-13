@@ -24,13 +24,13 @@ struct ListingView: View {
         let live = model.store.listing(model.appId ?? "").sorted { ($0.locale == "en-US" ? "" : $0.locale) < ($1.locale == "en-US" ? "" : $1.locale) }
         let changed = live.filter { l in drafts[l.locale].map { $0 != l } ?? false }
         let selected = live.first { $0.locale == locale } ?? live.first
-        Screen(title: "Listing", subtitle: "\(model.app?.name ?? "") · \(live.count) language\(live.count == 1 ? "" : "s")", inspector: true, scrolls: false) {
+        Screen(title: String(localized: "Listing"), subtitle: String(localized: "\(model.app?.name ?? "") · \(live.count) languages"), inspector: true, scrolls: false) {
             GlassGroup {
-                GlassItem(label: "Compare with Live", symbol: compare ? "checkmark" : nil) { compare.toggle() }
-                GlassItem(label: "Discard Changes") { drafts = [:]; message = nil }
+                GlassItem(label: String(localized: "Compare with Live"), symbol: compare ? "checkmark" : nil) { compare.toggle() }
+                GlassItem(label: String(localized: "Discard Changes")) { drafts = [:]; message = nil }
                     .disabled(changed.isEmpty).opacity(changed.isEmpty ? 0.45 : 1)
             }
-            SmallButton(label: busy ? "Uploading…" : model.isDemo ? "Upload (demo)" : "Upload to App Store Connect", prominent: true, busy: busy) {
+            SmallButton(label: busy ? String(localized: "Uploading…") : model.isDemo ? String(localized: "Upload (demo)") : String(localized: "Upload to App Store Connect"), prominent: true, busy: busy) {
                 Task { await upload(changed) }
             }
             .disabled(!busy && (changed.isEmpty || changed.contains { ListingCheck(drafts[$0.locale]!).overBudget }))
@@ -118,9 +118,9 @@ struct ListingView: View {
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 44) }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold))
+                    Text(l.name.isEmpty ? String(localized: "No name") : l.name).font(t.font(13, .semibold))
                         .lineLimit(2).minimumScaleFactor(0.75)
-                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2)
+                    Text(l.subtitle.isEmpty ? String(localized: "No subtitle") : l.subtitle).font(t.font(11)).foregroundStyle(t.label2)
                         .lineLimit(2).minimumScaleFactor(0.75)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,7 +138,7 @@ struct ListingView: View {
                 }
             }
             // What shows under the screenshots: the promotional text, else the start of the description.
-            Text(l.promoText.isEmpty ? "Product page · description" : "Product page · promotional text").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
+            Text(l.promoText.isEmpty ? String(localized: "Product page · description") : String(localized: "Product page · promotional text")).font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
             // The text lays out at full height in an overlay, which doesn't size the card: the fade cuts it, not a "…".
             Color.clear.frame(maxHeight: .infinity)
                 .overlay(alignment: .top) {
@@ -163,7 +163,7 @@ struct ListingView: View {
         }
     }
 
-    static func languageName(_ code: String) -> String { Locale(identifier: "en").localizedString(forIdentifier: code) ?? code }
+    static func languageName(_ code: String) -> String { Locale.current.localizedString(forIdentifier: code) ?? code }
 
     // MARK: Editor
 
@@ -177,19 +177,19 @@ struct ListingView: View {
         let repeats = ListingCheck.repeated(d)
         return VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top, spacing: 16) {
-                field("Name", nil, binding(l, \.name), live: l.name, limit: Self.limits.name)
-                field("Subtitle", nil, binding(l, \.subtitle), live: l.subtitle, limit: Self.limits.subtitle)
+                field(String(localized: "Name"), nil, binding(l, \.name), live: l.name, limit: Self.limits.name)
+                field(String(localized: "Subtitle"), nil, binding(l, \.subtitle), live: l.subtitle, limit: Self.limits.subtitle)
             }
             VStack(alignment: .leading, spacing: 10) {
-                field("Keywords", "Comma-separated, no spaces needed", binding(l, \.keywords), live: l.keywords, limit: Self.limits.keywords)
+                field(String(localized: "Keywords"), String(localized: "Comma-separated, no spaces needed"), binding(l, \.keywords), live: l.keywords, limit: Self.limits.keywords)
                 if !repeats.isEmpty {
                     let chars = repeats.map(\.count).reduce(0, +) + repeats.count
                     HStack(alignment: .center, spacing: 12) {
                         Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 12)).foregroundStyle(t.warn)
-                        Text("\(repeats.map { "“\($0)”" }.joined(separator: " and ")) \(repeats.count == 1 ? "is" : "are") already in your name or subtitle. Apple indexes those, so these \(chars) characters add nothing.")
+                        Text(repeats.count == 1 ? String(localized: "\(repeats.map { "“\($0)”" }.formatted(.list(type: .and))) is already in your name or subtitle. Apple indexes those, so these \(chars) characters add nothing.") : String(localized: "\(repeats.map { "“\($0)”" }.formatted(.list(type: .and))) are already in your name or subtitle. Apple indexes those, so these \(chars) characters add nothing."))
                             .font(t.font(12)).fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 8)
-                        SmallButton(label: "Remove Repeated Words", prominent: true) {
+                        SmallButton(label: String(localized: "Remove Repeated Words"), prominent: true) {
                             binding(l, \.keywords).wrappedValue = ListingCheck.removing(repeats, from: d.keywords)
                         }
                     }
@@ -197,8 +197,8 @@ struct ListingView: View {
                     .background(t.warn.opacity(0.12), in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
                 }
             }
-            field("Promotional text", "Can change without a new version", binding(l, \.promoText), live: l.promoText, limit: Self.limits.promo, lines: 2)
-            field("Description", nil, binding(l, \.description), live: l.description, limit: Self.limits.description, fill: true)
+            field(String(localized: "Promotional text"), String(localized: "Can change without a new version"), binding(l, \.promoText), live: l.promoText, limit: Self.limits.promo, lines: 2)
+            field(String(localized: "Description"), nil, binding(l, \.description), live: l.description, limit: Self.limits.description, fill: true)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -225,7 +225,7 @@ struct ListingView: View {
             .background(t.field, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: t.rS, style: .continuous).strokeBorder(n > limit ? t.neg : t.sep, lineWidth: 1))
             if compare && text.wrappedValue != live {
-                Text("Live: " + (live.isEmpty ? "empty" : live)).font(t.font(11)).foregroundStyle(t.label2).lineLimit(2).textSelection(.enabled)
+                Text(String(localized: "Live: \(live.isEmpty ? String(localized: "empty") : live)")).font(t.font(11)).foregroundStyle(t.label2).lineLimit(2).textSelection(.enabled)
             }
         }
         .frame(maxHeight: fill ? .infinity : nil, alignment: .top)
@@ -250,7 +250,7 @@ struct ListingView: View {
         }
         _ = model.runEngine()
         model.revision += 1
-        message = ("Uploaded \(done) language\(done == 1 ? "" : "s")\(model.isDemo ? " (demo, nothing left this Mac)" : "").", false)
+        message = (model.isDemo ? String(localized: "Uploaded \(done) languages (demo, nothing left this Mac).") : String(localized: "Uploaded \(done) languages."), false)
     }
 }
 
@@ -290,11 +290,11 @@ struct ListingCheck {
 
     var issues: [String] {
         var out: [String] = []
-        if overBudget { out.append("Over the character limit") }
+        if overBudget { out.append(String(localized: "Over the character limit")) }
         let r = Self.repeated(l).count
-        if r > 0 { out.append("\(r) repeated keyword\(r == 1 ? "" : "s")") }
-        if l.subtitle.isEmpty { out.append("Subtitle missing") }
-        if l.promoText.isEmpty { out.append("Promotional text missing") }
+        if r > 0 { out.append(String(localized: "\(r) repeated keywords")) }
+        if l.subtitle.isEmpty { out.append(String(localized: "Subtitle missing")) }
+        if l.promoText.isEmpty { out.append(String(localized: "Promotional text missing")) }
         return out
     }
 

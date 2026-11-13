@@ -19,13 +19,13 @@ struct InsightsView: View {
         let today = Day.today()
         // The quiet feed (Recent + Watching) is a fixed layout that fills the window; a long feed scrolls.
         let quiet = !shown.isEmpty && shown.count <= 3 && !shown.contains { $0.day >= Day.add(-1, to: today) }
-        Screen(title: "Insights", subtitle: subtitle, inspector: true, scrolls: !quiet) {
+        Screen(title: String(localized: "Insights"), subtitle: subtitle, inspector: true, scrolls: !quiet) {
             GlassGroup { categoryMenu(all) }
         } content: {
             if active.isEmpty && !showDismissed {
                 NothingToFlag()
             } else if shown.isEmpty {
-                Text("No \(category?.title.lowercased() ?? "") insights right now.").font(t.font(13)).foregroundStyle(t.label2)
+                (category.map { Text("Nothing in \($0.title) right now.") } ?? Text("No insights right now.")).font(t.font(13)).foregroundStyle(t.label2)
             } else {
                 list(shown)
             }
@@ -42,8 +42,8 @@ struct InsightsView: View {
 
     private var subtitle: String {
         let name = model.app?.name ?? ""
-        guard let d = model.lastSync else { return "\(name) · Fixed rules on your numbers, no AI" }
-        return "\(name) · Fixed rules on your numbers, no AI · Updated \(d.formatted(.relative(presentation: .named)))"
+        guard let d = model.lastSync else { return String(localized: "\(name) · Fixed rules on your numbers, no AI") }
+        return String(localized: "\(name) · Fixed rules on your numbers, no AI · Updated \(d.formatted(.relative(presentation: .named)))")
     }
 
     private func categoryMenu(_ all: [Insight]) -> some View {
@@ -64,7 +64,7 @@ struct InsightsView: View {
             }
         } label: {
             HStack(spacing: 6) {
-                Text(category?.title ?? "All categories")
+                Text(category?.title ?? String(localized: "All categories"))
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(t.label2)
             }
             .font(t.font(13, .semibold)).padding(.horizontal, 10).frame(height: 28).contentShape(Capsule())
@@ -84,10 +84,10 @@ struct InsightsView: View {
         let few = shown.count <= 3 && new.isEmpty
         return VStack(alignment: .leading, spacing: 16) {
             if few {
-                group("Recent", "\(shown.count) insight\(shown.count == 1 ? "" : "s") in the last \(Day.between(shown.map(\.day).min() ?? today, today) + 1) days")
+                group(String(localized: "Recent"), String(localized: "\(shown.count) insights in the last \(Day.between(shown.map(\.day).min() ?? today, today) + 1) days"))
                 grid(shown)
                 // A quiet feed still shows what is being watched, as when there is nothing to flag.
-                group("Watching", "Last 28 days against each metric's usual range").padding(.top, 8)
+                group(String(localized: "Watching"), String(localized: "Last 28 days against each metric's usual range")).padding(.top, 8)
                 // Two rows of three that share the rest of the window height: taller sparklines, no hole below.
                 VStack(spacing: 16) {
                     ForEach([0, 3], id: \.self) { start in
@@ -100,12 +100,12 @@ struct InsightsView: View {
                 .frame(maxHeight: .infinity)
             } else {
                 if !new.isEmpty {
-                    group("New", "\(new.count) since yesterday")
+                    group(String(localized: "New"), String(localized: "\(new.count) since yesterday"))
                     if let lead { InsightCardView(insight: lead, lead: true, asked: $asked, fixing: $fixing) }
                     grid(new.filter { $0.id != lead?.id })
                 }
-                if !week.isEmpty { group("Earlier this week", nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
-                if !older.isEmpty { group("Earlier", nil).padding(.top, 8); grid(older) }
+                if !week.isEmpty { group(String(localized: "Earlier this week"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
+                if !older.isEmpty { group(String(localized: "Earlier"), nil).padding(.top, 8); grid(older) }
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -195,8 +195,8 @@ struct InsightCardView: View {
 
     static func when(_ day: String) -> String {
         let today = Day.today()
-        if day == today { return "Today" }
-        if day == Day.add(-1, to: today) { return "Yesterday" }
+        if day == today { return String(localized: "Today") }
+        if day == Day.add(-1, to: today) { return String(localized: "Yesterday") }
         return Day.date(day).formatted(.dateTime.month(.abbreviated).day())
     }
 
@@ -221,17 +221,17 @@ struct InsightCardView: View {
 
     private var actions: some View {
         HStack(spacing: 8) {
-            SmallButton(label: "Ask", symbol: "sparkles") {
+            SmallButton(label: String(localized: "Ask"), symbol: "sparkles") {
                 asked = insight.id
                 model.ask("What should I make of “\(insight.title)”, and what should I do about it?")
             }
             switch insight.action {
-            case .fixKeywords: SmallButton(label: "Fix…", prominent: true) { fixing = insight }
+            case .fixKeywords: SmallButton(label: String(localized: "Fix…"), prominent: true) { fixing = insight }
             case .openReport(let p, let s):
-                SmallButton(label: "Read Report") {
+                SmallButton(label: String(localized: "Read Report")) {
                     openWindow(id: "report", value: ReportRef(appId: insight.appId, period: ReportPeriod(rawValue: p) ?? .week, start: s))
                 }
-            case .openMetric(let m): SmallButton(label: "Open") { open(m) }
+            case .openMetric(let m): SmallButton(label: String(localized: "Open")) { open(m) }
             case nil: EmptyView()
             }
         }
@@ -442,10 +442,10 @@ private struct NothingToFlag: View {
             Image(systemName: "checkmark").font(.system(size: 20, weight: .bold)).foregroundStyle(t.accentText)
                 .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
-                Text.tracked("Nothing to flag", -0.26).font(t.font(26, .bold))
+                Text.tracked(String(localized: "Nothing to flag"), -0.26).font(t.font(26, .bold))
                 Text(live == Self.watched.count
-                     ? "Vane compared \(live) metrics with their usual range. Everything is normal, so there is nothing to act on today. New insights appear here when a metric leaves its range or a review needs you."
-                     : "Vane watches \(live) of \(Self.watched.count) metrics so far and none needs you. The others start once Apple's first analytics report arrives, usually 24–48 hours after you connect.")
+                     ? String(localized: "Vane compared \(live) metrics with their usual range. Everything is normal, so there is nothing to act on today. New insights appear here when a metric leaves its range or a review needs you.")
+                     : String(localized: "Vane watches \(live) of \(Self.watched.count) metrics so far and none needs you. The others start once Apple's first analytics report arrives, usually 24–48 hours after you connect."))
                     .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 560, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 if let d = model.lastSync {
                     Text("Checked \(d.formatted(.relative(presentation: .named))) · Checks again after every refresh")
@@ -453,7 +453,7 @@ private struct NothingToFlag: View {
                 }
             }
             Spacer(minLength: 0)
-            SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
+            SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
         }
         .themedCard(padding: 28)
     }
@@ -496,7 +496,7 @@ private struct WatchCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 56, maxHeight: .infinity)
             if has {
-                Text(band.map { "Usual \(fmt($0.0))–\(fmt($0.1))" } ?? "Usual range after 13 weeks of data")
+                Text(band.map { String(localized: "Usual \(fmt($0.0))–\(fmt($0.1))") } ?? String(localized: "Usual range after 13 weeks of data"))
                     .font(t.font(11)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
             } else {
                 Text(" ").font(t.font(11))

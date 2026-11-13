@@ -27,14 +27,14 @@ struct AboutView: View {
             .padding(.top, 8)
 
             VStack(spacing: 0) {
-                link(symbol: "chevron.left.forwardslash.chevron.right", section: .appstore, title: "Source code",
-                     detail: "github.com/adrbn/vane", button: "Open", url: Self.repo)
+                link(symbol: "chevron.left.forwardslash.chevron.right", section: .appstore, title: String(localized: "Source code"),
+                     detail: "github.com/adrbn/vane", button: String(localized: "Open"), url: Self.repo)
                 t.sep.frame(height: 1).padding(.leading, 56)
-                link(symbol: "cup.and.saucer.fill", section: .insights, title: "Support Vane",
-                     detail: "Vane is free. A coffee on Ko-fi keeps it going.", button: "Ko-fi", url: Self.kofi, prominent: true)
+                link(symbol: "cup.and.saucer.fill", section: .insights, title: String(localized: "Support Vane"),
+                     detail: String(localized: "Vane is free. A coffee on Ko-fi keeps it going."), button: "Ko-fi", url: Self.kofi, prominent: true)
                 t.sep.frame(height: 1).padding(.leading, 56)
-                link(symbol: "exclamationmark.bubble", section: .reviews, title: "Report a problem",
-                     detail: "Or suggest a feature on GitHub.", button: "New Issue", url: Self.issues)
+                link(symbol: "exclamationmark.bubble", section: .reviews, title: String(localized: "Report a problem"),
+                     detail: String(localized: "Or suggest a feature on GitHub."), button: String(localized: "New Issue"), url: Self.issues)
             }
             .themedCard(padding: 0, radius: t.rS + 2)
 

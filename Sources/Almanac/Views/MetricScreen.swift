@@ -20,8 +20,9 @@ struct MetricDetailView: View {
         let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, days: days, territory: territory)
         let up = Change(metric, value: d.value, previous: d.previous).up
         let color = t.color(metric, up: up)
-        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(metric.isAppStore ? "App Store" : [.sessions, .crashes].contains(metric) ? "Usage" : "Sales")", inspector: true) {
-            GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
+        let kind = metric.isAppStore ? String(localized: "App Store") : [.sessions, .crashes].contains(metric) ? String(localized: "Usage") : String(localized: "Sales")
+        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(kind)", inspector: true) {
+            GlassSegments(options: [(7, String(localized: "7 Days")), (28, String(localized: "28 Days")), (90, String(localized: "90 Days")), (365, String(localized: "Year"))], selection: $days)
             GlassGroup {
                 if metric.hasTerritories { territoryMenu(d) }
                 Button { lastYear.toggle() } label: {
@@ -42,8 +43,8 @@ struct MetricDetailView: View {
                     Image(systemName: pinned ? "pin.fill" : "pin").font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(pinned ? t.accentText : t.label).frame(width: 30, height: 28).contentShape(Capsule())
                 }
-                .buttonStyle(.plain).help(pinned ? "Unpin from sidebar" : "Pin to sidebar")
-                GlassItem(label: "Export CSV", symbol: "square.and.arrow.up") { export(d) }
+                .buttonStyle(.plain).help(pinned ? Text("Unpin from sidebar") : Text("Pin to sidebar"))
+                GlassItem(label: String(localized: "Export CSV"), symbol: "square.and.arrow.up") { export(d) }
             }
         } content: {
             VStack(alignment: .leading, spacing: 16) {
@@ -71,7 +72,7 @@ struct MetricDetailView: View {
         } label: {
             HStack(spacing: 6) {
                 // Fixed width: the bar must not move to a second row when a longer country is picked (#1).
-                Text(territory.isEmpty ? "All territories" : Territories.name(territory)).lineLimit(1)
+                (territory.isEmpty ? Text("All territories") : Text(verbatim: Territories.name(territory))).lineLimit(1)
                     .frame(width: 112, alignment: .leading)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(t.label2)
             }
@@ -178,7 +179,7 @@ struct MetricDetailView: View {
                 AxisGridLine().foregroundStyle(t.sep)
                 AxisValueLabel {
                     if let x = v.as(Double.self) {
-                        Text(metric.isRate ? String(format: "%.0f%%", x * 100) : x.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US"))))
+                        Text(metric.isRate ? String(format: "%.0f%%", x * 100) : x.formatted(.number.notation(.compactName).locale(Locale.current)))
                             .font(t.font(11)).foregroundStyle(t.label2)
                     }
                 }
@@ -199,11 +200,11 @@ struct MetricDetailView: View {
     private func popover(_ r: MetricData.Row, _ d: MetricData) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(d.label(r.day, long: true)).font(t.font(11)).foregroundStyle(t.label2)
-            popRow("This year", MetricData.full(metric, r.value), t.label, bold: true)
+            popRow(String(localized: "This year"), MetricData.full(metric, r.value), t.label, bold: true)
             if lastYear, let ly = r.lastYear {
-                popRow("Last year", MetricData.full(metric, ly), t.label2)
+                popRow(String(localized: "Last year"), MetricData.full(metric, ly), t.label2)
                 let c = Change(metric, value: r.value, previous: ly, arrows: false)
-                popRow("Change", c.text, c.color(t), bold: true)
+                popRow(String(localized: "Change"), c.text, c.color(t), bold: true)
             }
         }
         .padding(12)
@@ -329,8 +330,8 @@ struct MetricData {
         }
     }
 
-    var rangeName: String { "Last \(periodNoun)" }
-    var periodNoun: String { "\(days) days" }
+    var rangeName: String { String(localized: "Last \(periodNoun)") }
+    var periodNoun: String { String(localized: "\(days) days") }
     var rangeLabel: String {
         let f: (String) -> String = { Day.date($0).formatted(days > 90 ? .dateTime.month(.abbreviated).day().year() : .dateTime.month(.abbreviated).day()) }
         return "\(f(from)) – \(f(to))"
@@ -339,7 +340,7 @@ struct MetricData {
     func label(_ day: String, long: Bool = false) -> String {
         let d = Day.date(day)
         switch g {
-        case .week: return "Week of " + d.formatted(.dateTime.month(.abbreviated).day())
+        case .week: return String(localized: "Week of \(d.formatted(.dateTime.month(.abbreviated).day()))")
         case .month, .year: return d.formatted(.dateTime.month(.wide).year())
         case .day: return long ? d.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()) : d.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
         }
@@ -354,7 +355,7 @@ struct MetricData {
     private var funnel: Bool { metric.isAppStore }
 
     func columns(lastYear: Bool) -> [String] {
-        ["Date", metric == .firstDownloads ? "Downloads" : metric.title] + (lastYear ? ["Last year", "vs last year"] : []) + (funnel ? ["Impressions", "Page views", "Conversion"] : [])
+        [String(localized: "Date"), metric == .firstDownloads ? String(localized: "Downloads") : metric.title] + (lastYear ? [String(localized: "Last year"), String(localized: "vs last year")] : []) + (funnel ? [String(localized: "Impressions"), String(localized: "Page views"), String(localized: "Conversion")] : [])
     }
 
     func cells(_ r: Row, lastYear: Bool) -> [(text: String, change: Change?)] {

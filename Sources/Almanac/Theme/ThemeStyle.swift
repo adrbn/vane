@@ -6,7 +6,15 @@ extension AlmanacTheme {
     static let storageKey = "theme"
     static func named(_ id: String) -> AlmanacTheme { all.first { $0.id == id } ?? .blocks }
 
-    var name: String { ["ticker": "Ticker", "blocks": "Color Blocks", "nocturne": "Nocturne", "candy": "Candy Glass"][id] ?? id }
+    var name: String {
+        switch id {
+        case "ticker": String(localized: "Ticker")
+        case "blocks": String(localized: "Color Blocks")
+        case "nocturne": String(localized: "Nocturne")
+        case "candy": String(localized: "Candy Glass")
+        default: id
+        }
+    }
     var scheme: ColorScheme { id == "ticker" || id == "nocturne" ? .dark : .light }
 
     func c(_ key: String) -> Color { Color(css: tokens[key] ?? "#FF00FF") }

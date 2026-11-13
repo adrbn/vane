@@ -59,12 +59,12 @@ struct LegacyTerritoriesView: View {
     private var mappedColumn: (title: String, value: (TerritoryRow) -> Double, format: (Double) -> String) {
         let int: (Double) -> String = { Int($0).formatted() }
         switch sortOrder.first?.keyPath {
-        case \TerritoryRow.pageViews: return ("Page views", \.pageViews, int)
-        case \TerritoryRow.firstDownloads: return ("First-time downloads", \.firstDownloads, int)
-        case \TerritoryRow.redownloads: return ("Redownloads", \.redownloads, int)
-        case \TerritoryRow.sales: return ("Sales", \.sales, { Metric.sales.format($0) })
-        case \TerritoryRow.conversion: return ("Conversion", \.conversion, { String(format: "%.2f%%", $0 * 100) })
-        default: return ("Impressions", \.impressions, int)
+        case \TerritoryRow.pageViews: return (String(localized: "Page views"), \.pageViews, int)
+        case \TerritoryRow.firstDownloads: return (String(localized: "First-time downloads"), \.firstDownloads, int)
+        case \TerritoryRow.redownloads: return (String(localized: "Redownloads"), \.redownloads, int)
+        case \TerritoryRow.sales: return (String(localized: "Sales"), \.sales, { Metric.sales.format($0) })
+        case \TerritoryRow.conversion: return (String(localized: "Conversion"), \.conversion, { String(format: "%.2f%%", $0 * 100) })
+        default: return (String(localized: "Impressions"), \.impressions, int)
         }
     }
 
@@ -133,7 +133,7 @@ struct WorldMap: View {
                     if let h = hovered {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("\(Territories.flag(h.iso)) \(Territories.name(h.iso))").font(.caption.weight(.semibold))
-                            Text(values[h.iso].map(format) ?? "No data").font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                            (values[h.iso].map { Text(format($0)) } ?? Text("No data")).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                         }
                         .padding(6).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
                         .offset(x: min(hoverPoint.x + 12, size.width - 150), y: max(hoverPoint.y - 44, 0))
@@ -143,7 +143,7 @@ struct WorldMap: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             HStack(spacing: 12) {
-                legend(Color.secondary.opacity(0.15), "None")
+                legend(Color.secondary.opacity(0.15), String(localized: "None"))
                 ForEach(Array(buckets.enumerated()), id: \.offset) { i, b in
                     legend(tint.opacity(0.25 + 0.75 * Double(i + 1) / Double(buckets.count)), "\(format(b))+")
                 }

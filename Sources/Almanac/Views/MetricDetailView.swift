@@ -31,7 +31,7 @@ struct LegacyMetricDetailView: View {
                 .frame(minHeight: 280)
                 .padding(.horizontal, 20).padding(.bottom, 12)
             Table(data.reversed()) {
-                TableColumn(granularity == .day ? "Day" : granularity.rawValue) { p in Text(label(p.day)) }
+                TableColumn(granularity == .day ? String(localized: "Day") : granularity.title) { p in Text(label(p.day)) }
                 TableColumn(metric.title) { p in Text(metric.format(p.value)).monospacedDigit() }
                 TableColumn("Change") { p in
                     let i = data.firstIndex(of: p) ?? 0
@@ -78,13 +78,13 @@ struct LegacyMetricDetailView: View {
     @ViewBuilder private func actions(data: [Point]) -> some View {
         Text(metric.format(metric.isGauge ? (data.last?.value ?? 0) : data.total)).font(.title3.weight(.semibold)).monospacedDigit()
         Picker("Granularity", selection: $granularity) {
-            ForEach([Granularity.day, .week, .month]) { Text($0.rawValue).tag($0) }
+            ForEach([Granularity.day, .week, .month]) { Text($0.title).tag($0) }
         }
         .pickerStyle(.segmented).labelsHidden().fixedSize()
         Button { model.togglePin(metric) } label: {
             Image(systemName: model.pinned.contains(metric) ? "pin.fill" : "pin")
         }
-        .help(model.pinned.contains(metric) ? "Unpin from sidebar" : "Pin to sidebar")
+        .help(model.pinned.contains(metric) ? String(localized: "Unpin from sidebar") : String(localized: "Pin to sidebar"))
         ShareLink(item: csv(data), preview: SharePreview("\(metric.title).csv")) { Image(systemName: "square.and.arrow.up") }
             .help("Export CSV")
     }
@@ -129,7 +129,7 @@ struct LegacyMetricDetailView: View {
         let d = Day.date(day)
         switch granularity {
         case .day: return d.formatted(.dateTime.month(.abbreviated).day().year())
-        case .week: return "Week of " + d.formatted(.dateTime.month(.abbreviated).day())
+        case .week: return String(localized: "Week of \(d.formatted(.dateTime.month(.abbreviated).day()))")
         case .month: return d.formatted(.dateTime.month(.wide).year())
         case .year: return d.formatted(.dateTime.year())
         }

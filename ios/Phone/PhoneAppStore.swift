@@ -17,7 +17,7 @@ struct AppStoreTab: View {
         PhoneScreen(title: title, subtitle: d.range) {
             PeriodMenu(days: $days)
         } content: {
-            PhoneSegments(options: [(.appStore, "App Store"), (.sales, "Sales"), (.usage, "Usage")], selection: $segment)
+            PhoneSegments(options: [(.appStore, String(localized: "App Store")), (.sales, String(localized: "Sales")), (.usage, String(localized: "Usage"))], selection: $segment)
                 .padding(.bottom, 4)
             switch segment {
             case .appStore: appStore(d)
@@ -28,13 +28,13 @@ struct AppStoreTab: View {
         .phoneDestinations()
     }
 
-    private var title: String { segment == .appStore ? "App Store" : segment == .sales ? "Sales" : "Usage" }
+    private var title: String { segment == .appStore ? String(localized: "App Store") : segment == .sales ? String(localized: "Sales") : String(localized: "Usage") }
 
     @ViewBuilder private func appStore(_ d: AppStoreData) -> some View {
         let c = d.change(.firstDownloads)
         link(.firstDownloads) {
-            PhoneHero(label: "First-time downloads, last \(d.per)", value: d.shown(.firstDownloads),
-                      caption: Text(c.text).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)"),
+            PhoneHero(label: String(localized: "First-time downloads, last \(d.per)"), value: d.shown(.firstDownloads),
+                      caption: Text(c.text).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")),
                       spark: d.spark(.firstDownloads))
         }
         grid {
@@ -48,8 +48,8 @@ struct AppStoreTab: View {
     @ViewBuilder private func sales(_ d: AppStoreData) -> some View {
         let c = d.change(.proceeds)
         link(.proceeds) {
-            PhoneHero(label: "Proceeds, last \(d.per)", value: d.shown(.proceeds),
-                      caption: Text(c.text).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)"),
+            PhoneHero(label: String(localized: "Proceeds, last \(d.per)"), value: d.shown(.proceeds),
+                      caption: Text(c.text).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")),
                       spark: d.spark(.proceeds))
         }
         grid {
@@ -57,7 +57,7 @@ struct AppStoreTab: View {
             link(.downloads) { tile(d, .downloads) }
             link(.activeSubs) {
                 let last = model.store.series(model.appId ?? "", .activeSubs).last?.value
-                PhoneTile(metric: nil, label: "Active subscriptions", value: last.map(Num.int) ?? "—", change: nil, note: "Latest count")
+                PhoneTile(metric: nil, label: String(localized: "Active subscriptions"), value: last.map(Num.int) ?? "—", change: nil, note: String(localized: "Latest count"))
             }
             link(.firstDownloads) { tile(d, .firstDownloads) }
         }
@@ -74,14 +74,14 @@ struct AppStoreTab: View {
                 .font(t.font(13)).foregroundStyle(t.label2).phoneCard()
         } else {
             link(.sessions) {
-                PhoneHero(label: "Sessions, last \(d.per)", value: Num.k(sessions),
+                PhoneHero(label: String(localized: "Sessions, last \(d.per)"), value: Num.k(sessions),
                           caption: Text("Crash rate ") + Text(sessions > 0 ? String(format: "%.2f%%", crashes / sessions * 100) : "—").fontWeight(.bold),
                           spark: model.store.series(app, .sessions, from: from!, to: to!).map(\.value))
             }
             grid {
-                link(.crashes) { PhoneTile(metric: nil, label: "Crashes", value: Num.int(crashes), change: nil, note: "Last \(d.per)") }
+                link(.crashes) { PhoneTile(metric: nil, label: String(localized: "Crashes"), value: Num.int(crashes), change: nil, note: String(localized: "Last \(d.per)")) }
                 link(.ratingsTotal) {
-                    PhoneTile(metric: nil, label: "Ratings", value: model.store.series(app, .ratingsTotal).last.map { Num.int($0.value) } ?? "—", change: nil, note: "All time")
+                    PhoneTile(metric: nil, label: String(localized: "Ratings"), value: model.store.series(app, .ratingsTotal).last.map { Num.int($0.value) } ?? "—", change: nil, note: String(localized: "All time"))
                 }
                 link(.newRatings) { tile(d, .newRatings) }
             }
@@ -89,15 +89,15 @@ struct AppStoreTab: View {
     }
 
     private func tile(_ d: AppStoreData, _ m: Metric) -> some View {
-        PhoneTile(metric: m, label: m == .pageCR ? "Conversion" : m == .pageViews ? "Page views" : m.title,
+        PhoneTile(metric: m, label: m == .pageCR ? String(localized: "Conversion") : m == .pageViews ? String(localized: "Page views") : m.title,
                   value: d.shown(m), change: d.has(m) && d.hasPrevious(m) ? d.change(m) : nil,
-                  note: d.has(m) ? "No earlier data" : AnalyticsPending.expected, spark: d.has(m) ? d.spark(m) : [])
+                  note: d.has(m) ? String(localized: "No earlier data") : AnalyticsPending.expected, spark: d.has(m) ? d.spark(m) : [])
     }
 
     private func territoryTile(_ d: AppStoreData) -> some View {
         let td = TerritoryData(store: model.store, app: model.appId ?? "", days: days)
-        return PhoneTile(metric: nil, label: "Territories", value: td.largest.map { Territories.flag($0.code) + " " + $0.code } ?? "—",
-                         change: nil, note: td.largest.map { "\(Num.pct($0.share)) of downloads" } ?? "No downloads yet")
+        return PhoneTile(metric: nil, label: String(localized: "Territories"), value: td.largest.map { Territories.flag($0.code) + " " + $0.code } ?? "—",
+                         change: nil, note: td.largest.map { String(localized: "\(Num.pct($0.share)) of downloads") } ?? String(localized: "No downloads yet"))
     }
 
     private func link<C: View>(_ m: Metric, @ViewBuilder _ c: () -> C) -> some View {
@@ -113,13 +113,13 @@ struct AppStoreTab: View {
 struct PeriodMenu: View {
     @Environment(\.theme) private var t
     @Binding var days: Int
-    static let options = [(7, "7 days"), (28, "28 days"), (90, "90 days"), (365, "1 year")]
+    static let options = [(7, String(localized: "7 days")), (28, String(localized: "28 days")), (90, String(localized: "90 days")), (365, String(localized: "1 year"))]
     var body: some View {
         Menu {
             Picker("Period", selection: $days) { ForEach(Self.options, id: \.0) { Text($0.1).tag($0.0) } }
         } label: {
             HStack(spacing: 6) {
-                Text(Self.options.first { $0.0 == days }?.1 ?? "\(days) days").font(t.font(14, .semibold))
+                Text(Self.options.first { $0.0 == days }?.1 ?? String(localized: "\(days) days")).font(t.font(14, .semibold))
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(t.label2)
             }
             .foregroundStyle(t.label)
@@ -144,7 +144,7 @@ struct PhoneMetric: View {
         let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, days: days, territory: "")
         let color = t.color(metric, up: d.value >= d.previous)
         PushedScreen(title: metric.title, subtitle: d.rangeLabel) {
-            PhoneSegments(options: PeriodMenu.options.map { ($0.0, $0.0 == 365 ? "1Y" : "\($0.0)D") }, selection: $days)
+            PhoneSegments(options: PeriodMenu.options.map { ($0.0, $0.0 == 365 ? String(localized: "1Y") : String(localized: "\($0.0)D")) }, selection: $days)
             VStack(alignment: .leading, spacing: 4) {
                 Text(MetricData.full(metric, d.value)).font(t.font(44, .heavy)).tracking(-1.2).monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.5)
@@ -160,7 +160,7 @@ struct PhoneMetric: View {
                 Toggle(isOn: $compare) { Text("Compare with last year").font(t.font(15, .semibold)) }
                     .tint(t.accent).phoneCard(padding: 14)
             }
-            PhoneSectionTitle(title: d.g == .week ? "Recent weeks" : "Recent days")
+            PhoneSectionTitle(title: d.g == .week ? String(localized: "Recent weeks") : String(localized: "Recent days"))
             VStack(spacing: 0) {
                 ForEach(Array(d.rows.reversed().prefix(10).enumerated()), id: \.element.id) { i, r in
                     HStack {
@@ -223,19 +223,19 @@ struct PhoneTerritories: View {
     var body: some View {
         let d = TerritoryData(store: model.store, app: model.appId ?? "", days: days)
         let top = d.rows.filter { $0.downloads > 0 }.sorted { $0.downloads > $1.downloads }
-        PushedScreen(title: "Territories", subtitle: "First-time downloads, last \(days) days") {
+        PushedScreen(title: String(localized: "Territories"), subtitle: String(localized: "First-time downloads, last \(days) days")) {
             ThemedWorldMap(values: Dictionary(uniqueKeysWithValues: d.rows.map { ($0.code, $0.downloads) }),
                            bins: ThemedWorldMap.bins(top.first?.downloads ?? 0))
                 .frame(height: 190).phoneCard(padding: 12)
             VStack(spacing: 0) {
-                fact("Largest", d.largest.map { "\(Territories.flag($0.code)) \($0.name)" }, d.largest.map { "\(Num.int($0.downloads)) · \(Num.pct($0.share))" })
+                fact(String(localized: "Largest"), d.largest.map { "\(Territories.flag($0.code)) \($0.name)" }, d.largest.map { "\(Num.int($0.downloads)) · \(Num.pct($0.share))" })
                 Divider().overlay(t.sep).padding(.leading, 16)
-                fact("Fastest growing", d.fastest.map { "\(Territories.flag($0.row.code)) \($0.row.name)" }, d.fastest?.change.text)
+                fact(String(localized: "Fastest growing"), d.fastest.map { "\(Territories.flag($0.row.code)) \($0.row.name)" }, d.fastest?.change.text)
                 Divider().overlay(t.sep).padding(.leading, 16)
-                fact("Best conversion", d.bestConversion.map { "\(Territories.flag($0.code)) \($0.name)" }, d.bestConversion?.conversion.map(Num.pct))
+                fact(String(localized: "Best conversion"), d.bestConversion.map { "\(Territories.flag($0.code)) \($0.name)" }, d.bestConversion?.conversion.map(Num.pct))
             }
             .phoneCard(padding: 0)
-            PhoneSectionTitle(title: "Top 5")
+            PhoneSectionTitle(title: String(localized: "Top 5"))
             VStack(spacing: 0) {
                 ForEach(Array(top.prefix(5).enumerated()), id: \.element.id) { i, r in
                     HStack(spacing: 10) {

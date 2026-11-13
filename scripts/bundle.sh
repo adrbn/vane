@@ -20,6 +20,10 @@ rm -rf build/icon && mkdir -p build/icon
 xcrun actool Resources/AppIcon.icon --compile build/icon --platform macosx --minimum-deployment-target 26.0 \
   --app-icon AppIcon --output-partial-info-plist build/icon/partial.plist >/dev/null
 cp build/icon/Assets.car build/icon/AppIcon.icns "$APP/Contents/Resources/"
+# Translations: the string catalog compiles into one .lproj per language (scripts/strings.sh refreshes it).
+rm -rf build/strings && mkdir -p build/strings
+xcrun xcstringstool compile Resources/Localizable.xcstrings --output-directory build/strings
+cp -R build/strings/*.lproj "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -27,7 +31,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <plist version="1.0"><dict>
   <key>CFBundleIdentifier</key><string>dev.almanac.app</string>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
-  <key>CFBundleLocalizations</key><array><string>en</string></array>
+  <key>CFBundleLocalizations</key><array><string>en</string><string>fr</string><string>es</string><string>it</string></array>
   <key>CFBundleName</key><string>Vane</string>
   <key>CFBundleDisplayName</key><string>Vane</string>
   <key>CFBundleExecutable</key><string>Almanac</string>

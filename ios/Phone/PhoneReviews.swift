@@ -14,11 +14,11 @@ struct PhoneReviews: View {
         let all = model.store.reviews(app)
         let versions = model.store.versions(app)
         let shown = needsReply ? all.filter { $0.response == nil } : all
-        PhoneScreen(title: "Reviews", subtitle: "\(all.count) review\(all.count == 1 ? "" : "s") · \(all.filter { $0.response == nil }.count) without a reply") {
+        PhoneScreen(title: "Reviews", subtitle: [String(localized: "\(all.count) reviews"), String(localized: "\(all.filter { $0.response == nil }.count) without a reply")].joined(separator: " · ")) {
             summary(all)
-            PhoneSegments(options: [(false, "All"), (true, "Needs reply")], selection: $needsReply)
+            PhoneSegments(options: [(false, String(localized: "All")), (true, String(localized: "Needs reply"))], selection: $needsReply)
             if shown.isEmpty {
-                Text(needsReply ? "Every review has a reply." : "No reviews yet.").font(t.font(13)).foregroundStyle(t.label2).phoneCard()
+                Text(needsReply ? String(localized: "Every review has a reply.") : String(localized: "No reviews yet.")).font(t.font(13)).foregroundStyle(t.label2).phoneCard()
             }
             ForEach(shown) { r in
                 ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying)
@@ -79,7 +79,7 @@ struct PhoneReplySheet: View {
                 Spacer()
                 Text("Reply").font(t.font(17, .bold))
                 Spacer()
-                Button(busy ? "Sending…" : "Send") { Task { await send() } }
+                Button(busy ? String(localized: "Sending…") : String(localized: "Send")) { Task { await send() } }
                     .font(t.font(16, .semibold)).foregroundStyle(t.accentText)
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
@@ -90,7 +90,7 @@ struct PhoneReplySheet: View {
                     Text(review.title).font(t.font(14, .semibold)).lineLimit(1)
                 }
                 Text(review.body).font(t.font(13)).foregroundStyle(t.label2).lineLimit(4)
-                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { ["Version \($0)"] } ?? []))
+                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { [String(localized: "Version \($0)")] } ?? []))
                     .joined(separator: " · ")).font(t.font(11)).foregroundStyle(t.label3)
             }
             .phoneCard(padding: 14)

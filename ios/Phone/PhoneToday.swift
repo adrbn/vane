@@ -18,7 +18,7 @@ extension View {
             case .territories(let days): PhoneTerritories(days: days)
             case .report: PhoneReport()
             case .settings: PhoneSettings()
-            case .about: PushedScreen(title: "About", subtitle: "") { AboutView() }
+            case .about: PushedScreen(title: String(localized: "About"), subtitle: "") { AboutView() }
             }
         }
     }
@@ -34,7 +34,7 @@ struct TodayScreen: View {
         let _ = model.revision
         let app = model.appId ?? ""
         let insights = model.insights()
-        PhoneScreen(title: "Today", subtitle: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(Locale(identifier: "en_US")))) {
+        PhoneScreen(title: String(localized: "Today"), subtitle: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(.current))) {
             NavigationLink(value: PhoneRoute.settings) { PhoneIconLabel(symbol: "gearshape") }.buttonStyle(.plain)
         } content: {
             if model.isDemo { PhoneDemoNote() }
@@ -52,7 +52,7 @@ struct TodayScreen: View {
                 .phoneCard(padding: 14)
             }
             .buttonStyle(.plain)
-            PhoneSectionTitle(title: "Insights", detail: insights.isEmpty ? "" : "\(insights.count)")
+            PhoneSectionTitle(title: String(localized: "Insights"), detail: insights.isEmpty ? "" : "\(insights.count)")
             if insights.isEmpty {
                 Text("Nothing new. Vane writes one when a number moves outside its usual range.")
                     .font(t.font(13)).foregroundStyle(t.label2).phoneCard()
@@ -72,7 +72,7 @@ struct TodayScreen: View {
             let best = prior.allSatisfy { $0.value < last.value } && prior.count > 6
             let c = weekAgo.map { Change(.firstDownloads, value: last.value, previous: $0.value, arrows: true) }
             NavigationLink(value: PhoneRoute.metric(.firstDownloads, days: 28)) {
-                PhoneHero(label: "First-time downloads · \(InsightCardView.when(last.day))",
+                PhoneHero(label: String(localized: "First-time downloads · \(InsightCardView.when(last.day))"),
                           value: Num.int(last.value),
                           caption: best ? Text("Best day ever").fontWeight(.bold)
                               : c.map { Text($0.text).fontWeight(.bold) + Text(" on the same day last week") } ?? Text(AppStoreData.md(last.day)),
@@ -153,17 +153,17 @@ struct PhoneInsightCard: View {
 
     @ViewBuilder private var action: some View {
         switch insight.action {
-        case .fixKeywords: SmallButton(label: "Fix in Listing", prominent: true) { tab = .listing }
-        case .openReport: NavigationLink(value: PhoneRoute.report) { linkLabel("Read Report") }.buttonStyle(.plain)
+        case .fixKeywords: SmallButton(label: String(localized: "Fix in Listing"), prominent: true) { tab = .listing }
+        case .openReport: NavigationLink(value: PhoneRoute.report) { linkLabel(String(localized: "Read Report")) }.buttonStyle(.plain)
         case .openMetric(let m):
             switch m {
-            case "listing": SmallButton(label: "Open Listing") { tab = .listing }
-            case "reviews": SmallButton(label: "Open Reviews") { tab = .reviews }
-            case "territories": NavigationLink(value: PhoneRoute.territories(days: 28)) { linkLabel("Open") }.buttonStyle(.plain)
-            case "sales": SmallButton(label: "Open Sales") { tab = .appStore }
+            case "listing": SmallButton(label: String(localized: "Open Listing")) { tab = .listing }
+            case "reviews": SmallButton(label: String(localized: "Open Reviews")) { tab = .reviews }
+            case "territories": NavigationLink(value: PhoneRoute.territories(days: 28)) { linkLabel(String(localized: "Open")) }.buttonStyle(.plain)
+            case "sales": SmallButton(label: String(localized: "Open Sales")) { tab = .appStore }
             default:
                 if let metric = Metric(rawValue: m) {
-                    NavigationLink(value: PhoneRoute.metric(metric, days: 28)) { linkLabel("Open") }.buttonStyle(.plain)
+                    NavigationLink(value: PhoneRoute.metric(metric, days: 28)) { linkLabel(String(localized: "Open")) }.buttonStyle(.plain)
                 }
             }
         case nil: EmptyView()
@@ -186,23 +186,23 @@ struct PhoneReport: View {
     var body: some View {
         let app = model.appId ?? ""
         let r = report(app)
-        PushedScreen(title: "\(period.title) report", subtitle: r.map { "\($0.appName) · \($0.periodLabel)" } ?? "") {
+        PushedScreen(title: period.reportTitle, subtitle: r.map { "\($0.appName) · \($0.periodLabel)" } ?? "") {
             PhoneSegments(options: ReportPeriod.allCases.map { ($0, $0.title) }, selection: $period)
             if let r {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible())], spacing: 12) {
                     ForEach(r.headline.prefix(4)) { k in
                         PhoneTile(metric: k.metric, label: k.metric.title, value: Num.value(k.metric, k.value),
                                   change: k.previous > 0 ? Change(k.metric, value: k.value, previous: k.previous) : nil,
-                                  note: k.previous > 0 ? nil : "No earlier data")
+                                  note: k.previous > 0 ? nil : String(localized: "No earlier data"))
                     }
                 }
-                block("Summary", [r.summary])
+                block(String(localized: "Summary"), [r.summary])
                 if let first = r.headline.first, first.spark.contains(where: { $0.value > 0 }) {
                     PhoneBars(points: first.spark, color: t.color(first.metric)).frame(height: 120).phoneCard()
                 }
                 ForEach(Array(r.sections.enumerated()), id: \.offset) { _, s in block(s.heading, s.paragraphs) }
             } else {
-                Text("Not enough data for a full \(period.rawValue) yet.").font(t.font(13)).foregroundStyle(t.label2).phoneCard()
+                (period == .week ? Text("Not enough data for a full week yet.") : period == .month ? Text("Not enough data for a full month yet.") : Text("Not enough data for a full year yet.")).font(t.font(13)).foregroundStyle(t.label2).phoneCard()
             }
         }
     }

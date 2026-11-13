@@ -18,7 +18,7 @@ struct LegacyListingView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Picker("Locale", selection: $locale) {
-                            ForEach(all) { Text(Locale(identifier: "en").localizedString(forIdentifier: $0.locale) ?? $0.locale).tag($0.locale) }
+                            ForEach(all) { Text(Locale.current.localizedString(forIdentifier: $0.locale) ?? $0.locale).tag($0.locale) }
                         }
                         .labelsHidden().fixedSize()
                         Spacer()
@@ -26,10 +26,10 @@ struct LegacyListingView: View {
                             model.ask("Review my App Store listing for \(Locale(identifier: "en").localizedString(forIdentifier: l.locale) ?? l.locale). What would you change in name, subtitle and keywords to rank for more searches? Be specific.")
                         }
                     }
-                    field("Name", l.name, limit: 30)
-                    field("Subtitle", l.subtitle, limit: 30)
+                    field(String(localized: "Name"), l.name, limit: 30)
+                    field(String(localized: "Subtitle"), l.subtitle, limit: 30)
                     VStack(alignment: .leading, spacing: 6) {
-                        budgetHeader("Keywords", count: keywords.count, limit: 100)
+                        budgetHeader(String(localized: "Keywords"), count: keywords.count, limit: 100)
                         TextField("keyword,keyword", text: $keywords, axis: .vertical).lineLimit(2...4).textFieldStyle(.roundedBorder)
                         let repeats = repeated(l, keywords)
                         if !repeats.isEmpty {
@@ -39,19 +39,19 @@ struct LegacyListingView: View {
                         HStack {
                             if let message { Text(message).font(.caption).foregroundStyle(.secondary) }
                             Spacer()
-                            Button(model.isDemo ? "Save (demo)" : "Save to App Store Connect") { Task { await save(l) } }
+                            Button(model.isDemo ? String(localized: "Save (demo)") : String(localized: "Save to App Store Connect")) { Task { await save(l) } }
                                 .disabled(busy || keywords == l.keywords || keywords.count > 100)
                         }
                     }
                     .card()
-                    field("Promotional text", l.promoText, limit: 170)
-                    field("Description", l.description, limit: 4000)
+                    field(String(localized: "Promotional text"), l.promoText, limit: 170)
+                    field(String(localized: "Description"), l.description, limit: 4000)
                 }
                 .padding(20)
                 .onAppear { if locale.isEmpty || keywords.isEmpty { locale = l.locale; keywords = l.keywords } }
                 .onChange(of: locale) { keywords = all.first { $0.locale == locale }?.keywords ?? "" ; message = nil }
             } else {
-                EmptyHint(title: "No listing yet", message: "Refresh to import your App Store listing.", symbol: "text.page").padding(.top, 60)
+                EmptyHint(title: String(localized: "No listing yet"), message: String(localized: "Refresh to import your App Store listing."), symbol: "text.page").padding(.top, 60)
             }
         }
         .onAppear {
@@ -72,7 +72,7 @@ struct LegacyListingView: View {
     private func field(_ title: String, _ value: String, limit: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             budgetHeader(title, count: value.count, limit: limit)
-            Text(value.isEmpty ? "Empty" : value).foregroundStyle(value.isEmpty ? .tertiary : .primary).textSelection(.enabled)
+            Text(value.isEmpty ? String(localized: "Empty") : value).foregroundStyle(value.isEmpty ? .tertiary : .primary).textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .card()
@@ -90,7 +90,7 @@ struct LegacyListingView: View {
             if let s = model.syncer { try await s.updateKeywords(l, keywords: keywords) }
             else { var c = l; c.keywords = keywords; try model.store.upsert(listing: c) }
             model.runEngine()
-            message = "Saved."
+            message = String(localized: "Saved.")
         } catch { message = error.localizedDescription }
     }
 }

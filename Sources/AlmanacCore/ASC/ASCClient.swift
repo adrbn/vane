@@ -20,10 +20,10 @@ public enum ASCError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .badKey: "The private key couldn't be read. Paste the full contents of the AuthKey_XXXX.p8 file."
-        case .http(let code, let msg): "App Store Connect returned \(code): \(msg)"
-        case .notFound: "No report is available for that day yet."
-        case .decoding(let m): "Unexpected response: \(m)"
+        case .badKey: String(localized: "The private key couldn't be read. Paste the full contents of the AuthKey_XXXX.p8 file.")
+        case .http(let code, let msg): String(localized: "App Store Connect returned \(code): \(msg)")
+        case .notFound: String(localized: "No report is available for that day yet.")
+        case .decoding(let m): String(localized: "Unexpected response: \(m)")
         }
     }
 }

@@ -10,11 +10,11 @@ struct DataArrivingView: View {
         let app = model.appId ?? ""
         // Days covered by the sales reports, read from what was actually stored.
         let salesDays = model.store.lastDay(app, .firstDownloads).map { last in model.store.series(app, .firstDownloads, from: "2000-01-01", to: last).map(\.day) } ?? []
-        Screen(title: "App Store", subtitle: "\(model.app?.name ?? "") · Waiting for Apple", inspector: false) {} content: {
+        Screen(title: String(localized: "App Store"), subtitle: String(localized: "\(model.app?.name ?? "") · Waiting for Apple"), inspector: false) {} content: {
             VStack(alignment: .leading, spacing: 24) {
                 status(salesDays)
-                section("Available now", "Sales reports go back a year, so these were imported right away") { sales(app) }
-                section("Waiting for Apple", "Each metric fills in with the first analytics report") { pending }
+                section(String(localized: "Available now"), String(localized: "Sales reports go back a year, so these were imported right away")) { sales(app) }
+                section(String(localized: "Waiting for Apple"), String(localized: "Each metric fills in with the first analytics report")) { pending }
             }
         }
     }
@@ -25,18 +25,18 @@ struct DataArrivingView: View {
                 Image(systemName: "clock").font(.system(size: 22, weight: .semibold)).foregroundStyle(t.accentText)
                     .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text.tracked("Your first App Store report arrives in 24–48 hours", -0.26).font(t.font(26, .bold))
-                    Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? "this app"), checks for it in the background and notifies you when it lands.")
+                    Text.tracked(String(localized: "Your first App Store report arrives in 24–48 hours"), -0.26).font(t.font(26, .bold))
+                    Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? String(localized: "this app")), checks for it in the background and notifies you when it lands.")
                         .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 620, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
+                SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
             }
             HStack(alignment: .top, spacing: 16) {
-                step("Key verified", model.lastSync.map { "Last refresh \($0.formatted(.relative(presentation: .named)))" } ?? "Connected", .done)
-                step("Sales history imported", salesDays.isEmpty ? "Nothing yet" : "\(salesDays.count) days, \(AppStoreData.md(salesDays.first!)) – \(AppStoreData.md(salesDays.last!))", salesDays.isEmpty ? .wait : .done)
-                step("Analytics report requested", "Apple is preparing it", .wait)
-                step("First insights", "After 7 days of analytics", .todo)
+                step(String(localized: "Key verified"), model.lastSync.map { String(localized: "Last refresh \($0.formatted(.relative(presentation: .named)))") } ?? String(localized: "Connected"), .done)
+                step(String(localized: "Sales history imported"), salesDays.isEmpty ? String(localized: "Nothing yet") : String(localized: "\(salesDays.count) days, \(AppStoreData.md(salesDays.first!)) – \(AppStoreData.md(salesDays.last!))"), salesDays.isEmpty ? .wait : .done)
+                step(String(localized: "Analytics report requested"), String(localized: "Apple is preparing it"), .wait)
+                step(String(localized: "First insights"), String(localized: "After 7 days of analytics"), .todo)
             }
             .padding(.leading, 72)
         }
@@ -79,15 +79,15 @@ struct DataArrivingView: View {
         // Compare only when the previous 28 days are fully covered, never against the launch weeks.
         let full = model.store.series(app, .firstDownloads, from: "2000-01-01", to: to).first.map { $0.day <= pFrom } ?? false
         return HStack(spacing: 32) {
-            kpi("First-time downloads, last 28 days", .firstDownloads, app, from, to, pFrom, pTo, full)
-            kpi("Redownloads", .redownloads, app, from, to, pFrom, pTo, full)
-            kpi("Proceeds", .proceeds, app, from, to, pFrom, pTo, full)
+            kpi(String(localized: "First-time downloads, last 28 days"), .firstDownloads, app, from, to, pFrom, pTo, full)
+            kpi(String(localized: "Redownloads"), .redownloads, app, from, to, pFrom, pTo, full)
+            kpi(String(localized: "Proceeds"), .proceeds, app, from, to, pFrom, pTo, full)
             ZStack {
                 LinePath(values: spark, floorZero: true, closed: true).fill(t.accent.opacity(0.1))
                 Spark(values: spark, color: t.accent)
             }
             .frame(height: 56)
-            SmallButton(label: "Open Sales") { model.section = .sales }
+            SmallButton(label: String(localized: "Open Sales")) { model.section = .sales }
         }
         .themedCard(padding: 20)
     }
@@ -98,7 +98,7 @@ struct DataArrivingView: View {
         return VStack(alignment: .leading, spacing: 2) {
             Text(label).font(t.font(13)).foregroundStyle(t.label2)
             Text.tracked(m == .proceeds ? m.format(v) : Num.int(v), -0.6).font(t.numFont).monospacedDigit()
-            (Text(c.text).foregroundStyle(c.color(t)).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : " vs \(m == .proceeds ? m.format(p) : Num.int(p))").foregroundStyle(t.label2))
+            (Text(c.text).foregroundStyle(c.color(t)).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : String(localized: " vs \(m == .proceeds ? m.format(p) : Num.int(p))")).foregroundStyle(t.label2))
                 .font(t.font(13)).monospacedDigit()
         }
         .fixedSize()
@@ -137,17 +137,17 @@ struct AnalyticsPending: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
     let compact: Bool
-    static let expected = "Expected in 24–48 hours"
+    static let expected = String(localized: "Expected in 24–48 hours")
 
     var body: some View {
         // Apple publishes each analytics report on its own schedule: sessions often land days before impressions.
         let sessions = model.store.series(model.appId ?? "", .sessions).first?.day
-        let title = Text(sessions == nil ? "App Store analytics arrive in 24–48 hours" : "Impressions and conversion are still on their way").font(t.font(compact ? 15 : 17, .bold))
+        let title = Text(sessions == nil ? String(localized: "App Store analytics arrive in 24–48 hours") : String(localized: "Impressions and conversion are still on their way")).font(t.font(compact ? 15 : 17, .bold))
         let sub = Text(sessions == nil
-            ? "Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report."
-            : "Apple’s sessions report has arrived and is in Usage. Its App Store engagement report, which holds impressions and page views, usually follows within a few days.")
+            ? String(localized: "Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report.")
+            : String(localized: "Apple’s sessions report has arrived and is in Usage. Its App Store engagement report, which holds impressions and page views, usually follows within a few days."))
             .font(t.font(13)).foregroundStyle(t.label2)
-        let check = SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
+        let check = SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
         let icon = Image(systemName: "clock").font(.system(size: 15, weight: .semibold)).foregroundStyle(t.accentText)
             .frame(width: 36, height: 36).background(t.accentSoft, in: RoundedRectangle(cornerRadius: t.inner(14), style: .continuous))
         if compact {
@@ -168,10 +168,10 @@ struct AnalyticsPending: View {
                 }
                 Spacer(minLength: 16)
                 HStack(spacing: 16) {
-                    step("Sales history imported", true)
-                    if sessions == nil { step("Analytics report requested", true) }
-                    step(sessions.map { "Sessions since \(AppStoreData.md($0))" } ?? "First analytics report", sessions != nil)
-                    if sessions != nil { step("Impressions report", false) }
+                    step(String(localized: "Sales history imported"), true)
+                    if sessions == nil { step(String(localized: "Analytics report requested"), true) }
+                    step(sessions.map { String(localized: "Sessions since \(AppStoreData.md($0))") } ?? String(localized: "First analytics report"), sessions != nil)
+                    if sessions != nil { step(String(localized: "Impressions report"), false) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

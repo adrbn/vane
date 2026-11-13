@@ -102,7 +102,7 @@ struct AppPicker: View {
         } label: {
             HStack(spacing: 8) {
                 if let app = model.app { AppIconView(app: app, size: 26) }
-                Text(model.app?.name ?? "No app").font(t.font(14, .semibold)).lineLimit(1)
+                Text(model.app?.name ?? String(localized: "No app")).font(t.font(14, .semibold)).lineLimit(1)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(t.label2)
             }
             .foregroundStyle(t.label)

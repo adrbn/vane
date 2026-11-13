@@ -120,7 +120,7 @@ struct ReviewsView: View {
                 }
                 .foregroundStyle(snap.tint)
                 Spacer(minLength: 4)
-                Text(snap.needsReply == 0 ? "Every review answered" : "\(snap.needsReply) waiting for a reply")
+                Text(snap.needsReply == 0 ? String(localized: "Every review answered") : String(localized: "\(snap.needsReply) waiting for a reply"))
                     .font(.caption.weight(.semibold)).foregroundStyle(snap.needsReply == 0 ? Color.secondary : snap.tint)
                 Text("\(snap.reviews) reviews").font(.caption2).foregroundStyle(.secondary)
             }

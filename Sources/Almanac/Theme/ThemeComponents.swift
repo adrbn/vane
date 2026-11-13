@@ -59,7 +59,7 @@ extension Screen {
     @ViewBuilder private var ask: some View {
         RefreshButton()
         if inspector {
-            GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
+            GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: String(localized: "Ask about this screen")) { model.chatOpen.toggle() }
         }
     }
 }
@@ -147,7 +147,7 @@ struct RefreshButton: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
     var body: some View {
-        GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : "Refresh Now (⌘R)") { Task { await model.refresh() } }
+        GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : String(localized: "Refresh Now (⌘R)")) { Task { await model.refresh() } }
             .overlay {
                 TimelineView(.animation(paused: !model.syncing)) { tl in
                     Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)
@@ -271,20 +271,21 @@ struct Change {
         if metric.isRate {
             let pts = (value - previous) * 100
             up = pts >= 0; flat = abs(pts) < 0.05
-            text = flat ? "No change" : "\(arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−"))\(String(format: "%.1f", abs(pts))) pts"
+            let sign = arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−")
+            text = flat ? String(localized: "No change") : String(localized: "\(sign)\(String(format: "%.1f", abs(pts))) pts")
         } else if previous > 0 {
             let r = value / previous - 1
             up = r >= 0; flat = abs(r) < 0.0005
-            text = flat ? "No change" : "\(arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−"))\(String(format: "%.1f", abs(r) * 100))%"
+            text = flat ? String(localized: "No change") : "\(arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−"))\(String(format: "%.1f", abs(r) * 100))%"
         } else {
-            up = true; flat = true; text = "No earlier data"
+            up = true; flat = true; text = String(localized: "No earlier data")
         }
     }
 
     /// The earlier period isn't fully covered by history: say so instead of a misleading percentage.
     static let noHistory: Change = {
         var c = Change(.downloads, value: 0, previous: 0)
-        c.text = "No earlier data"
+        c.text = String(localized: "No earlier data")
         return c
     }()
 
@@ -295,7 +296,7 @@ struct Change {
 // MARK: - Compact number formatting used across the redesign (5,412 · 48.2K · 1.3M).
 
 enum Num {
-    static func int(_ v: Double) -> String { Int(v.rounded()).formatted(.number.locale(Locale(identifier: "en_US"))) }
+    static func int(_ v: Double) -> String { Int(v.rounded()).formatted(.number.locale(Locale.current)) }
     static func k(_ v: Double) -> String {
         if v >= 1e6 { return String(format: "%.1fM", v / 1e6) }
         if v >= 1e4 { return String(format: "%.1fK", v / 1e3) }

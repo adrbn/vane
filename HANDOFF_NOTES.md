@@ -96,6 +96,16 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - One icon for both apps: `Resources/AppIcon.icon` (the iOS target points at it). iOS can't read its own Icon Composer icon back, so About shows `ios/Phone/Resources/AboutIcon.png`; re-render it when the icon changes: `ictool Resources/AppIcon.icon --export-image --output-file ios/Phone/Resources/AboutIcon.png --platform iOS --rendition Default --width 128 --height 128 --scale 2` (ictool lives in Icon Composer.app/Contents/Executables).
 - Insights: categories can be turned off (Settings on iPhone, the Insights menu on Mac), stored in `insights.muted`; the background agent skips them too.
 
+## Localization
+
+- English, French, Spanish, Italian. One String Catalog, `Resources/Localizable.xcstrings`, shared by the Mac app, the iPhone app and the widgets.
+- Rule: a user-visible literal that ends up in a `String` goes through `String(localized: "…")`. Literals in `Text("…")`, `Button("…")` and other `LocalizedStringKey` spots are picked up on their own. Counts use one key (`"\(n) apps"`) with plural variations in the catalog, never two literals.
+- `scripts/strings.sh` extracts every string from both builds and syncs the catalog. New keys arrive untranslated; translate them before a release.
+- `scripts/bundle.sh` compiles the catalog into `*.lproj` in the Mac bundle; Xcode does it for iOS.
+- Test a language: `open -n build/Vane.app --args --demo -theme blocks -AppleLanguages "(fr)"`.
+- Insights says « Observations » in French, "Hallazgos" in Spanish. Translations must keep `claude /login` intact (the inspector detects it).
+- Known gaps: review translation still targets English, stored insights keep the language they were written in.
+
 ## Launch flags (screenshots and testing)
 `open -n build/Vane.app --args …`
 

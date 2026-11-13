@@ -60,7 +60,7 @@ struct ThemePicker: View {
                             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(on ? t.accent : t.sep2, lineWidth: on ? 2 : 1))
                         VStack(alignment: .leading, spacing: 1) {
                             Text(theme.name).font(t.font(12, .semibold)).foregroundStyle(on ? t.label : t.label2)
-                            Text(theme.scheme == .dark ? "Dark" : "Light").font(t.font(11)).foregroundStyle(t.label3)
+                            (theme.scheme == .dark ? Text("Dark") : Text("Light")).font(t.font(11)).foregroundStyle(t.label3)
                         }
                         .padding(.horizontal, 2)
                     }
@@ -78,7 +78,7 @@ struct ThemePicker: View {
 struct ConnectForm: View, SettingsBlocks {
     @Environment(AppModel.self) private var model
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
-    var caption: String? = "Create a key with the Sales and Reports role in Users and Access → Integrations."
+    var caption: String? = String(localized: "Create a key with the Sales and Reports role in Users and Access → Integrations.")
     /// Called once the key is checked and saved, before the import finishes.
     var onConnected: () -> Void = {}
     @State private var creds = Keychain.credentials()
@@ -93,33 +93,33 @@ struct ConnectForm: View, SettingsBlocks {
         let saved = Keychain.credentials()
         let dirty = creds != saved
         group(t, "", caption) {
-            row(t, "Issuer ID") { input(t, $creds.issuerId, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", width: 300) }
-            row(t, "Key ID") { input(t, $creds.keyId, "e.g. 2X9R4HXF34") }
-            row(t, "Private key", creds.privateKeyPEM.isEmpty ? "Drop the AuthKey .p8 file here, or choose it." : nil) {
+            row(t, String(localized: "Issuer ID")) { input(t, $creds.issuerId, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", width: 300) }
+            row(t, String(localized: "Key ID")) { input(t, $creds.keyId, String(localized: "e.g. 2X9R4HXF34")) }
+            row(t, String(localized: "Private key"), creds.privateKeyPEM.isEmpty ? String(localized: "Drop the AuthKey .p8 file here, or choose it.") : nil) {
                 if !creds.privateKeyPEM.isEmpty {
                     VStack(alignment: .trailing, spacing: 1) {
-                        Text(creds.keyId.isEmpty ? "Loaded" : "AuthKey_\(creds.keyId).p8").font(t.font(12))
-                        Text(dirty ? "Saved when you connect" : "Stored in your Keychain").font(t.font(11)).foregroundStyle(t.label2)
+                        (creds.keyId.isEmpty ? Text("Loaded") : Text(verbatim: "AuthKey_\(creds.keyId).p8")).font(t.font(12))
+                        (dirty ? Text("Saved when you connect") : Text("Stored in your Keychain")).font(t.font(11)).foregroundStyle(t.label2)
                     }
                 }
-                SmallButton(label: "Choose File…") { importing = true }
+                SmallButton(label: String(localized: "Choose File…")) { importing = true }
             }
             .background(dropping ? t.accentSoft : .clear)
-            row(t, "Vendor number") { input(t, $creds.vendorNumber, "e.g. 87654321") }
+            row(t, String(localized: "Vendor number")) { input(t, $creds.vendorNumber, String(localized: "e.g. 87654321")) }
             HStack(spacing: 8) {
                 Image(systemName: status?.error == true ? "xmark.circle.fill" : saved.isComplete && !dirty ? "checkmark.circle.fill" : "circle.dashed")
                     .font(.system(size: 15)).foregroundStyle(status?.error == true ? t.neg : saved.isComplete && !dirty ? t.pos : t.label3)
                 connectionText(t, saved: saved, dirty: dirty)
                 Spacer(minLength: 8)
-                if !model.isDemo && !creds.isComplete { SmallButton(label: "Show Demo Data") { model.loadDemo() } }
-                SmallButton(label: testing ? "Checking…" : dirty ? "Save and Connect" : "Test Connection", prominent: dirty, busy: testing) { Task { await save() } }
+                if !model.isDemo && !creds.isComplete { SmallButton(label: String(localized: "Show Demo Data")) { model.loadDemo() } }
+                SmallButton(label: testing ? String(localized: "Checking…") : dirty ? String(localized: "Save and Connect") : String(localized: "Test Connection"), prominent: dirty, busy: testing) { Task { await save() } }
                     .disabled(!creds.isComplete).opacity(!creds.isComplete ? 0.5 : 1)
             }
             .padding(.horizontal, 12).frame(minHeight: 44)
             #if os(macOS)
             if saved.isComplete {
-                row(t, "Vane on iPhone", "Shows a QR code the iPhone's Camera can scan to connect with this key.") {
-                    SmallButton(label: "Show Setup Code…") { showingQR = true }
+                row(t, String(localized: "Vane on iPhone"), String(localized: "Shows a QR code the iPhone's Camera can scan to connect with this key.")) {
+                    SmallButton(label: String(localized: "Show Setup Code…")) { showingQR = true }
                 }
             }
             #endif
@@ -146,8 +146,8 @@ struct ConnectForm: View, SettingsBlocks {
         } else if dirty {
             text = Text("Unsaved changes").font(t.font(12, .semibold))
         } else {
-            let when = model.lastSync.map { " · updated \($0.formatted(.relative(presentation: .named).locale(Locale(identifier: "en_US"))))" } ?? ""
-            text = Text("Connected").font(t.font(12, .semibold)) + Text("\(when) · \(model.apps.count) app\(model.apps.count == 1 ? "" : "s")").foregroundStyle(t.label2)
+            let when = model.lastSync.map { String(localized: " · updated \($0.formatted(.relative(presentation: .named).locale(Locale.current)))") } ?? ""
+            text = Text("Connected").font(t.font(12, .semibold)) + Text("\(when) · \(model.apps.count) apps").foregroundStyle(t.label2)
         }
         return text.font(t.font(12)).foregroundStyle(status?.error == true ? t.neg : t.label).lineLimit(2)
     }
@@ -158,7 +158,7 @@ struct ConnectForm: View, SettingsBlocks {
         do {
             _ = try await ASCClient(credentials: creds).json("v1/apps", query: ["limit": "1"])
             Keychain.save(creds)
-            status = ("Connected. Importing your data…", false)
+            status = (String(localized: "Connected. Importing your data…"), false)
             onConnected()
             await model.refresh()
             status = model.syncErrors.isEmpty ? nil : (model.syncErrors.joined(separator: "\n"), true)
@@ -173,18 +173,18 @@ struct RefreshSettings: View, SettingsBlocks {
     @AppStorage("notifyInsights") private var notify = true
     @State private var agentOn = BackgroundAgent.isEnabled
     @State private var error: String?
-    var title = "Refresh"
+    var title = String(localized: "Refresh")
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)
         group(t, title) {
-            row(t, "Refresh in the background", error ?? "Every 6 hours, even when the window is closed. Listed in Login Items.", warn: error != nil) {
+            row(t, String(localized: "Refresh in the background"), error ?? String(localized: "Every 6 hours, even when the window is closed. Listed in Login Items."), warn: error != nil) {
                 Toggle("", isOn: $agentOn).labelsHidden().toggleStyle(.switch)
                     .onChange(of: agentOn) { _, on in
                         do { try BackgroundAgent.setEnabled(on); error = nil } catch { self.error = error.localizedDescription; agentOn = BackgroundAgent.isEnabled }
                     }
             }
-            row(t, "Notify me about new insights", "Milestones and anything that needs attention, found by a background refresh.") {
+            row(t, String(localized: "Notify me about new insights"), String(localized: "Milestones and anything that needs attention, found by a background refresh.")) {
                 Toggle("", isOn: $notify).labelsHidden().toggleStyle(.switch).disabled(!agentOn)
             }
         }

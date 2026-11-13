@@ -11,7 +11,7 @@ struct InspectorPanel: View {
     @State private var input = ""
     @State private var busy = false
 
-    private let starters = ["Explain this to me", "What changed recently, and why?", "What should I do next?"]
+    private let starters = [String(localized: "Explain this to me"), String(localized: "What changed recently, and why?"), String(localized: "What should I do next?")]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -22,9 +22,9 @@ struct InspectorPanel: View {
                 }
                 Spacer()
                 if !messages.isEmpty {
-                    iconButton("square.and.pencil", help: "New chat") { messages = [] }
+                    iconButton("square.and.pencil", help: String(localized: "New chat")) { messages = [] }
                 }
-                iconButton("xmark", help: "Close") { model.chatOpen = false }
+                iconButton("xmark", help: String(localized: "Close")) { model.chatOpen = false }
             }
             .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 12)
 
@@ -102,9 +102,9 @@ struct InspectorPanel: View {
         case "error":
             VStack(alignment: .leading, spacing: 8) {
                 Label(m.text, systemImage: "exclamationmark.triangle").font(t.font(13)).foregroundStyle(t.warn)
-                if m.text.contains("signed out") {
+                if m.text.contains("claude /login") {
                     // One click instead of "open Terminal and type this": Terminal runs the CLI's own sign-in.
-                    SmallButton(label: "Sign In in Terminal") {
+                    SmallButton(label: String(localized: "Sign In in Terminal")) {
                         let script = "tell application \"Terminal\"\n activate\n do script \"claude /login\"\nend tell"
                         NSAppleScript(source: script)?.executeAndReturnError(nil)
                     }

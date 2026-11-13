@@ -50,25 +50,25 @@ struct ReportView: View {
         // Title block sits under the traffic lights, on the same centered 880 pt column as the body.
         return HStack(alignment: .center, spacing: 8) {
             VStack(alignment: .leading, spacing: 0) {
-                Text.tracked("\(r.period.title) Report", -0.2).font(t.titleFont).lineLimit(1).frame(height: 26)
-                Text("\(r.appName) · \(r.periodLabel)").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
+                Text.tracked(r.period.reportTitle, -0.2).font(t.titleFont).lineLimit(1).frame(height: 26)
+                Text(verbatim: "\(r.appName) · \(r.periodLabel)").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
             }
             Spacer(minLength: 12)
             GlassSegments(options: ReportPeriod.allCases.map { ($0, $0.title) }, selection: Binding(
                 get: { ref.period },
                 set: { p in ref = complete(ReportRef(appId: ref.appId, period: p, start: Self.start(p, ref.start))); section = "Summary" }))
             GlassGroup {
-                chevron("chevron.left", help: "Previous", enabled: span.map { ref.start > $0.lowerBound } ?? false) { ref = shifted(ref, -1) }
-                chevron("chevron.right", help: "Next", enabled: span.map { end(next) <= $0.upperBound } ?? false) { ref = next }
+                chevron("chevron.left", help: String(localized: "Previous"), enabled: span.map { ref.start > $0.lowerBound } ?? false) { ref = shifted(ref, -1) }
+                chevron("chevron.right", help: String(localized: "Next"), enabled: span.map { end(next) <= $0.upperBound } ?? false) { ref = next }
             }
             GlassGroup {
-                ShareLink(item: r.plainText, subject: Text("\(r.appName) \(r.period.title.lowercased()) report, \(r.periodLabel)")) {
+                ShareLink(item: r.plainText, subject: Text("\(r.appName) · \(r.period.reportTitle), \(r.periodLabel)")) {
                     Label("Share", systemImage: "square.and.arrow.up").labelStyle(.titleAndIcon)
                         .font(t.font(13, .semibold)).foregroundStyle(t.label)
                         .padding(.horizontal, 12).frame(height: 28).contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                GlassItem(label: "Export PDF") { exportPDF(r, span, t) }
+                GlassItem(label: String(localized: "Export PDF")) { exportPDF(r, span, t) }
             }
             .fixedSize()
         }
@@ -155,7 +155,7 @@ struct ReportBody: View {
         VStack(alignment: .leading, spacing: 32) {
             if printable {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(report.appName) · \(report.period.title) Report").font(t.font(22, .bold))
+                    Text("\(report.appName) · \(report.period.reportTitle)").font(t.font(22, .bold))
                     Text(report.periodLabel).font(t.font(13)).foregroundStyle(t.label2)
                 }
             }
@@ -171,7 +171,7 @@ struct ReportBody: View {
                             ForEach(ids, id: \.self) { id in
                                 let on = id == section
                                 Button { jump(id) } label: {
-                                    Text(id).font(t.font(13, on ? .semibold : .regular)).foregroundStyle(on ? t.label : t.label2).lineLimit(2)
+                                    Text(LocalizedStringKey(id)).font(t.font(13, on ? .semibold : .regular)).foregroundStyle(on ? t.label : t.label2).lineLimit(2)
                                         .padding(.horizontal, 10).padding(.vertical, 6).frame(minHeight: 28).frame(maxWidth: .infinity, alignment: .leading)
                                         .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
                                         .contentShape(Rectangle())
@@ -202,13 +202,13 @@ struct ReportBody: View {
     }
 
     private var caption: String {
-        let through = span.map { " Figures through \(Day.date($0.upperBound).formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US"))))." } ?? ""
-        return "Written on this Mac from your App Store Connect data.\(through)"
+        let through = span.map { String(localized: " Figures through \(Day.date($0.upperBound).formatted(.dateTime.month(.abbreviated).day().locale(Locale.current))).") } ?? ""
+        return String(localized: "Written on this Mac from your App Store Connect data.\(through)")
     }
 
     private func block(_ heading: String, _ paragraphs: [String]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(heading).font(t.font(20, .bold))
+            Text(LocalizedStringKey(heading)).font(t.font(20, .bold))
             ForEach(paragraphs, id: \.self) {
                 Text($0).font(t.font(15)).lineSpacing(7).fixedSize(horizontal: false, vertical: true)
             }
@@ -219,7 +219,7 @@ struct ReportBody: View {
     private func kpi(_ k: Report.KPI) -> some View {
         let fill = t.tileFill(k.metric == .proceeds ? .redownloads : k.metric)
         let c = Change(k.metric, value: k.value, previous: k.previous, arrows: false)
-        let vs = c.text == "No earlier data" ? "" : " vs last \(report.period.rawValue)"
+        let vs = c.text == Change.noHistory.text ? "" : (report.period == .week ? String(localized: " vs last week") : report.period == .month ? String(localized: " vs last month") : String(localized: " vs last year"))
         return VStack(alignment: .leading, spacing: 6) {
             Text(MetricCard.label(k.metric)).font(t.font(12, .semibold)).foregroundStyle(fill?.fg2 ?? t.label2).lineLimit(1)
             Text.tracked(Num.value(k.metric, k.value), -0.8).font(t.font(30, t.numWeight)).monospacedDigit()
@@ -235,7 +235,7 @@ struct ReportBody: View {
     private func bars(_ points: [Point], year: Bool) -> some View {
         let peak = points.map(\.value).max() ?? 1
         let few = points.count <= 12
-        let en = Locale(identifier: "en_US")
+        let en = Locale.current
         return HStack(alignment: .bottom, spacing: few ? 8 : 3) {
             ForEach(points) { p in
                 VStack(spacing: 4) {

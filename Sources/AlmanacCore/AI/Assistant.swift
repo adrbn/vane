@@ -20,13 +20,14 @@ public struct Assistant: Sendable {
     Don't repeat the numbers back as a list; use them inside sentences. A value marked "not available yet" is missing, not zero.
     Start with the answer itself. Never say Vane lacks a number that is in the data, and don't send the user to App Store Connect for something the data already shows.
     For App Store Optimization advice, follow Apple's own guidance: name (30 chars) and subtitle (30) and keyword field (100, comma separated, no spaces) are indexed; never repeat a word across them; plurals and the app's category are matched automatically.
+    Answer in the language with code \(Locale.preferredLanguages.first ?? "en").
     """
 
     public enum AssistantError: Error, LocalizedError {
         case notInstalled(String), failed(String)
         public var errorDescription: String? {
             switch self {
-            case .notInstalled(let p): "Couldn't find the \(p) command. Install it and sign in, then try again."
+            case .notInstalled(let p): String(localized: "Couldn't find the \(p) command. Install it and sign in, then try again.")
             case .failed(let m): m
             }
         }
@@ -55,7 +56,7 @@ public struct Assistant: Sendable {
         }
         let out = try await Self.shell(cmd, stdin: prompt)
         let trimmed = out.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { throw AssistantError.failed("\(provider.title) returned nothing. Run `\(provider.rawValue)` once in Terminal to check you're signed in.") }
+        if trimmed.isEmpty { throw AssistantError.failed(String(localized: "\(provider.title) returned nothing. Run `\(provider.rawValue)` once in Terminal to check you're signed in.")) }
         return trimmed
     }
 
@@ -66,16 +67,16 @@ public struct Assistant: Sendable {
         let text = lines.joined(separator: "\n")
         let l = text.lowercased()
         if l.contains("authenticate") || l.contains("oauth") || l.contains("logged out") || l.contains("/login") || l.contains("not logged in") {
-            return "Claude Code is signed out. Run claude /login in Terminal, then try again."
+            return String(localized: "Claude Code is signed out. Run claude /login in Terminal, then try again.")
         }
-        return text.isEmpty ? "The AI command failed without saying why." : String(text.suffix(500))
+        return text.isEmpty ? String(localized: "The AI command failed without saying why.") : String(text.suffix(500))
     }
 
     static func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 
     static func shell(_ command: String, stdin: String) async throws -> String {
         #if !os(macOS)
-        throw AssistantError.failed("AI chat runs in the Mac app, with your own Claude Code or Codex.")
+        throw AssistantError.failed(String(localized: "AI chat runs in the Mac app, with your own Claude Code or Codex."))
         #else
         return try await Task.detached {
             let p = Process()

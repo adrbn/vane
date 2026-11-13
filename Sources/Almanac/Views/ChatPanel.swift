@@ -54,7 +54,7 @@ struct ChatPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Ask about the chart, table or report you're looking at. The answer comes from your own \(AISettings.provider.title) subscription; your data goes straight from this Mac to it.")
                 .font(.callout).foregroundStyle(.secondary)
-            ForEach(["Explain this to me", "What changed recently, and why?", "What should I do next?"], id: \.self) { q in
+            ForEach([String(localized: "Explain this to me"), String(localized: "What changed recently, and why?"), String(localized: "What should I do next?")], id: \.self) { q in
                 Button(q) { send(q) }.linkButtonStyle()
             }
         }

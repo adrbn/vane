@@ -24,23 +24,23 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
 
     public var title: String {
         switch self {
-        case .impressions: "Impressions"
-        case .uniqueImpressions: "Unique impressions"
-        case .pageViews: "Product page views"
-        case .browseImpressions: "Browse impressions"
-        case .searchImpressions: "Search impressions"
-        case .firstDownloads: "First-time downloads"
-        case .redownloads: "Redownloads"
-        case .downloads: "Total downloads"
-        case .sales: "Sales"
-        case .proceeds: "Proceeds"
-        case .activeSubs: "Active subscriptions"
-        case .sessions: "Sessions"
-        case .crashes: "Crashes"
-        case .ratingsTotal: "Total ratings"
-        case .newRatings: "New ratings"
-        case .ttr: "Tap-through rate"
-        case .pageCR: "Page conversion rate"
+        case .impressions: String(localized: "Impressions")
+        case .uniqueImpressions: String(localized: "Unique impressions")
+        case .pageViews: String(localized: "Product page views")
+        case .browseImpressions: String(localized: "Browse impressions")
+        case .searchImpressions: String(localized: "Search impressions")
+        case .firstDownloads: String(localized: "First-time downloads")
+        case .redownloads: String(localized: "Redownloads")
+        case .downloads: String(localized: "Total downloads")
+        case .sales: String(localized: "Sales")
+        case .proceeds: String(localized: "Proceeds")
+        case .activeSubs: String(localized: "Active subscriptions")
+        case .sessions: String(localized: "Sessions")
+        case .crashes: String(localized: "Crashes")
+        case .ratingsTotal: String(localized: "Total ratings")
+        case .newRatings: String(localized: "New ratings")
+        case .ttr: String(localized: "Tap-through rate")
+        case .pageCR: String(localized: "Page conversion rate")
         }
     }
 
@@ -55,8 +55,7 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
 
     public func format(_ v: Double) -> String {
         if isRate { return String(format: "%.2f%%", v * 100) }
-        // The app is English-only: keep 1,234 and $1,234.00 whatever the Mac's region.
-        let en = Locale(identifier: "en_US")
+        let en = Locale.current
         if isCurrency { return v.formatted(.currency(code: "USD").locale(en)) }
         return Int(v.rounded()).formatted(.number.locale(en))
     }
@@ -107,7 +106,18 @@ public struct ListingLocale: Identifiable, Hashable, Sendable {
 public enum InsightCategory: String, CaseIterable, Identifiable, Sendable, Codable {
     case discovery, conversion, revenue, ratings, markets, retention, milestones, reports
     public var id: String { rawValue }
-    public var title: String { rawValue.capitalized }
+    public var title: String {
+        switch self {
+        case .discovery: String(localized: "Discovery")
+        case .conversion: String(localized: "Conversion")
+        case .revenue: String(localized: "Revenue")
+        case .ratings: String(localized: "Ratings")
+        case .markets: String(localized: "Markets")
+        case .retention: String(localized: "Retention")
+        case .milestones: String(localized: "Milestones")
+        case .reports: String(localized: "Reports")
+        }
+    }
     public var symbol: String {
         switch self {
         case .discovery: "magnifyingglass"

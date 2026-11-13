@@ -8,7 +8,7 @@ public enum Territories {
     public static func alpha2(_ code: String) -> String { code.count == 3 ? (a3to2[code] ?? code) : code }
 
     public static func name(_ code: String) -> String {
-        Locale(identifier: "en").localizedString(forRegionCode: alpha2(code)) ?? code
+        Locale.current.localizedString(forRegionCode: alpha2(code)) ?? code
     }
 
     public static func flag(_ code: String) -> String {

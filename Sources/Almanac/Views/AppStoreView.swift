@@ -13,8 +13,8 @@ struct AppStoreView: View {
             DataArrivingView()
         } else {
             let d = AppStoreData(store: model.store, app: app, days: days)
-            Screen(title: "App Store", subtitle: "\(model.app?.name ?? "") · \(d.range)", inspector: true, scrolls: false) {
-                GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
+            Screen(title: String(localized: "App Store"), subtitle: "\(model.app?.name ?? "") · \(d.range)", inspector: true, scrolls: false) {
+                GlassSegments(options: [(7, String(localized: "7 Days")), (28, String(localized: "28 Days")), (90, String(localized: "90 Days")), (365, String(localized: "Year"))], selection: $days)
             } content: {
                 if t.usesRail {
                     VStack(alignment: .leading, spacing: 20) {
@@ -72,14 +72,14 @@ struct AppStoreData {
 
     var range: String {
         guard days == 365 else { return "\(Self.md(from)) – \(Self.md(to))" }
-        let f = Date.FormatStyle.dateTime.month(.abbreviated).day().year().locale(Locale(identifier: "en_US"))
+        let f = Date.FormatStyle.dateTime.month(.abbreviated).day().year().locale(Locale.current)
         return "\(Day.date(from).formatted(f)) – \(Day.date(to).formatted(f))"
     }
-    var per: String { days == 365 ? "year" : "\(days) days" }
+    var per: String { days == 365 ? String(localized: "year") : String(localized: "\(days) days") }
     static func md(_ d: String) -> String { Day.date(d).formatted(.dateTime.month(.abbreviated).day()) }
 
     func shown(_ m: Metric) -> String { has(m) ? Num.value(m, value(m)) : "—" }
-    func was(_ m: Metric) -> String { !has(m) ? AnalyticsPending.expected : hasPrevious(m) ? "was " + Num.value(m, previous(m)) : "" }
+    func was(_ m: Metric) -> String { !has(m) ? AnalyticsPending.expected : hasPrevious(m) ? String(localized: "was \(Num.value(m, previous(m)))") : "" }
 
     func chatContext(_ name: String) -> String {
         "Screen: App Store overview for \(name), \(from) to \(to) vs \(pFrom) to \(pTo)\n" +
@@ -109,7 +109,7 @@ private struct Bento: View {
                 }
                 .frame(minHeight: 436, maxHeight: .infinity)
                 HStack(alignment: .top, spacing: 12) {
-                    MetricCard(d: d, metric: .pageCR, caption: "Page visitors who downloaded").frame(width: col)
+                    MetricCard(d: d, metric: .pageCR, caption: String(localized: "Page visitors who downloaded")).frame(width: col)
                     if d.pending { AnalyticsPending(compact: false).frame(maxHeight: .infinity) } else { FunnelCard(d: d) }
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -136,7 +136,7 @@ private struct Hero: View {
                     Text.tracked(Num.int(d.value(.firstDownloads)), t.heroTracking).font(t.heroFont).monospacedDigit()
                         .foregroundStyle(t.heroFg).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 10).padding(.leading, -4)
                     (Text(c.text).foregroundStyle(t.heroBackground == nil ? c.color(t) : t.heroFg).fontWeight(.bold)
-                        + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)").foregroundStyle(t.heroFg2).fontWeight(.medium))
+                        + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.heroFg2).fontWeight(.medium))
                         .font(t.font(17)).monospacedDigit().padding(.top, 10)
                     if let b = d.best, b.value > 0 {
                         Text("Best day: \(Num.int(b.value)) on \(AppStoreData.md(b.day))").font(t.font(13)).foregroundStyle(t.heroFg2).monospacedDigit().padding(.top, 2)
@@ -206,7 +206,7 @@ struct MetricCard: View {
         .buttonStyle(.plain)
     }
 
-    static func label(_ m: Metric) -> String { m == .pageViews ? "Page views" : m == .pageCR ? "Conversion rate" : m.title }
+    static func label(_ m: Metric) -> String { m == .pageViews ? String(localized: "Page views") : m == .pageCR ? String(localized: "Conversion rate") : m.title }
     static func symbol(_ m: Metric) -> String {
         switch m {
         case .impressions: "eye.fill"
@@ -297,7 +297,7 @@ private struct TickerOverview: View {
                 Spark(values: d.spark(m), color: c.flat ? t.label2 : t.color(m, up: c.up), width: 1.5).frame(width: 72, height: 28).opacity(d.has(m) ? 1 : 0)
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(d.shown(m)).font(t.font(16, .semibold)).monospacedDigit().foregroundStyle(d.has(m) ? t.label : t.label3)
-                    Text(c.text == Change.noHistory.text ? "—" : c.flat ? (m.isRate ? "0.0 pts" : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
+                    Text(c.text == Change.noHistory.text ? "—" : c.flat ? (m.isRate ? String(localized: "0.0 pts") : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
                         .foregroundStyle(.black).padding(.horizontal, 8).frame(minWidth: 72, alignment: .trailing).frame(height: 24)
                         .background(c.flat ? Color(css: "#8E8E93") : c.up ? t.pos : t.neg, in: RoundedRectangle(cornerRadius: 6))
                         .opacity(d.has(m) && c.text != Change.noHistory.text ? 1 : 0)
@@ -320,7 +320,7 @@ private struct TickerOverview: View {
         return VStack(alignment: .leading, spacing: 0) {
             Text(MetricCard.label(m)).font(t.font(17)).foregroundStyle(t.label2)
             Text.tracked(d.shown(m), t.heroTracking).font(t.heroFont).monospacedDigit().lineLimit(1).frame(height: 84)
-            (Text(d.has(m) ? c.text : AnalyticsPending.expected).foregroundStyle(d.has(m) ? c.color(t) : t.label2) + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)").foregroundStyle(t.label2).fontWeight(.regular))
+            (Text(d.has(m) ? c.text : AnalyticsPending.expected).foregroundStyle(d.has(m) ? c.color(t) : t.label2) + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.label2).fontWeight(.regular))
                 .font(t.font(17, .semibold)).monospacedDigit()
             GeometryReader { g in
                 ZStack(alignment: .topTrailing) {
@@ -357,12 +357,12 @@ private struct TickerOverview: View {
         let search = d.value(.searchImpressions), imp = d.value(.impressions)
         let releases = model.store.versions(d.app).filter { $0.day >= d.from && $0.day <= d.to }.map(\.version)
         let cells: [(String, String)] = [
-            ("Best day", peak.map { "\(Num.value(selected, $0.value)) · \(AppStoreData.md($0.day))" } ?? "—"),
-            ("Daily average", selected.isRate ? Num.pct(d.value(selected)) : Num.int(d.value(selected) / Double(max(1, d.store.series(d.app, selected, from: d.from, to: d.to).count)))),
-            ("From App Store search", d.pending ? "—" : imp > 0 ? Num.pct(search / imp).replacingOccurrences(of: ".0%", with: "%") : "—"),
-            ("Tap-through", d.shown(.ttr)),
-            ("Conversion", d.shown(.pageCR)),
-            ("Releases", releases.isEmpty ? "None" : releases.suffix(2).joined(separator: " · ")),
+            (String(localized: "Best day"), peak.map { "\(Num.value(selected, $0.value)) · \(AppStoreData.md($0.day))" } ?? "—"),
+            (String(localized: "Daily average"), selected.isRate ? Num.pct(d.value(selected)) : Num.int(d.value(selected) / Double(max(1, d.store.series(d.app, selected, from: d.from, to: d.to).count)))),
+            (String(localized: "From App Store search"), d.pending ? "—" : imp > 0 ? Num.pct(search / imp).replacingOccurrences(of: ".0%", with: "%") : "—"),
+            (String(localized: "Tap-through"), d.shown(.ttr)),
+            (String(localized: "Conversion"), d.shown(.pageCR)),
+            (String(localized: "Releases"), releases.isEmpty ? String(localized: "None") : releases.suffix(2).joined(separator: " · ")),
         ]
         return Grid(horizontalSpacing: 24, verticalSpacing: 0) {
             ForEach(0..<2) { r in

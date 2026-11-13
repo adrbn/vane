@@ -20,7 +20,7 @@ struct LegacyReviewsView: View {
                 Spacer()
                 Picker("Rating", selection: $rating) {
                     Text("All ratings").tag(0)
-                    ForEach((1...5).reversed(), id: \.self) { Text("\($0) star\($0 == 1 ? "" : "s")").tag($0) }
+                    ForEach((1...5).reversed(), id: \.self) { Text("\($0) stars").tag($0) }
                 }
                 .labelsHidden().fixedSize()
                 Toggle("Unanswered only", isOn: $unansweredOnly).checkboxStyle()
@@ -77,10 +77,10 @@ struct ReviewRow: View {
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
             HStack(spacing: 14) {
-                Button(translation == nil ? "Translate" : "Show original") {
+                Button(translation == nil ? LocalizedStringKey("Translate") : LocalizedStringKey("Show original")) {
                     if translation != nil { translation = nil } else { config = .init(target: Locale.current.language) }
                 }
-                Button(review.response == nil ? "Reply…" : "Edit reply…") { replying = review }
+                Button(review.response == nil ? LocalizedStringKey("Reply…") : LocalizedStringKey("Edit reply…")) { replying = review }
             }
             .linkButtonStyle().font(.caption)
         }
@@ -124,7 +124,7 @@ struct ReplySheet: View {
                 if busy { ProgressView().controlSize(.small) }
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button(model.isDemo ? "Post (demo)" : "Post reply") { Task { await post() } }
+                Button(model.isDemo ? LocalizedStringKey("Post (demo)") : LocalizedStringKey("Post reply")) { Task { await post() } }
                     .keyboardShortcut(.defaultAction).disabled(busy || text.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }

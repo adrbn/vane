@@ -27,7 +27,7 @@ struct ReviewsView: View {
                 && (search.isEmpty || "\($0.title) \($0.body) \($0.reviewer)".localizedCaseInsensitiveContains(search))
         }
         ZStack {
-            Screen(title: "Reviews", subtitle: "\(model.app?.name ?? "") · \(Num.int(Double(all.count))) written reviews", inspector: true, scrolls: false) {
+            Screen(title: String(localized: "Reviews"), subtitle: "\(model.app?.name ?? "") · \(String(localized: "\(all.count) written reviews"))", inspector: true, scrolls: false) {
                 controls(all, versions)
             } content: {
                 // Two panes that always reach the bottom of the window, like Mail: a short list leaves room
@@ -60,21 +60,21 @@ struct ReviewsView: View {
     // MARK: Toolbar
 
     @ViewBuilder private func controls(_ all: [Review], _ versions: [VersionMark]) -> some View {
-        GlassSegments(options: [(false, "All"), (true, "Needs reply")], selection: $needsReply)
+        GlassSegments(options: [(false, String(localized: "All")), (true, String(localized: "Needs reply"))], selection: $needsReply)
         GlassGroup {
-            menu(rating == 0 ? "All ratings" : "\(rating) star\(rating == 1 ? "" : "s")") {
+            menu(rating == 0 ? String(localized: "All ratings") : String(localized: "\(rating) stars")) {
                 Button("All ratings") { rating = 0 }
                 Divider()
-                ForEach((1...5).reversed(), id: \.self) { n in Button("\(n) star\(n == 1 ? "" : "s")") { rating = n } }
+                ForEach((1...5).reversed(), id: \.self) { n in Button("\(n) stars") { rating = n } }
             }
-            menu(territory.map(Territories.name) ?? "All territories") {
+            menu(territory.map(Territories.name) ?? String(localized: "All territories")) {
                 Button("All territories") { territory = nil }
                 Divider()
                 ForEach(Array(Set(all.map(\.territory))).sorted { Territories.name($0) < Territories.name($1) }, id: \.self) { c in
                     Button(Territories.name(c)) { territory = c }
                 }
             }
-            menu(version.map { "Version \($0)" } ?? "All versions") {
+            menu(version.map { String(localized: "Version \($0)") } ?? String(localized: "All versions")) {
                 Button("All versions") { version = nil }
                 Divider()
                 ForEach(versions.reversed(), id: \.self) { v in Button("Version \(v.version)") { version = v.version } }
@@ -90,7 +90,7 @@ struct ReviewsView: View {
                 .buttonStyle(.plain)
             }
         } else {
-            GlassIconButton(symbol: "magnifyingglass", help: "Search reviews") { searching = true }
+            GlassIconButton(symbol: "magnifyingglass", help: String(localized: "Search reviews")) { searching = true }
         }
     }
 
@@ -115,7 +115,7 @@ struct ReviewsView: View {
                     .foregroundStyle(all.isEmpty ? t.label3 : t.label)
                 VStack(alignment: .leading, spacing: 2) {
                     ThemedStars(rating: Int(avg.rounded()), size: 11)
-                    Text("\(all.count) written review\(all.count == 1 ? "" : "s")").font(t.font(11)).foregroundStyle(t.label2)
+                    Text("\(all.count) written reviews").font(t.font(11)).foregroundStyle(t.label2)
                 }
             }
             VStack(spacing: 6) {
@@ -155,12 +155,12 @@ struct ReviewsView: View {
                         Text(String(format: "%.1f", a)).font(t.font(28, .bold)).monospacedDigit()
                         if let p = prev, !before.isEmpty {
                             let d = a - ReviewInfo.average(before)
-                            Text(abs(d) < 0.05 ? "No change" : String(format: "%@%.1f", d > 0 ? "+" : "−", abs(d)))
+                            (abs(d) < 0.05 ? Text("No change") : Text(String(format: "%@%.1f", d > 0 ? "+" : "−", abs(d))))
                                 .font(t.font(13, .bold)).monospacedDigit().foregroundStyle(abs(d) < 0.05 ? t.label2 : d > 0 ? t.pos : t.neg)
                             Text("vs \(p.version)").font(t.font(13)).foregroundStyle(t.label2)
                         }
                     }
-                    Text("\(now.count) written review\(now.count == 1 ? "" : "s")").font(t.font(11)).foregroundStyle(t.label2)
+                    Text("\(now.count) written reviews").font(t.font(11)).foregroundStyle(t.label2)
                 }
             } else {
                 Text("Latest version").font(t.font(11)).foregroundStyle(t.label2)
@@ -172,11 +172,12 @@ struct ReviewsView: View {
 
     private func waitingCard(_ all: [Review]) -> some View {
         let waiting = all.filter { $0.response == nil }
+        let low = waiting.filter { $0.rating <= 2 }.count
         return VStack(alignment: .leading, spacing: 4) {
             Text("Waiting for a reply").font(t.font(11)).foregroundStyle(t.label2)
             Text("\(waiting.count)").font(t.font(28, .bold)).monospacedDigit()
-            Text(waiting.isEmpty ? "You're all caught up"
-                 : "Oldest from \(AppStoreData.md(waiting.map(\.created).min()!)) · \(waiting.filter { $0.rating <= 2 }.count) \(waiting.filter { $0.rating <= 2 }.count == 1 ? "is" : "are") 1–2 stars")
+            Text(waiting.isEmpty ? String(localized: "You're all caught up")
+                 : String(localized: "Oldest from \(AppStoreData.md(waiting.map(\.created).min()!)) · \(low) are 1–2 stars"))
                 .font(t.font(11)).foregroundStyle(t.label2)
         }
         .themedCard(padding: 20)
@@ -220,8 +221,8 @@ struct ReviewsView: View {
     @ViewBuilder private func list(_ shown: [Review], all: [Review], versions: [VersionMark]) -> some View {
         if shown.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                Text(all.isEmpty ? "No reviews yet" : search.isEmpty ? "No reviews match these filters" : "No reviews mention “\(search)”").font(t.font(15, .bold))
-                Text(all.isEmpty ? "Written App Store reviews show up here after a refresh." : search.isEmpty ? "Try All ratings, All territories or All versions." : "Search looks at titles, review text and reviewer names.")
+                Text(all.isEmpty ? String(localized: "No reviews yet") : search.isEmpty ? String(localized: "No reviews match these filters") : String(localized: "No reviews mention “\(search)”")).font(t.font(15, .bold))
+                Text(all.isEmpty ? String(localized: "Written App Store reviews show up here after a refresh.") : search.isEmpty ? String(localized: "Try All ratings, All territories or All versions.") : String(localized: "Search looks at titles, review text and reviewer names."))
                     .font(t.font(13)).foregroundStyle(t.label2)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -242,8 +243,8 @@ struct ReviewsView: View {
                         } else {
                             Spacer(minLength: 24)
                         }
-                        Text(shown.count == all.count ? "That's every written review. New ones arrive with each refresh."
-                             : "\(shown.count) of \(all.count) written reviews match these filters.")
+                        Text(shown.count == all.count ? String(localized: "That's every written review. New ones arrive with each refresh.")
+                             : String(localized: "\(shown.count) of \(all.count) written reviews match these filters."))
                             .font(t.font(12)).foregroundStyle(t.label3).padding(.bottom, 20)
                     }
                     .frame(minHeight: g.size.height)
@@ -277,11 +278,11 @@ private struct ReviewContext: View {
                 Text("Weekly downloads, each written review pinned on its week").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
             }
             HStack(spacing: 0) {
-                stat(reviews.isEmpty ? "—" : Num.int(total / Double(reviews.count)), "downloads per written review")
+                stat(reviews.isEmpty ? "—" : Num.int(total / Double(reviews.count)), String(localized: "downloads per written review"))
                     .opens { model.section = .metric(.downloads) }
-                stat("\(replied) of \(reviews.count)", "answered")
-                stat(last.map { "\(Day.between($0, Day.today())) days" } ?? "—", "since the last review")
-                stat(ratings.map(Num.int) ?? "—", "ratings on the App Store")
+                stat(String(localized: "\(replied) of \(reviews.count)"), String(localized: "answered"))
+                stat(last.map { String(localized: "\(Day.between($0, Day.today())) days") } ?? "—", String(localized: "since the last review"))
+                stat(ratings.map(Num.int) ?? "—", String(localized: "ratings on the App Store"))
                     .opens { model.section = .usage }
             }
             Chart {
@@ -302,7 +303,7 @@ private struct ReviewContext: View {
                 }
             }
             .chartYAxis { AxisMarks(position: .trailing) { AxisGridLine().foregroundStyle(t.sep); AxisValueLabel().font(t.font(10)).foregroundStyle(t.label2) } }
-            .chartXAxis { AxisMarks(values: .stride(by: .month)) { AxisValueLabel(format: .dateTime.month(.abbreviated).locale(Locale(identifier: "en_US"))).font(t.font(10)).foregroundStyle(t.label2) } }
+            .chartXAxis { AxisMarks(values: .stride(by: .month)) { AxisValueLabel(format: .dateTime.month(.abbreviated).locale(Locale.current)).font(t.font(10)).foregroundStyle(t.label2) } }
             .frame(maxHeight: .infinity)
             .padding(.top, 14)
         }
@@ -328,7 +329,7 @@ enum ReviewInfo {
         guard let (lang, p) = r.languageHypotheses(withMaximum: 1).first, p > 0.6 else { return nil }
         return lang.rawValue
     }
-    static func languageName(_ code: String) -> String { Locale(identifier: "en").localizedString(forLanguageCode: code) ?? code }
+    static func languageName(_ code: String) -> String { Locale.current.localizedString(forLanguageCode: code) ?? code }
 }
 
 struct ThemedStars: View {
@@ -364,16 +365,16 @@ struct ThemedReviewRow: View {
             Text(translation ?? review.body).font(t.font(13)).lineSpacing(3).textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .center, spacing: 8) {
-                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { ["Version \($0)"] } ?? [])).joined(separator: " · "))
+                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { [String(localized: "Version \($0)")] } ?? [])).joined(separator: " · "))
                     .font(t.font(11)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 if foreign {
-                    SmallButton(label: translation == nil ? "Translate" : "Show Original") {
+                    SmallButton(label: translation == nil ? String(localized: "Translate") : String(localized: "Show Original")) {
                         if translation != nil { translation = nil } else { config = .init(target: Locale.Language(identifier: "en")) }
                     }
                 }
                 if review.response == nil {
-                    SmallButton(label: "Reply…", symbol: "sparkles", prominent: true) { replying = review }
+                    SmallButton(label: String(localized: "Reply…"), symbol: "sparkles", prominent: true) { replying = review }
                 }
             }
             .padding(.top, 2)
@@ -420,8 +421,8 @@ struct ThemedReplySheet: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Reply to \(review.reviewer)").font(t.font(20, .bold))
-                Text((["\(review.rating) star\(review.rating == 1 ? "" : "s")", "“\(review.title)”", "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"]
-                      + (version.map { ["Version \($0)"] } ?? []) + [AppStoreData.md(review.created)]).joined(separator: " · "))
+                Text(([String(localized: "\(review.rating) stars"), "“\(review.title)”", "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"]
+                      + (version.map { [String(localized: "Version \($0)")] } ?? []) + [AppStoreData.md(review.created)]).joined(separator: " · "))
                     .font(t.font(12)).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             VStack(alignment: .leading, spacing: 6) {
@@ -438,9 +439,9 @@ struct ThemedReplySheet: View {
                 }
                 if lang != "en", translation != nil {
                     HStack(spacing: 4) {
-                        Text(showOriginal ? "Original in \(ReviewInfo.languageName(lang))" : "Translated from \(ReviewInfo.languageName(lang))").foregroundStyle(t.label2)
+                        (showOriginal ? Text("Original in \(ReviewInfo.languageName(lang))") : Text("Translated from \(ReviewInfo.languageName(lang))")).foregroundStyle(t.label2)
                         Text("·").foregroundStyle(t.label2)
-                        Button(showOriginal ? "Show Translation" : "Show Original") { showOriginal.toggle() }
+                        Button(showOriginal ? LocalizedStringKey("Show Translation") : LocalizedStringKey("Show Original")) { showOriginal.toggle() }
                             .buttonStyle(.plain).foregroundStyle(t.accentText)
                     }
                     .font(t.font(11))
@@ -454,7 +455,7 @@ struct ThemedReplySheet: View {
                 Text("Suggested reply").font(t.font(13, .semibold))
                 Text("Drafted by \(AISettings.provider.title) in \(ReviewInfo.languageName(lang))").font(t.font(11)).foregroundStyle(t.label2)
                 Spacer()
-                GlassSegments(options: [("Friendly", "Friendly"), ("Brief", "Brief")], selection: $tone).fixedSize()
+                GlassSegments(options: [("Friendly", String(localized: "Friendly")), ("Brief", String(localized: "Brief"))], selection: $tone).fixedSize()
             }
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $text).font(t.font(13)).lineSpacing(3).scrollContentBackground(.hidden).focused($focused)
@@ -467,16 +468,16 @@ struct ThemedReplySheet: View {
             .overlay(RoundedRectangle(cornerRadius: t.rS, style: .continuous).strokeBorder(focused ? t.accent : t.sep2, lineWidth: 1))
             .background(RoundedRectangle(cornerRadius: t.rS + 3, style: .continuous).fill(focused ? t.accentSoft : .clear).padding(-3))
             HStack(alignment: .top) {
-                Text(error ?? "Replies are public, so review before sending.").font(t.font(11)).foregroundStyle(error == nil ? t.label2 : t.neg)
+                Text(error ?? String(localized: "Replies are public, so review before sending.")).font(t.font(11)).foregroundStyle(error == nil ? t.label2 : t.neg)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 12)
                 Text("\(Num.int(Double(text.count))) / 5,970").font(t.font(11)).monospacedDigit().foregroundStyle(text.count > 5970 ? t.neg : t.label2)
             }
             HStack(spacing: 8) {
-                SmallButton(label: busy ? "Drafting…" : "Regenerate", symbol: "sparkles", busy: busy) { Task { await draft() } }
+                SmallButton(label: busy ? String(localized: "Drafting…") : String(localized: "Regenerate"), symbol: "sparkles", busy: busy) { Task { await draft() } }
                 Spacer()
-                SmallButton(label: "Cancel") { close() }.keyboardShortcut(.cancelAction)
-                SmallButton(label: model.isDemo ? "Send Reply (demo)" : "Send Reply", prominent: true) { Task { await send() } }
+                SmallButton(label: String(localized: "Cancel")) { close() }.keyboardShortcut(.cancelAction)
+                SmallButton(label: model.isDemo ? String(localized: "Send Reply (demo)") : String(localized: "Send Reply"), prominent: true) { Task { await send() } }
                     .keyboardShortcut(.defaultAction)
                     .disabled(busy || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || text.count > 5970)
             }

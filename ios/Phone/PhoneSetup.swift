@@ -27,11 +27,11 @@ struct WelcomeFlow: View {
                     .phoneCard()
                     .padding(.top, 8)
                     Spacer(minLength: 12)
-                    PhoneButton(label: "Scan the Code on Your Mac") { path.append(.scan) }
+                    PhoneButton(label: String(localized: "Scan the Code on Your Mac")) { path.append(.scan) }
                     Text("Already using Vane on a Mac? It shows the code in Settings.")
                         .font(t.font(12)).foregroundStyle(t.label2).frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
-                    PhoneButton(label: "Enter an API Key", prominent: false) { path.append(.key) }
+                    PhoneButton(label: String(localized: "Enter an API Key"), prominent: false) { path.append(.key) }
                     Button("Try the Demo") { finish() }
                         .font(t.font(15, .semibold)).foregroundStyle(t.accentText)
                         .frame(maxWidth: .infinity).frame(height: 44)
@@ -44,7 +44,7 @@ struct WelcomeFlow: View {
             .navigationDestination(for: WelcomeStep.self) { s in
                 switch s {
                 case .scan: PhoneScan { finish() }
-                case .key: PushedScreen(title: "API key", subtitle: "The same key Vane uses on the Mac") { PhoneKeyForm { finish() } }
+                case .key: PushedScreen(title: String(localized: "API key"), subtitle: String(localized: "The same key Vane uses on the Mac")) { PhoneKeyForm { finish() } }
                 }
             }
         }
@@ -82,7 +82,7 @@ struct PhoneThemeGrid: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(theme.name).font(t.font(14, .semibold))
-                                Text(theme.scheme == .dark ? "Dark" : "Light").font(t.font(12)).foregroundStyle(t.label2)
+                                Text(theme.scheme == .dark ? String(localized: "Dark") : String(localized: "Light")).font(t.font(12)).foregroundStyle(t.label2)
                             }
                             Spacer()
                             Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: 18)).foregroundStyle(on ? t.accent : t.label3)
@@ -105,7 +105,7 @@ struct PhoneScan: View {
     @State private var found: ASCCredentials?
 
     var body: some View {
-        PushedScreen(title: "Scan code", subtitle: "On the Mac: Vane → Settings → App Store Connect → Show Setup Code") {
+        PushedScreen(title: String(localized: "Scan code"), subtitle: String(localized: "On the Mac: Vane → Settings → App Store Connect → Show Setup Code")) {
             if DataScannerViewController.isSupported && DataScannerViewController.isAvailable {
                 QRScanner { if found == nil, let url = URL(string: $0) { found = SetupLink.credentials(from: url) } }
                     .frame(height: 360)
@@ -160,23 +160,23 @@ struct PhoneKeyForm: View {
             Text("In App Store Connect: Users and Access → Integrations → App Store Connect API. The key needs the Sales and Reports role.")
                 .font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
             VStack(spacing: 0) {
-                input("Issuer ID", $creds.issuerId, "xxxxxxxx-xxxx-…")
+                input(String(localized: "Issuer ID"), $creds.issuerId, "xxxxxxxx-xxxx-…")
                 Divider().overlay(t.sep).padding(.leading, 16)
-                input("Key ID", $creds.keyId, "2X9R4HXF34")
+                input(String(localized: "Key ID"), $creds.keyId, "2X9R4HXF34")
                 Divider().overlay(t.sep).padding(.leading, 16)
                 HStack {
                     Text("Private key").font(t.font(15))
                     Spacer()
-                    Button(creds.privateKeyPEM.isEmpty ? "Choose .p8 File" : "AuthKey loaded") { importing = true }
+                    Button(creds.privateKeyPEM.isEmpty ? String(localized: "Choose .p8 File") : String(localized: "AuthKey loaded")) { importing = true }
                         .font(t.font(15, .semibold)).foregroundStyle(t.accentText)
                 }
                 .padding(.horizontal, 16).frame(height: 50)
                 Divider().overlay(t.sep).padding(.leading, 16)
-                input("Vendor number", $creds.vendorNumber, "87654321")
+                input(String(localized: "Vendor number"), $creds.vendorNumber, "87654321")
             }
             .phoneCard(padding: 0)
             if let status { Text(status.text).font(t.font(12)).foregroundStyle(status.error ? t.neg : t.label2) }
-            PhoneButton(label: busy ? "Checking…" : "Connect") { Task { await connect() } }
+            PhoneButton(label: busy ? String(localized: "Checking…") : String(localized: "Connect")) { Task { await connect() } }
                 .disabled(!creds.isComplete || busy).opacity(creds.isComplete ? 1 : 0.5)
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: AccountSettings.keyTypes) { r in
@@ -200,7 +200,7 @@ struct PhoneKeyForm: View {
         do {
             _ = try await ASCClient(credentials: creds).json("v1/apps", query: ["limit": "1"])
             Keychain.save(creds)
-            status = ("Connected. Importing your data…", false)
+            status = (String(localized: "Connected. Importing your data…"), false)
             done()
             await model.refresh()
         } catch { status = (error.localizedDescription, true) }
@@ -214,14 +214,14 @@ struct PhoneSettings: View {
 
     var body: some View {
         let connected = Keychain.credentials().isComplete
-        PushedScreen(title: "Settings", subtitle: "") {
-            PhoneSectionTitle(title: "Connection")
+        PushedScreen(title: String(localized: "Settings"), subtitle: "") {
+            PhoneSectionTitle(title: String(localized: "Connection"))
             HStack(spacing: 10) {
                 Image(systemName: connected ? "checkmark.circle.fill" : "circle.dashed")
                     .font(.system(size: 18)).foregroundStyle(connected ? t.pos : t.label3)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(connected ? "Connected" : model.isDemo ? "Showing demo data" : "Not connected").font(t.font(15, .semibold))
-                    Text(model.lastSync.map { "Updated \($0.formatted(.relative(presentation: .named).locale(Locale(identifier: "en_US"))))" } ?? "Scan the code from your Mac, or add a key below")
+                    Text(connected ? String(localized: "Connected") : model.isDemo ? String(localized: "Showing demo data") : String(localized: "Not connected")).font(t.font(15, .semibold))
+                    Text(model.lastSync.map { String(localized: "Updated \($0.formatted(.relative(presentation: .named).locale(.current)))") } ?? String(localized: "Scan the code from your Mac, or add a key below"))
                         .font(t.font(12)).foregroundStyle(t.label2)
                 }
                 Spacer()
@@ -233,11 +233,11 @@ struct PhoneSettings: View {
                 }
             }
             .phoneCard(padding: 14)
-            PhoneSectionTitle(title: "Your API key")
+            PhoneSectionTitle(title: String(localized: "Your API key"))
             PhoneKeyForm()
-            PhoneSectionTitle(title: "Look")
+            PhoneSectionTitle(title: String(localized: "Look"))
             PhoneThemeGrid()
-            PhoneSectionTitle(title: "Insights", detail: "Fixed rules, no AI")
+            PhoneSectionTitle(title: String(localized: "Insights"), detail: String(localized: "Fixed rules, no AI"))
             @Bindable var m = model
             VStack(spacing: 0) {
                 ForEach(Array(InsightCategory.allCases.enumerated()), id: \.element) { i, c in
@@ -276,14 +276,14 @@ struct PhoneSettings: View {
 struct AskScreen: View {
     @Environment(\.theme) private var t
     var body: some View {
-        PhoneScreen(title: "Ask", subtitle: "Questions about your numbers") {
+        PhoneScreen(title: String(localized: "Ask"), subtitle: String(localized: "Questions about your numbers")) {
             VStack(alignment: .leading, spacing: 12) {
                 IconSquare(symbol: "sparkles", style: t.square(.insights), size: 44)
                 Text("Ask works through your Mac").font(t.font(22, .bold))
                 Text("Vane answers with the Claude Code or Codex command line installed on your Mac. Open Vane on the Mac and ask there: it sees the same numbers as this iPhone.")
                     .font(t.font(15)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(["Why did downloads drop last week?", "Which country should I localize for next?", "Did the last release change conversion?"], id: \.self) {
+                    ForEach([String(localized: "Why did downloads drop last week?"), String(localized: "Which country should I localize for next?"), String(localized: "Did the last release change conversion?")], id: \.self) {
                         Text($0).font(t.font(14)).foregroundStyle(t.label2)
                             .padding(.horizontal, 14).frame(height: 40, alignment: .leading)
                             .background(t.fill, in: Capsule())

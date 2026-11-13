@@ -23,7 +23,7 @@ struct AccountSettings: View {
                 field("Key ID", $creds.keyId)
                 LabeledContent("Private key") {
                     HStack {
-                        Text(creds.privateKeyPEM.isEmpty ? "None" : "AuthKey loaded").foregroundStyle(.secondary)
+                        (creds.privateKeyPEM.isEmpty ? Text("None") : Text("AuthKey loaded")).foregroundStyle(.secondary)
                         Button("Choose .p8…") { importing = true }
                     }
                 }
@@ -74,9 +74,9 @@ struct AccountSettings: View {
         if creds.keyId.isEmpty, let m = url.lastPathComponent.firstMatch(of: #/AuthKey_([A-Z0-9]+)\.p8/#) { creds.keyId = String(m.1) }
     }
 
-    @ViewBuilder private func field(_ label: String, _ text: Binding<String>, prompt: String? = nil) -> some View {
+    @ViewBuilder private func field(_ label: LocalizedStringKey, _ text: Binding<String>, prompt: LocalizedStringKey? = nil) -> some View {
         #if os(macOS)
-        TextField(label, text: text, prompt: prompt.map(Text.init))
+        TextField(label, text: text, prompt: prompt.map { Text($0) })
         #else
         LabeledContent(label) {
             TextField(label, text: text, prompt: Text(prompt ?? "Required"))
@@ -90,9 +90,9 @@ struct AccountSettings: View {
         do {
             _ = try await ASCClient(credentials: creds).json("v1/apps", query: ["limit": "1"])
             Keychain.save(creds)
-            status = "Connected. Importing your data…"
+            status = String(localized: "Connected. Importing your data…")
             await model.refresh()
-            status = model.syncErrors.isEmpty ? "All set." : model.syncErrors.joined(separator: "\n")
+            status = model.syncErrors.isEmpty ? String(localized: "All set.") : model.syncErrors.joined(separator: "\n")
         } catch { status = error.localizedDescription }
     }
 }

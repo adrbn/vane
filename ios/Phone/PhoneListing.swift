@@ -14,7 +14,7 @@ struct PhoneListing: View {
         let _ = model.revision
         let locales = model.store.listing(model.appId ?? "")
         let saved = locales.first { $0.locale == locale } ?? locales.first
-        PhoneScreen(title: "Listing", subtitle: "What people see on the App Store") {
+        PhoneScreen(title: String(localized: "Listing"), subtitle: String(localized: "What people see on the App Store")) {
             if !locales.isEmpty {
                 Menu {
                     Picker("Language", selection: $locale) { ForEach(locales) { Text(name($0.locale)).tag($0.locale) } }
@@ -27,24 +27,26 @@ struct PhoneListing: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Keywords repeat the name or subtitle", systemImage: "exclamationmark.triangle.fill")
                             .font(t.font(15, .bold)).foregroundStyle(t.warn)
-                        Text("“\(repeated.joined(separator: "”, “"))” already \(repeated.count == 1 ? "counts" : "count") from the name or subtitle. The space is better used for new words.")
+                        (repeated.count == 1
+                            ? Text("“\(repeated.joined(separator: "”, “"))” already counts from the name or subtitle. The space is better used for new words.")
+                            : Text("“\(repeated.joined(separator: "”, “"))” already count from the name or subtitle. The space is better used for new words."))
                             .font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
-                        SmallButton(label: "Remove \(repeated.count == 1 ? "it" : "them")", prominent: true) {
+                        SmallButton(label: repeated.count == 1 ? String(localized: "Remove it") : String(localized: "Remove them"), prominent: true) {
                             l.wrappedValue.keywords = ListingCheck.removing(repeated, from: l.wrappedValue.keywords)
                         }
                     }
                     .phoneCard()
                 }
-                field("Name", l.name, ListingView.limits.name)
-                field("Subtitle", l.subtitle, ListingView.limits.subtitle)
-                field("Keywords", l.keywords, ListingView.limits.keywords)
-                field("Promotional text", l.promoText, ListingView.limits.promo, lines: 4)
-                field("Description", l.description, ListingView.limits.description, lines: 10)
+                field(String(localized: "Name"), l.name, ListingView.limits.name)
+                field(String(localized: "Subtitle"), l.subtitle, ListingView.limits.subtitle)
+                field(String(localized: "Keywords"), l.keywords, ListingView.limits.keywords)
+                field(String(localized: "Promotional text"), l.promoText, ListingView.limits.promo, lines: 4)
+                field(String(localized: "Description"), l.description, ListingView.limits.description, lines: 10)
                 if let status { Text(status.text).font(t.font(12)).foregroundStyle(status.error ? t.neg : t.label2) }
                 if l.wrappedValue != saved {
-                    PhoneButton(label: busy ? "Saving…" : model.isDemo ? "Save" : "Upload Changes") { Task { await save(saved, l.wrappedValue) } }
+                    PhoneButton(label: busy ? String(localized: "Saving…") : model.isDemo ? String(localized: "Save") : String(localized: "Upload Changes")) { Task { await save(saved, l.wrappedValue) } }
                         .disabled(busy || ListingCheck(l.wrappedValue).overBudget)
-                    PhoneButton(label: "Discard", prominent: false) { draft = saved }
+                    PhoneButton(label: String(localized: "Discard"), prominent: false) { draft = saved }
                 }
             } else {
                 Text("No listing yet. It arrives with the first sync.").font(t.font(13)).foregroundStyle(t.label2).phoneCard()
@@ -61,7 +63,7 @@ struct PhoneListing: View {
     }
 
     private func name(_ code: String) -> String {
-        let l = Locale(identifier: code), en = Locale(identifier: "en")
+        let l = Locale(identifier: code), en = Locale.current
         let lang = l.language.languageCode.flatMap { en.localizedString(forLanguageCode: $0.identifier) } ?? code
         return l.region.map { "\(lang) (\($0.identifier))" } ?? lang
     }
@@ -97,7 +99,7 @@ struct PhoneListing: View {
         do {
             if let s = model.syncer { try await s.updateListing(from: old, to: new) } else { try model.store.upsert(listing: new) }
             model.revision += 1
-            status = ("Saved.", false)
+            status = (String(localized: "Saved."), false)
         } catch { status = (error.localizedDescription, true) }
     }
 }

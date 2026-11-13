@@ -13,7 +13,7 @@ enum WidgetFeed {
         let weekAgo = s.last { $0.day == Day.add(-7, to: last.day) }
         let change = weekAgo.map { Change(.firstDownloads, value: last.value, previous: $0.value) }
         let d = AppStoreData(store: store, app: app.id, days: 28)
-        let month: [VaneSnapshot.Stat] = [(Metric.firstDownloads, "Downloads"), (.ttr, "Tap-through"), (.pageCR, "Conversion")]
+        let month: [VaneSnapshot.Stat] = [(Metric.firstDownloads, String(localized: "Downloads")), (.ttr, String(localized: "Tap-through")), (.pageCR, String(localized: "Conversion"))]
             .filter { d.has($0.0) }
             .map { m, label in .init(label: label, value: Num.value(m, d.value(m))) }
         let reviews = store.reviews(app.id)

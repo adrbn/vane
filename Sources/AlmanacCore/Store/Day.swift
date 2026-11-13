@@ -45,6 +45,14 @@ public enum Day {
 public enum Granularity: String, CaseIterable, Identifiable, Sendable {
     case day = "Day", week = "Week", month = "Month", year = "Year"
     public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .day: String(localized: "Day")
+        case .week: String(localized: "Week")
+        case .month: String(localized: "Month")
+        case .year: String(localized: "Year")
+        }
+    }
 
     public func bucket(_ day: String) -> String {
         switch self {

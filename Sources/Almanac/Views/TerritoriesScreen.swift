@@ -10,12 +10,23 @@ struct TerritoriesView: View {
     @State private var ascending = false
     @State private var showAll = false
 
-    enum Key: String, CaseIterable { case name = "Territory", impressions = "Impressions", conversion = "Conversion", downloads = "Downloads", change = "Change", share = "Share" }
+    enum Key: String, CaseIterable { case name = "Territory", impressions = "Impressions", conversion = "Conversion", downloads = "Downloads", change = "Change", share = "Share"
+        var title: String {
+            switch self {
+            case .name: String(localized: "Territory")
+            case .impressions: String(localized: "Impressions")
+            case .conversion: String(localized: "Conversion")
+            case .downloads: String(localized: "Downloads")
+            case .change: String(localized: "Change")
+            case .share: String(localized: "Share")
+            }
+        }
+    }
 
     var body: some View {
         let d = TerritoryData(store: model.store, app: model.appId ?? "", days: days)
-        Screen(title: "Territories", subtitle: "\(model.app?.name ?? "") · First-time downloads · \(AppStoreData.md(d.from)) – \(AppStoreData.md(d.to))", inspector: true, scrolls: false) {
-            GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
+        Screen(title: String(localized: "Territories"), subtitle: "\(model.app?.name ?? "") · \(String(localized: "First-time downloads")) · \(AppStoreData.md(d.from)) – \(AppStoreData.md(d.to))", inspector: true, scrolls: false) {
+            GlassSegments(options: [(7, String(localized: "7 Days")), (28, String(localized: "28 Days")), (90, String(localized: "90 Days")), (365, String(localized: "Year"))], selection: $days)
         } content: {
             // Same proportions at every window size: the map takes ~45% of the height, the table the rest,
             // with as many rows as fit. Full screen gets a bigger map and more rows, never a hole.
@@ -46,21 +57,21 @@ struct TerritoriesView: View {
                 }
                 .padding(.bottom, 12)
                 if let top = d.largest {
-                    takeaway("Largest market", Text(top.name), "\(Num.int(top.downloads)) downloads · \(Num.pct(top.share)) of all")
+                    takeaway(String(localized: "Largest market"), Text(top.name), String(localized: "\(Num.int(top.downloads)) downloads · \(Num.pct(top.share)) of all"))
                 }
                 if d.largest != nil && !d.hasPrevious {
-                    note("Fastest growing", "Needs a full earlier \(days == 365 ? "year" : "\(days) days") of history to compare")
+                    note(String(localized: "Fastest growing"), days == 365 ? String(localized: "Needs a full earlier year of history to compare") : String(localized: "Needs a full earlier \(days) days of history to compare"))
                 }
                 if d.largest != nil && d.rows.allSatisfy({ $0.pageViews == nil }) {
-                    note("Highest conversion", "Arrives with Apple's first analytics report")
+                    note(String(localized: "Highest conversion"), String(localized: "Arrives with Apple's first analytics report"))
                 }
                 if let g = d.fastest {
-                    takeaway("Fastest growing", Text(g.row.name) + Text("  " + g.change.text).foregroundStyle(g.change.color(t)),
-                             "\(Num.int(g.row.downloads)) downloads, up from \(Num.int(g.row.previous ?? 0))")
+                    takeaway(String(localized: "Fastest growing"), Text(g.row.name) + Text("  " + g.change.text).foregroundStyle(g.change.color(t)),
+                             String(localized: "\(Num.int(g.row.downloads)) downloads, up from \(Num.int(g.row.previous ?? 0))"))
                 }
                 if let c = d.bestConversion {
-                    takeaway("Highest conversion", Text("\(c.name) \(Num.pct(c.conversion ?? 0))"),
-                             "Average across territories \(Num.pct(d.averageConversion ?? 0))")
+                    takeaway(String(localized: "Highest conversion"), Text("\(c.name) \(Num.pct(c.conversion ?? 0))"),
+                             String(localized: "Average across territories \(Num.pct(d.averageConversion ?? 0))"))
                 }
                 if d.largest == nil {
                     Text("No downloads in this period yet.").font(t.font(13)).foregroundStyle(t.label2).padding(.top, 12)
@@ -135,7 +146,7 @@ struct TerritoriesView: View {
                     Button {
                         if sort == k { ascending.toggle() } else { sort = k; ascending = k == .name }
                     } label: {
-                        Text(sort == k ? "\(k.rawValue) \(ascending ? "▴" : "▾")" : k.rawValue)
+                        Text(sort == k ? "\(k.title) \(ascending ? "▴" : "▾")" : k.title)
                             .font(t.font(12, .semibold)).foregroundStyle(sort == k ? t.label : t.label2)
                             .frame(maxWidth: .infinity, alignment: k == .name || k == .share ? .leading : .trailing)
                             .contentShape(Rectangle())
@@ -157,11 +168,11 @@ struct TerritoriesView: View {
             .scrollIndicators(.never).scrollDisabled(!showAll)
             .frame(maxHeight: .infinity, alignment: .top)
             HStack {
-                Text(showAll ? "All \(rows.count) territories" : "Top \(shown.count) of \(rows.count) territories")
+                (showAll ? Text("All \(rows.count) territories") : Text("Top \(shown.count) of \(rows.count) territories"))
                     .font(t.font(12)).foregroundStyle(t.label2)
                 Spacer()
                 if rows.count > fit {
-                    Button(showAll ? "Show Top \(fit)" : "Show All") { showAll.toggle() }
+                    Button(showAll ? LocalizedStringKey("Show Top \(fit)") : LocalizedStringKey("Show All")) { showAll.toggle() }
                         .buttonStyle(.plain).font(t.font(12, .semibold)).foregroundStyle(t.accentText)
                 }
             }
@@ -185,7 +196,7 @@ struct TerritoriesView: View {
             Text(Num.int(r.downloads)).font(t.font(13, .bold)).monospacedDigit()
                 .frame(width: Self.widths[.downloads]!, alignment: .trailing)
             let c = r.change
-            Text(c?.text ?? (r.previous == nil ? "—" : "New")).font(t.font(13)).monospacedDigit()
+            Text(c?.text ?? (r.previous == nil ? "—" : String(localized: "New"))).font(t.font(13)).monospacedDigit()
                 .foregroundStyle(c.map { $0.color(t) } ?? (r.previous == nil ? t.label3 : t.label2))
                 .frame(width: Self.widths[.change]!, alignment: .trailing)
             HStack(spacing: 10) {
@@ -349,7 +360,7 @@ struct ThemedWorldMap: View {
                 if let h = hovered {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(Territories.flag(h)) \(Territories.name(h))").font(t.font(12, .semibold))
-                        Text(values[h].map { "\(Num.int($0)) downloads" } ?? "No downloads").font(t.font(11)).monospacedDigit().foregroundStyle(t.label2)
+                        Text(values[h].map { String(localized: "\(Num.int($0)) downloads") } ?? String(localized: "No downloads")).font(t.font(11)).monospacedDigit().foregroundStyle(t.label2)
                     }
                     .padding(.horizontal, 10).padding(.vertical, 6)
                     .background(t.popover, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))

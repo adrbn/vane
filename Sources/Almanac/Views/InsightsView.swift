@@ -17,7 +17,7 @@ struct LegacyInsightsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header(counts: Dictionary(grouping: all, by: \.category).mapValues(\.count))
                 if shown.isEmpty {
-                    EmptyHint(title: "Nothing to flag", message: "Vane checks your data after every refresh and lists what's worth knowing here.", symbol: "checkmark.seal")
+                    EmptyHint(title: String(localized: "Nothing to flag"), message: String(localized: "Vane checks your data after every refresh and lists what's worth knowing here."), symbol: "checkmark.seal")
                         .padding(.top, 60)
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 290, maximum: 420), spacing: 14, alignment: .top)], spacing: 14) {
@@ -177,7 +177,7 @@ struct KeywordFixSheet: View {
         let locale: String = { if case .fixKeywords(let l, _)? = insight.action { return l }; return "" }()
         let listing = model.store.listing(insight.appId).first { $0.locale == locale }
         VStack(alignment: .leading, spacing: 14) {
-            Text("Fix keywords · \(Locale(identifier: "en").localizedString(forIdentifier: locale) ?? locale)").font(.title3.weight(.semibold))
+            Text("Fix keywords · \(Locale.current.localizedString(forIdentifier: locale) ?? locale)").font(.title3.weight(.semibold))
             Text(insight.body).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             LabeledContent("Now") { Text(listing?.keywords ?? "").textSelection(.enabled).foregroundStyle(.secondary) }
             VStack(alignment: .trailing, spacing: 4) {
@@ -191,7 +191,7 @@ struct KeywordFixSheet: View {
                 Button("Suggest words with AI") { Task { await suggest(listing) } }.disabled(busy)
                 Spacer()
                 Button("Cancel") { done() }.keyboardShortcut(.cancelAction)
-                Button(model.isDemo ? "Apply (demo)" : "Apply to App Store Connect") { Task { await apply(listing) } }
+                Button(model.isDemo ? String(localized: "Apply (demo)") : String(localized: "Apply to App Store Connect")) { Task { await apply(listing) } }
                     .keyboardShortcut(.defaultAction).disabled(busy || keywords.count > 100 || listing == nil)
             }
         }

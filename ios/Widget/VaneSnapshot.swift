@@ -35,10 +35,10 @@ struct VaneSnapshot: Codable {
 
     /// Widget gallery and first install, before the app has synced.
     static let sample = VaneSnapshot(
-        app: "Vane", day: "Yesterday", downloads: "130", change: "↑ 8.2%", up: true,
+        app: "Vane", day: String(localized: "Yesterday"), downloads: "130", change: "↑ 8.2%", up: true,
         spark: [92, 104, 98, 120, 111, 96, 118, 124, 109, 101, 127, 119, 113, 130, 122, 117, 126, 135, 121, 114, 129, 138, 125, 119, 133, 141, 128, 130],
-        month: [.init(label: "Downloads", value: "4,022"),
-                .init(label: "Tap-through", value: "8.5%"),
-                .init(label: "Conversion", value: "22.5%")],
+        month: [.init(label: String(localized: "Downloads"), value: "4,022"),
+                .init(label: String(localized: "Tap-through"), value: "8.5%"),
+                .init(label: String(localized: "Conversion"), value: "22.5%")],
         rating: 4.6, reviews: 48, needsReply: 3, accent: [0.27, 0.2, 0.89], updated: .now)
 }

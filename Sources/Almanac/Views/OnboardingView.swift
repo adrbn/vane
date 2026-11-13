@@ -49,12 +49,12 @@ struct OnboardingView: View, SettingsBlocks {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .center, spacing: 14) {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
-                heading(t, "Welcome to Vane", "Your App Store Connect numbers, on your Mac. It reads Apple's reports and tells you what changed.")
+                heading(t, String(localized: "Welcome to Vane"), String(localized: "Your App Store Connect numbers, on your Mac. It reads Apple's reports and tells you what changed."))
             }
             HStack(alignment: .top, spacing: 12) {
-                feature(t, "lightbulb.fill", "Insights", "Milestones, drops and keyword issues, spotted for you.")
-                feature(t, "chart.xyaxis.line", "Every metric", "Impressions, conversion, downloads, sales and sessions.")
-                feature(t, "text.bubble.fill", "Listing and reviews", "Edit your metadata and answer reviews in one place.")
+                feature(t, "lightbulb.fill", String(localized: "Insights"), String(localized: "Milestones, drops and keyword issues, spotted for you."))
+                feature(t, "chart.xyaxis.line", String(localized: "Every metric"), String(localized: "Impressions, conversion, downloads, sales and sessions."))
+                feature(t, "text.bubble.fill", String(localized: "Listing and reviews"), String(localized: "Edit your metadata and answer reviews in one place."))
             }
             .fixedSize(horizontal: false, vertical: true)
             Text("Setup takes about five minutes: you create an API key in App Store Connect and add it here. Or look around with demo apps first.")
@@ -77,13 +77,13 @@ struct OnboardingView: View, SettingsBlocks {
 
     private func connect(_ t: AlmanacTheme) -> some View {
         VStack(alignment: .leading, spacing: 20) {
-            heading(t, "Connect App Store Connect", "Vane reads your reports with an API key. The key stays in your Keychain and never leaves this Mac.")
+            heading(t, String(localized: "Connect App Store Connect"), String(localized: "Vane reads your reports with an API key. The key stays in your Keychain and never leaves this Mac."))
             group(t, "") {
-                guide(t, 1, "Create a key", "Users and Access → Integrations → App Store Connect API. Give it the Sales and Reports role.",
-                      link: ("Open", "https://appstoreconnect.apple.com/access/integrations/api"))
-                guide(t, 2, "Download the .p8 and drop it below", "Apple lets you download it only once. Vane reads the Key ID from the file name; copy the Issuer ID shown above the keys.")
-                guide(t, 3, "Find your vendor number", "Payments and Financial Reports, at the top left of the page.",
-                      link: ("Open", "https://appstoreconnect.apple.com/itc/payments_and_financial_reports"))
+                guide(t, 1, String(localized: "Create a key"), String(localized: "Users and Access → Integrations → App Store Connect API. Give it the Sales and Reports role."),
+                      link: (String(localized: "Open"), "https://appstoreconnect.apple.com/access/integrations/api"))
+                guide(t, 2, String(localized: "Download the .p8 and drop it below"), String(localized: "Apple lets you download it only once. Vane reads the Key ID from the file name; copy the Issuer ID shown above the keys."))
+                guide(t, 3, String(localized: "Find your vendor number"), String(localized: "Payments and Financial Reports, at the top left of the page."),
+                      link: (String(localized: "Open"), "https://appstoreconnect.apple.com/itc/payments_and_financial_reports"))
             }
             ConnectForm(caption: nil) { connected = true; step = 2 }
         }
@@ -108,23 +108,23 @@ struct OnboardingView: View, SettingsBlocks {
 
     private func next(_ t: AlmanacTheme) -> some View {
         VStack(alignment: .leading, spacing: 20) {
-            heading(t, connected ? "Here's what happens next" : "Look around first",
-                    connected ? "Apple doesn't send everything at once. Vane fills in as each report arrives."
-                              : "You're looking at demo apps. Connect your key in Settings → App Store Connect whenever you're ready.")
+            heading(t, connected ? String(localized: "Here's what happens next") : String(localized: "Look around first"),
+                    connected ? String(localized: "Apple doesn't send everything at once. Vane fills in as each report arrives.")
+                              : String(localized: "You're looking at demo apps. Connect your key in Settings → App Store Connect whenever you're ready."))
             group(t, "") {
-                timeline(t, "Sales history", connected ? "Now. Downloads, proceeds and territories, as far back as Apple keeps them." : "Right after you connect.",
+                timeline(t, String(localized: "Sales history"), connected ? String(localized: "Now. Downloads, proceeds and territories, as far back as Apple keeps them.") : String(localized: "Right after you connect."),
                          state: !connected ? .waiting : model.syncing ? .working : .done)
-                timeline(t, "Apple's analytics", "In 1 to 2 days. Impressions, page views, conversion and sessions, as Apple publishes each report.", state: .waiting)
-                timeline(t, "Insights", "As soon as there's something to say: milestones, drops, keyword issues.", state: .waiting)
+                timeline(t, String(localized: "Apple's analytics"), String(localized: "In 1 to 2 days. Impressions, page views, conversion and sessions, as Apple publishes each report."), state: .waiting)
+                timeline(t, String(localized: "Insights"), String(localized: "As soon as there's something to say: milestones, drops, keyword issues."), state: .waiting)
             }
             if connected {
                 group(t, "") {
-                    row(t, "Vane on iPhone", "Scan a code with the iPhone app to use the same key there.") {
-                        SmallButton(label: "Show Code…") { showingQR = true }
+                    row(t, String(localized: "Vane on iPhone"), String(localized: "Scan a code with the iPhone app to use the same key there.")) {
+                        SmallButton(label: String(localized: "Show Code…")) { showingQR = true }
                     }
                 }
             }
-            RefreshSettings(title: "Stay up to date")
+            RefreshSettings(title: String(localized: "Stay up to date"))
         }
     }
 
@@ -151,16 +151,16 @@ struct OnboardingView: View, SettingsBlocks {
 
     private func footer(_ t: AlmanacTheme) -> some View {
         HStack(spacing: 8) {
-            if step > 0 { SmallButton(label: "Back") { step -= 1 } }
+            if step > 0 { SmallButton(label: String(localized: "Back")) { step -= 1 } }
             Spacer()
             switch step {
             case 0:
-                SmallButton(label: "Look Around with Demo Data") { finish() }
-                SmallButton(label: "Continue", prominent: true) { step = 1 }.keyboardShortcut(.defaultAction)
+                SmallButton(label: String(localized: "Look Around with Demo Data")) { finish() }
+                SmallButton(label: String(localized: "Continue"), prominent: true) { step = 1 }.keyboardShortcut(.defaultAction)
             case 1:
-                SmallButton(label: connected ? "Continue" : "Skip for Now", prominent: connected) { step = 2 }
+                SmallButton(label: connected ? String(localized: "Continue") : String(localized: "Skip for Now"), prominent: connected) { step = 2 }
             default:
-                SmallButton(label: connected ? "Open Vane" : "Start", prominent: true) { finish() }.keyboardShortcut(.defaultAction)
+                SmallButton(label: connected ? String(localized: "Open Vane") : String(localized: "Start"), prominent: true) { finish() }.keyboardShortcut(.defaultAction)
             }
         }
     }

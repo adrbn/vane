@@ -20,8 +20,8 @@ struct SalesScreen: View {
         let app = model.appId ?? ""
         let rows = makeRows(app)
         let paid = rows.contains { $0.sales > 0 }, subs = rows.contains { $0.subs > 0 }
-        Screen(title: "Sales", subtitle: "\(model.app?.name ?? "") · From Apple's daily sales reports", inspector: true, scrolls: false) {
-            GlassSegments(options: [(Granularity.day, "Daily"), (.week, "Weekly"), (.month, "Monthly"), (.year, "Yearly")], selection: $g)
+        Screen(title: String(localized: "Sales"), subtitle: "\(model.app?.name ?? "") · \(String(localized: "From Apple's daily sales reports"))", inspector: true, scrolls: false) {
+            GlassSegments(options: [(Granularity.day, String(localized: "Daily")), (.week, String(localized: "Weekly")), (.month, String(localized: "Monthly")), (.year, String(localized: "Yearly"))], selection: $g)
         } content: {
             if rows.isEmpty {
                 AnalyticsPending(compact: false).frame(height: 200)
@@ -77,7 +77,7 @@ struct SalesScreen: View {
         }
     }
 
-    private var unit: String { g == .day ? "day" : g.rawValue.lowercased() }
+    private var unit: String { g.title.lowercased() }
 
     // MARK: Summary card
 
@@ -88,18 +88,27 @@ struct SalesScreen: View {
         let ordered = rows.sorted { $0.start < $1.start }
         return HStack(alignment: .top, spacing: 32) {
             VStack(alignment: .leading, spacing: 18) {
-                stat("Downloads", Num.int(total), "\(Num.int(rows.reduce(0) { $0 + $1.first })) first-time · \(Num.int(rows.reduce(0) { $0 + $1.re })) re", big: true)
-                stat(paid ? "Sales" : "Proceeds", paid ? Metric.sales.format(rows.reduce(0) { $0 + $1.sales }) : Metric.proceeds.format(proceeds),
-                     paid ? "\(Metric.proceeds.format(proceeds)) after Apple's commission" : "Free app, no in-app purchases sold")
-                if let best, rows.count > 1 { stat("Best \(unit)", Num.int(best.total), label(best.start)) }
+                stat(String(localized: "Downloads"), Num.int(total), String(localized: "\(Num.int(rows.reduce(0) { $0 + $1.first })) first-time · \(Num.int(rows.reduce(0) { $0 + $1.re })) re"), big: true)
+                stat(paid ? String(localized: "Sales") : String(localized: "Proceeds"), paid ? Metric.sales.format(rows.reduce(0) { $0 + $1.sales }) : Metric.proceeds.format(proceeds),
+                     paid ? String(localized: "\(Metric.proceeds.format(proceeds)) after Apple's commission") : String(localized: "Free app, no in-app purchases sold"))
+                if let best, rows.count > 1 { stat(String(localized: "Best \(unit)"), Num.int(best.total), label(best.start)) }
                 Spacer(minLength: 0)
-                Text("\(ordered.count)\(complete ? " complete" : "") \(unit)\(ordered.count == 1 ? "" : "s")\(complete ? "" : ", partly covered") · \(ordered.count == 1 ? label(ordered[0].start, short: true) : "\(label(ordered.first!.start, short: true)) – \(label(ordered.last!.start, short: true))")")
+                Text(verbatim: "\(periodsText(ordered.count, complete: complete)) · \(ordered.count == 1 ? label(ordered[0].start, short: true) : "\(label(ordered.first!.start, short: true)) – \(label(ordered.last!.start, short: true))")")
                     .font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
             }
             .frame(width: 220, alignment: .leading)
             chart(ordered)
         }
         .themedCard()
+    }
+
+    private func periodsText(_ n: Int, complete: Bool) -> String {
+        switch g {
+        case .day: complete ? String(localized: "\(n) complete days") : String(localized: "\(n) days, partly covered")
+        case .week: complete ? String(localized: "\(n) complete weeks") : String(localized: "\(n) weeks, partly covered")
+        case .month: complete ? String(localized: "\(n) complete months") : String(localized: "\(n) months, partly covered")
+        case .year: complete ? String(localized: "\(n) complete years") : String(localized: "\(n) years, partly covered")
+        }
     }
 
     private func stat(_ label: String, _ value: String, _ caption: String, big: Bool = false) -> some View {
@@ -112,12 +121,13 @@ struct SalesScreen: View {
 
     private func chart(_ rows: [Row]) -> some View {
         let few = rows.count <= 16
+        let firstTime = String(localized: "First-time"), redownloads = String(localized: "Redownloads")
         return Chart {
             ForEach(rows) { r in
                 BarMark(x: .value("Period", r.start), y: .value("Downloads", r.first), width: barWidth(rows.count))
-                    .foregroundStyle(by: .value("Kind", "First-time"))
+                    .foregroundStyle(by: .value("Kind", firstTime))
                 BarMark(x: .value("Period", r.start), y: .value("Downloads", r.re), width: barWidth(rows.count))
-                    .foregroundStyle(by: .value("Kind", "Redownloads"))
+                    .foregroundStyle(by: .value("Kind", redownloads))
                     .annotation(position: .top, spacing: 4) {
                         // Release chips sit on their bar, like the Release column below.
                         if let v = r.releases.last {
@@ -127,7 +137,7 @@ struct SalesScreen: View {
                     }
             }
         }
-        .chartForegroundStyleScale(["First-time": t.color(.firstDownloads), "Redownloads": t.color(.firstDownloads).opacity(0.4)])
+        .chartForegroundStyleScale([firstTime: t.color(.firstDownloads), redownloads: t.color(.firstDownloads).opacity(0.4)])
         .chartLegend(position: .bottom, alignment: .leading)
         .chartXAxis {
             // One category per period, so every label sits under its bar.
@@ -149,10 +159,25 @@ struct SalesScreen: View {
 
     // MARK: Table
 
-    private struct Column { let title: String; let width: CGFloat? }
+    private struct Column {
+        let title: String; let width: CGFloat?
+        /// `title` doubles as the column's identifier, so only the shown text is localized.
+        var label: String {
+            switch title {
+            case "First-time": String(localized: "First-time")
+            case "Redownloads": String(localized: "Redownloads")
+            case "Total": String(localized: "Total")
+            case "Sales": String(localized: "Sales")
+            case "Proceeds": String(localized: "Proceeds")
+            case "Active subs": String(localized: "Active subs")
+            case "Release": String(localized: "Release")
+            default: title
+            }
+        }
+    }
 
     private func columns(paid: Bool, subs: Bool) -> [Column] {
-        [Column(title: g == .day ? "Day" : g.rawValue, width: nil), Column(title: "First-time", width: 110), Column(title: "Redownloads", width: 110),
+        [Column(title: g.title, width: nil), Column(title: "First-time", width: 110), Column(title: "Redownloads", width: 110),
          Column(title: "Total", width: 160)]
             + (paid ? [Column(title: "Sales", width: 110)] : []) + [Column(title: "Proceeds", width: 110)]
             + (subs ? [Column(title: "Active subs", width: 110)] : []) + [Column(title: "Release", width: 120)]
@@ -162,7 +187,7 @@ struct SalesScreen: View {
         let cols = columns(paid: paid, subs: subs)
         let peak = max(1, rows.map(\.total).max() ?? 1)
         return VStack(spacing: 0) {
-            line(cols, header: true) { i in Text(cols[i].title) }
+            line(cols, header: true) { i in Text(cols[i].label) }
                 .font(t.font(12, .semibold)).foregroundStyle(t.label2)
                 .overlay(alignment: .bottom) { t.sep.frame(height: 1) }
             ScrollView {

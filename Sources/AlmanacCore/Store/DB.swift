@@ -3,7 +3,7 @@ import SQLite3
 
 public enum DBError: Error, LocalizedError {
     case sqlite(String)
-    public var errorDescription: String? { if case .sqlite(let m) = self { return "Database: \(m)" }; return nil }
+    public var errorDescription: String? { if case .sqlite(let m) = self { return String(localized: "Database: \(m)") }; return nil }
 }
 
 public struct Row {

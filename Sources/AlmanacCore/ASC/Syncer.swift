@@ -19,19 +19,19 @@ public struct Syncer: Sendable {
         }
 
         var apps: [(AppRecord, String)] = []  // (app, sku)
-        await attempt("Apps") { apps = try await syncApps() }
+        await attempt(String(localized: "Apps")) { apps = try await syncApps() }
         let fx = await ExchangeRates.load()
         if !client.credentials.vendorNumber.isEmpty {
-            await attempt("Sales") { try await syncSales(apps: apps, fx: fx) }
-            await attempt("Subscriptions") { try await syncSubscriptions(apps: apps.map(\.0)) }
+            await attempt(String(localized: "Sales")) { try await syncSales(apps: apps, fx: fx) }
+            await attempt(String(localized: "Subscriptions")) { try await syncSubscriptions(apps: apps.map(\.0)) }
         } else {
-            errors.append(StepError(step: "Sales", message: "Add your vendor number in Settings to import sales."))
+            errors.append(StepError(step: String(localized: "Sales"), message: String(localized: "Add your vendor number in Settings to import sales.")))
         }
         for (app, _) in apps {
-            await attempt("Analytics · \(app.name)") { try await syncAnalytics(app: app.id) }
-            await attempt("Reviews · \(app.name)") { try await syncReviews(app: app.id) }
-            await attempt("Listing · \(app.name)") { try await syncListing(app: app.id) }
-            await attempt("Ratings · \(app.name)") { try await syncRatings(app: app.id) }
+            await attempt(String(localized: "Analytics · \(app.name)")) { try await syncAnalytics(app: app.id) }
+            await attempt(String(localized: "Reviews · \(app.name)")) { try await syncReviews(app: app.id) }
+            await attempt(String(localized: "Listing · \(app.name)")) { try await syncListing(app: app.id) }
+            await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
         }
         store.setMeta("last_sync", ISO8601DateFormatter().string(from: Date()))
         return errors

@@ -70,7 +70,7 @@ struct RootView: View {
     @ViewBuilder private var detail: some View {
         if model.app == nil {
             Screen(title: "Vane", subtitle: "") {} content: {
-                EmptyHint(title: "No apps yet", message: "Add your App Store Connect key in Settings, then refresh.", symbol: "app.dashed")
+                EmptyHint(title: String(localized: "No apps yet"), message: String(localized: "Add your App Store Connect key in Settings, then refresh."), symbol: "app.dashed")
             }
         } else {
             switch model.section {
@@ -90,13 +90,13 @@ struct RootView: View {
 extension Pane {
     var title: String {
         switch self {
-        case .insights: "Insights"
-        case .listing: "Listing"
-        case .reviews: "Reviews"
-        case .appStore: "App Store"
-        case .sales: "Sales"
-        case .usage: "Usage"
-        case .territories: "Territories"
+        case .insights: String(localized: "Insights")
+        case .listing: String(localized: "Listing")
+        case .reviews: String(localized: "Reviews")
+        case .appStore: String(localized: "App Store")
+        case .sales: String(localized: "Sales")
+        case .usage: String(localized: "Usage")
+        case .territories: String(localized: "Territories")
         case .metric(let m): m.title
         }
     }
@@ -142,9 +142,9 @@ struct ThemedSidebar: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(Pane.group1, id: \.self) { row($0) }
-                    header("Analytics")
+                    header(String(localized: "Analytics"))
                     ForEach(Pane.analytics, id: \.self) { row($0) }
-                    header("Pinned charts")
+                    header(String(localized: "Pinned charts"))
                     if model.pinned.isEmpty {
                         Text("Pin any chart to keep it here.").font(t.font(12)).foregroundStyle(t.label2).padding(.horizontal, 8)
                     }
@@ -234,7 +234,7 @@ struct ThemedAppSwitcher: View {
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 34) }
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(model.app?.name ?? "No app").font(t.font(14, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(model.app?.name ?? String(localized: "No app")).font(t.font(14, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Text(subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
                 }
                 Spacer(minLength: 0)
@@ -249,7 +249,7 @@ struct ThemedAppSwitcher: View {
 
     private var subtitle: String {
         guard let app = model.app else { return "" }
-        return model.store.versions(app.id).last.map { "iOS · Version \($0.version)" } ?? "iOS"
+        return model.store.versions(app.id).last.map { String(localized: "iOS · Version \($0.version)") } ?? "iOS"
     }
 }
 
@@ -265,7 +265,7 @@ struct ThemedSyncFooter: View {
                 Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)
             }
             if !model.syncErrors.isEmpty {
-                Text("\(model.syncErrors.count) problem\(model.syncErrors.count == 1 ? "" : "s") with the last refresh")
+                Text("\(model.syncErrors.count) problems with the last refresh")
                     .foregroundStyle(t.warn).help(model.syncErrors.joined(separator: "\n"))
             }
         }

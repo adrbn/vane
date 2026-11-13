@@ -14,17 +14,17 @@ struct UsageScreen: View {
         let analytics = model.store.lastDay(app, .sessions) != nil
         let to = model.store.lastDay(app, .sessions) ?? model.store.lastDay(app) ?? Day.today()
         let from = Day.add(-(days - 1), to: to)
-        Screen(title: "Usage", subtitle: "\(model.app?.name ?? "") · \(AppStoreData.md(from)) – \(AppStoreData.md(to))", inspector: true, scrolls: false) {
-            GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
+        Screen(title: String(localized: "Usage"), subtitle: "\(model.app?.name ?? "") · \(AppStoreData.md(from)) – \(AppStoreData.md(to))", inspector: true, scrolls: false) {
+            GlassSegments(options: [(7, String(localized: "7 Days")), (28, String(localized: "28 Days")), (90, String(localized: "90 Days")), (365, String(localized: "Year"))], selection: $days)
         } content: {
             let subs = model.store.series(app, .activeSubs).contains { $0.value > 0 }
             VStack(spacing: 16) {
                 if !analytics { AnalyticsPending(compact: true) }
                 // Until Apple's report lands, sessions and crashes stay compact and the real data (ratings) takes the room.
                 HStack(spacing: 16) {
-                    UsageCard(metric: .sessions, from: from, to: to, days: days, pending: analytics ? nil : "Arrives with Apple's first analytics report")
-                    UsageCard(metric: .crashes, from: from, to: to, days: days, pending: !analytics ? "Arrives with Apple's first analytics report"
-                              : model.store.lastDay(app, .crashes) == nil ? "No crash report from Apple yet." : nil)
+                    UsageCard(metric: .sessions, from: from, to: to, days: days, pending: analytics ? nil : String(localized: "Arrives with Apple's first analytics report"))
+                    UsageCard(metric: .crashes, from: from, to: to, days: days, pending: !analytics ? String(localized: "Arrives with Apple's first analytics report")
+                              : model.store.lastDay(app, .crashes) == nil ? String(localized: "No crash report from Apple yet.") : nil)
                 }
                 .frame(height: analytics ? nil : 132)
                 .frame(maxHeight: analytics ? .infinity : nil)
@@ -75,7 +75,7 @@ private struct UsageCard: View {
                 Spacer(minLength: 0)
             } else {
                 Text.tracked(metric.format(value), -0.9).font(t.numFont).monospacedDigit().lineLimit(1).padding(.top, 14)
-                Text(pts.count < 2 ? "Tracked daily since \(AppStoreData.md(pts.first?.day ?? end))" : c.text == Change.noHistory.text ? c.text : "\(c.text) on the previous \(days) days")
+                Text(pts.count < 2 ? String(localized: "Tracked daily since \(AppStoreData.md(pts.first?.day ?? end))") : c.text == Change.noHistory.text ? c.text : String(localized: "\(c.text) on the previous \(days) days"))
                     .font(t.font(13, .semibold)).foregroundStyle(pts.count < 2 || c.text == Change.noHistory.text ? t.label2 : c.color(t)).monospacedDigit().padding(.top, 4)
                 if pts.count >= 2 {
                     ZStack {
@@ -93,7 +93,7 @@ private struct UsageCard: View {
         .opens { model.section = metric == .ratingsTotal ? .reviews : .metric(metric) }
     }
 
-    private var title: String { metric == .ratingsTotal ? "Ratings" : metric.title }
+    private var title: String { metric == .ratingsTotal ? String(localized: "Ratings") : metric.title }
     private var symbol: String {
         switch metric {
         case .sessions: "play.circle.fill"
@@ -122,7 +122,7 @@ private struct RatingsCard: View {
                 }
                 Text.tracked(total.map { Num.int($0.value) } ?? "—", -0.9).font(t.numFont).monospacedDigit()
                     .foregroundStyle(total == nil ? t.label3 : t.label).padding(.top, 14)
-                Text(total.map { "Ratings on the App Store, tracked since \(AppStoreData.md($0.day))" } ?? "Counted from the next refresh")
+                Text(total.map { String(localized: "Ratings on the App Store, tracked since \(AppStoreData.md($0.day))") } ?? String(localized: "Counted from the next refresh"))
                     .font(t.font(13)).foregroundStyle(t.label2).padding(.top, 4)
                 Spacer(minLength: 20)
                 Text("Written reviews").font(t.font(13, .semibold)).foregroundStyle(t.label2)
@@ -130,7 +130,7 @@ private struct RatingsCard: View {
                     Text(reviews.isEmpty ? "—" : String(format: "%.1f", avg)).font(t.font(28, t.numWeight)).monospacedDigit()
                     VStack(alignment: .leading, spacing: 2) {
                         ThemedStars(rating: Int(avg.rounded()), size: 11)
-                        Text("\(reviews.count) review\(reviews.count == 1 ? "" : "s")").font(t.font(11)).foregroundStyle(t.label2)
+                        Text("\(reviews.count) reviews").font(t.font(11)).foregroundStyle(t.label2)
                     }
                 }
                 .padding(.top, 4)
@@ -156,7 +156,7 @@ private struct RatingsCard: View {
                 HStack {
                     Text("Latest reviews").font(t.font(13, .semibold)).foregroundStyle(t.label2)
                     Spacer()
-                    SmallButton(label: "Open Reviews") { model.section = .reviews }
+                    SmallButton(label: String(localized: "Open Reviews")) { model.section = .reviews }
                 }
                 if reviews.isEmpty {
                     Text("No written reviews yet. They show up here and in Reviews as people write them.").font(t.font(13)).foregroundStyle(t.label2)
@@ -168,7 +168,7 @@ private struct RatingsCard: View {
                             Text(r.title).font(t.font(15, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                         }
                         Text(r.body).font(t.font(13)).lineSpacing(3).lineLimit(4)
-                        Text("\(r.reviewer) · \(AppStoreData.md(r.created)) · \(r.response == nil ? "Not replied yet" : "Replied")")
+                        Text(verbatim: "\(r.reviewer) · \(AppStoreData.md(r.created)) · \(r.response == nil ? String(localized: "Not replied yet") : String(localized: "Replied"))")
                             .font(t.font(12)).foregroundStyle(r.response == nil ? t.warn : t.label2)
                     }
                     .padding(.top, i == 0 ? 4 : 14)
