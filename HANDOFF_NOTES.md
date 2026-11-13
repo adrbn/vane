@@ -13,6 +13,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
   - Usage: sessions/crashes cards plus a Ratings card (total, written-review distribution, latest reviews).
 - Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
+- Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
 - Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages").
 - Opening the chat widens the window by the panel's width (as far as the display allows) and closing it gives the width back, so screens keep their layout. A screen still too wide is clipped on the right, never pushing the sidebar off.
 - Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0.

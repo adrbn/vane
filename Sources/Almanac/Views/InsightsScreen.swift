@@ -34,7 +34,7 @@ struct InsightsView: View {
                 CenteredSheet(onDismiss: { fixing = nil }) { KeywordFixSheet(insight: f, close: { fixing = nil }) }
             }
         }
-        .onAppear { model.chatContext = LegacyInsightsView.context(shown, app: model.app?.name ?? "") }
+        .onAppear { model.chatContext = LegacyInsightsView.context(shown, app: model.app?.name ?? ""); model.markInsightsSeen() }
         .onChange(of: category) { model.chatContext = LegacyInsightsView.context(shown, app: model.app?.name ?? "") }
     }
 

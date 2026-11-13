@@ -28,15 +28,24 @@ final class AppModel {
     let store: Store
     var apps: [AppRecord] = []
     var appId: String? { didSet { UserDefaults.standard.set(appId, forKey: "selectedApp") } }
-    var selection: Pane? = Pane.fromLaunchArgument ?? .insights { // bound straight to the sidebar List
+    var selection: Pane? = Pane.fromLaunchArgument ?? .appStore { // bound straight to the sidebar List
         didSet {
             guard !navigating, let old = oldValue, old != selection else { return }
             backStack.append(old); forwardStack = []
         }
     }
     var section: Pane {
-        get { selection ?? .insights }
+        get { selection ?? .appStore }
         set { selection = newValue }
+    }
+    // Insights the user hasn't looked at yet: a red dot on Insights in the sidebar until the screen is opened.
+    var seenInsights = Set(UserDefaults.standard.stringArray(forKey: "insights.seen") ?? [])
+    var hasUnseenInsights: Bool { store.insights(appId ?? "").contains { !seenInsights.contains($0.id) } }
+    func markInsightsSeen() {
+        let ids = Set(store.insights(appId ?? "").map(\.id))
+        guard !ids.isSubset(of: seenInsights) else { return }
+        seenInsights.formUnion(ids)
+        UserDefaults.standard.set(Array(seenInsights), forKey: "insights.seen")
     }
     // Back/forward through visited screens, like Safari: ⌘[ ⌘] or a two-finger swipe.
     private var backStack: [Pane] = []

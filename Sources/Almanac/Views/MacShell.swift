@@ -170,14 +170,15 @@ struct ThemedSidebar: View {
     }
 
     private func row(_ p: Pane) -> some View {
-        let count = p == .insights ? model.store.insights(model.appId ?? "").filter(\.needsAttention).count
-            : p == .reviews ? model.store.reviews(model.appId ?? "").filter { $0.response == nil && $0.rating <= 3 }.count : 0
+        let count = p == .reviews ? model.store.reviews(model.appId ?? "").filter { $0.response == nil && $0.rating <= 3 }.count : 0
+        let dot = p == .insights && model.hasUnseenInsights
         return Button { model.section = p } label: {
             HStack(spacing: 10) {
                 IconSquare(symbol: p.symbol, style: t.square(p.themeSection))
                 Text(p.title).font(t.font(13, .semibold)).lineLimit(1).truncationMode(.tail)
                 Spacer(minLength: 0)
                 if count > 0 { Text("\(count)").font(t.font(12, .semibold)).foregroundStyle(t.label2).monospacedDigit() }
+                if dot { UnseenDot() }
             }
             .padding(.horizontal, 6).frame(height: 34)
             .background(isOn(p) ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
@@ -273,6 +274,14 @@ struct SettingsGear: View {
 }
 
 /// Ticker: 80 pt rail of icons, no labels.
+/// System red, like a Dock or Mail badge without a number: "something new here".
+struct UnseenDot: View {
+    var body: some View {
+        Circle().fill(Color(nsColor: .systemRed)).frame(width: 8, height: 8)
+            .accessibilityLabel("New insights")
+    }
+}
+
 struct IconRail: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
@@ -293,6 +302,7 @@ struct IconRail: View {
                         .foregroundStyle(on ? Color.white : Color(css: "#8E8E93"))
                         .frame(width: 40, height: 40)
                         .background(on ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(alignment: .topTrailing) { if p == .insights && model.hasUnseenInsights { UnseenDot().padding(5) } }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
