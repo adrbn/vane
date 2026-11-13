@@ -17,7 +17,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
   - Sales: summary card (totals + stacked bars, release chips on their bar) over a table capped to its rows, fixed column widths and row height, a Release column, "Partial" on incomplete periods.
   - Usage: sessions/crashes cards plus a Ratings card (total, written-review distribution, latest reviews).
 - Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
-- Nested corners are concentric: a shape `inset` pt inside a container uses `t.inner(inset, in: outer)` = outer radius − inset (6 pt floor). Applied to the sidebar rows and app switcher, the Listing language selection, the pending-banner icon and the chat field. Shapes sitting farther in than the container's radius (fields 24 pt inside a card) keep their own radius. The "In search" card sizes its padding to the theme and takes icon radius + padding, so the app icon's corner follows the card's.
+- Nested corners are concentric: a shape `inset` pt inside a container uses `t.inner(inset, in: outer)` = outer radius − inset (6 pt floor). Applied to the sidebar rows and app switcher, the Listing language selection, the pending-banner icon and the chat field. Shapes sitting farther in than the container's radius (fields 24 pt inside a card) keep their own radius. On Listing, the Localizations and "In search" cards take the fields' radius (`rS`), so the column reads as one set with Description.
 - No "…" on content text: app name, "In search" name and subtitle, review titles and meta, chat starters, banner text and sync status wrap to two lines instead of truncating. Single-line numbers shrink (minimumScaleFactor) rather than cut. Reviews show the territory with its flag.
 - App icons come from the public iTunes lookup (US store); an app missing there (unreleased, removed, other countries only) takes the icon of its latest build from the API (`iconAssetToken`).
 - Every tracked text (hero numbers, screen titles, headlines) uses `Text.tracked`: negative tracking on every character but the last. On the last one SwiftUI shrinks its box and clips the glyph (a lone "0" lost its right edge).
@@ -73,7 +73,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - "Add Language…" is omitted: it needs a create call to the API, out of scope.
 - Selected locale, compare toggle and the upload message live in scene storage, because the detail view is re-created after each store change.
 
-- Listing: languages show a check, "Edited" or a warning dot. An issue every language shares is said once under the list. Fields have no progress bars, and the counter turns orange past 90%. Under the list, an "In search" preview shows icon, name and subtitle, the keyword chips (repeats in orange) and the product-page text.
+- Listing: languages show a check, "Edited" or a warning dot. An issue every language shares is said once under the list. Fields have no progress bars, and the counter turns orange past 90%. Under the list, an "In search" preview shows icon, name and subtitle (two lines at most, shrinking to 75 % rather than "…"), Get on the right (opens the public App Store page; a plain label in demo), the keyword chips (repeats in orange) and the product-page text, faded out at the bottom.
 
 ## Report window
 - Its own themed window with no sidebar. It shows complete periods only; prev/next are disabled outside the data span.
