@@ -79,7 +79,9 @@ final class AppModel {
     }
 
     var app: AppRecord? { apps.first { $0.id == appId } }
-    var isDemo: Bool { store.meta("demo") == "1" }
+    var isDemo: Bool { demoLaunch || store.meta("demo") == "1" }
+    /// The `--demo` window: never syncs, so real data can't land in its database.
+    let demoLaunch = CommandLine.arguments.contains("--demo")
     var lastSync: Date? { store.meta("last_sync").flatMap { ISO8601DateFormatter().date(from: $0) } }
 
     init() {
@@ -91,6 +93,8 @@ final class AppModel {
         appId = UserDefaults.standard.string(forKey: "selectedApp")
         pinned = (UserDefaults.standard.stringArray(forKey: "pinned") ?? ["unique_impressions", "ttr", "downloads", "first_downloads", "active_subs"])
             .compactMap(Metric.init(rawValue:))
+        // A demo database that a sync once filled with real apps (before demoLaunch existed) is reset.
+        if demo && store.meta("demo") != "1" { try? store.removeAll() }
         reload()
         if apps.isEmpty && (demo || !Keychain.credentials().isComplete) { loadDemo() }
         // Re-run the engine on launch so stored insights pick up the current format (charts, wording) before the next sync.
@@ -118,7 +122,7 @@ final class AppModel {
 
     func refresh() async {
         let creds = Keychain.credentials()
-        guard creds.isComplete else {
+        guard creds.isComplete, !demoLaunch else {
             if isDemo { loadDemo() }
             return
         }

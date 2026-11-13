@@ -92,7 +92,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 
 | Flag | Effect |
 |------|--------|
-| `--demo` | Demo database (temp dir, persists between launches; delete `$(getconf DARWIN_USER_TEMP_DIR)almanac-demo.sqlite*` to reset) |
+| `--demo` | Demo database (temp dir, persists between launches; never syncs, even with a saved key; delete `$(getconf DARWIN_USER_TEMP_DIR)almanac-demo.sqlite*` to reset) |
 | `--pane <name>` | Opens that screen |
 | `--report week\|month\|year` | Opens the report window for the current app |
 | `--settings` | Opens the Settings sheet |
