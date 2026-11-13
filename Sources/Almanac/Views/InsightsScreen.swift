@@ -291,8 +291,10 @@ struct MiniInsightChart: View {
     var color: Color
     var versions: [VersionMark] = []
     var baselineLabel = true
+    @State private var width: CGFloat = 0
 
     var body: some View {
+        let labels = releaseLabels()
         Chart {
             ForEach(chart.points) { p in
                 AreaMark(x: .value("Day", p.date), y: .value("Value", p.value))
@@ -309,7 +311,7 @@ struct MiniInsightChart: View {
             ForEach(versions) { v in
                 RuleMark(x: .value("Release", Day.date(v.day))).foregroundStyle(t.label2.opacity(0.5)).lineStyle(.init(lineWidth: 1, dash: [2, 3]))
                     .annotation(position: .top, alignment: .center, spacing: 2) {
-                        Text("\(Day.date(v.day).formatted(.dateTime.month(.abbreviated).day())) · \(v.version)").font(t.font(10, .semibold)).foregroundStyle(t.label2)
+                        if let l = labels[v.id] { Text(l).font(t.font(10, .semibold)).foregroundStyle(t.label2) }
                     }
             }
             if let p = chart.points.last {
@@ -318,6 +320,26 @@ struct MiniInsightChart: View {
             }
         }
         .chartXAxis(.hidden).chartYAxis(.hidden).chartLegend(.hidden)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+
+    /// Label per release, left to right, only where it doesn't run into the previous one:
+    /// "Oct 15 · 1.2.0", else "1.2.0", else none (the dashed rule stays).
+    private func releaseLabels() -> [VersionMark.ID: String] {
+        let dates = chart.points.map(\.date) + versions.map { Day.date($0.day) }
+        guard width > 0, let lo = dates.min(), let hi = dates.max(), hi > lo else { return [:] }
+        let x = { (d: Date) in CGFloat(d.timeIntervalSince(lo) / hi.timeIntervalSince(lo)) * width }
+        let est = { (s: String) in CGFloat(s.count) * 6.2 } // ponytail: 10pt semibold ≈ 6.2pt/char, measure if labels ever clip
+        var out: [VersionMark.ID: String] = [:]
+        var rightEdge = -CGFloat.infinity
+        for v in versions.sorted(by: { $0.day < $1.day }) {
+            let cx = x(Day.date(v.day))
+            let full = "\(Day.date(v.day).formatted(.dateTime.month(.abbreviated).day())) · \(v.version)"
+            for l in [full, v.version] where cx - est(l) / 2 >= rightEdge + 8 {
+                out[v.id] = l; rightEdge = cx + est(l) / 2; break
+            }
+        }
+        return out
     }
 }
 
