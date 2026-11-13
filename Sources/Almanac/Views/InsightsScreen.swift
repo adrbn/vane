@@ -17,7 +17,10 @@ struct InsightsView: View {
         let active = model.store.insights(app)
         let all = showDismissed ? model.store.insights(app, includeDismissed: true) : active
         let shown = all.filter { category == nil || $0.category == category }
-        Screen(title: "Insights", subtitle: subtitle, inspector: true) {
+        let today = Day.today()
+        // The quiet feed (Recent + Watching) is a fixed layout that fills the window; a long feed scrolls.
+        let quiet = !shown.isEmpty && shown.count <= 3 && !shown.contains { $0.day >= Day.add(-1, to: today) }
+        Screen(title: "Insights", subtitle: subtitle, inspector: true, scrolls: !quiet) {
             GlassGroup { categoryMenu(all) }
         } content: {
             if active.isEmpty && !showDismissed {
@@ -34,8 +37,8 @@ struct InsightsView: View {
                 CenteredSheet(onDismiss: { fixing = nil }) { KeywordFixSheet(insight: f, close: { fixing = nil }) }
             }
         }
-        .onAppear { model.chatContext = LegacyInsightsView.context(shown, app: model.app?.name ?? ""); model.markInsightsSeen() }
-        .onChange(of: category) { model.chatContext = LegacyInsightsView.context(shown, app: model.app?.name ?? "") }
+        .onAppear { model.chatContext = context(shown); model.markInsightsSeen() }
+        .onChange(of: category) { model.chatContext = context(shown) }
     }
 
     private var subtitle: String {
@@ -80,9 +83,16 @@ struct InsightsView: View {
                 grid(shown)
                 // A quiet feed still shows what is being watched, as when there is nothing to flag.
                 group("Watching", "Last 28 days against each metric's usual range").padding(.top, 8)
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 16)], spacing: 16) {
-                    ForEach(NothingToFlag.watched, id: \.self) { WatchCard(metric: $0, app: model.appId ?? "") }
+                // Two rows of three that share the rest of the window height: taller sparklines, no hole below.
+                VStack(spacing: 16) {
+                    ForEach([0, 3], id: \.self) { start in
+                        HStack(spacing: 16) {
+                            ForEach(NothingToFlag.watched[start..<start + 3], id: \.self) { WatchCard(metric: $0, app: model.appId ?? "") }
+                        }
+                        .frame(maxHeight: .infinity)
+                    }
                 }
+                .frame(maxHeight: .infinity)
             } else {
                 if !new.isEmpty {
                     group("New", "\(new.count) since yesterday")
@@ -93,6 +103,7 @@ struct InsightsView: View {
                 if !older.isEmpty { group("Earlier", nil).padding(.top, 8); grid(older) }
             }
         }
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func group(_ title: String, _ sub: String?) -> some View {
@@ -206,7 +217,7 @@ struct InsightCardView: View {
         HStack(spacing: 8) {
             SmallButton(label: "Ask", symbol: "sparkles") {
                 asked = insight.id
-                model.ask("Explain this insight and what I should do about it: \(insight.title). \(insight.body)")
+                model.ask("What should I make of “\(insight.title)”, and what should I do about it?")
             }
             switch insight.action {
             case .fixKeywords: SmallButton(label: "Fix…", prominent: true) { fixing = insight }
@@ -334,6 +345,21 @@ private struct KeywordEvidence: View {
 
 // MARK: - Nothing to flag
 
+extension InsightsView {
+    /// Insights plus the numbers on the Watching cards, so the assistant knows what Almanac already shows.
+    func context(_ shown: [Insight]) -> String {
+        let app = model.appId ?? ""
+        let lines = NothingToFlag.watched.map { m -> String in
+            guard NothingToFlag.hasData(model.store, app, m) else { return "- \(MetricCard.label(m)): not available yet (waiting for Apple's first analytics report)" }
+            let to = model.store.lastDay(app, m) ?? Day.today(), from = Day.add(-27, to: to)
+            let v = m.isRate ? model.store.total(app, m, from: from, to: to)
+                : model.store.series(app, m, from: from, to: to).map(\.value).reduce(0, +) / 28
+            return "- \(MetricCard.label(m)): \(m.isRate ? Num.pct(v) : Num.k(v) + " a day") over the last 28 days"
+        }
+        return LegacyInsightsView.context(shown, app: model.app?.name ?? "") + "\nShown in Almanac (Watching):\n" + lines.joined(separator: "\n")
+    }
+}
+
 private struct NothingToFlag: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
@@ -358,7 +384,7 @@ private struct NothingToFlag: View {
                     Text("Watching").font(t.font(15, .bold))
                     Text("Last 28 days against each metric's usual range").font(t.font(13)).foregroundStyle(t.label2).lineLimit(1)
                 }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 16)], spacing: 16) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .top), count: 3), spacing: 16) {
                     ForEach(Self.watched, id: \.self) { WatchCard(metric: $0, app: app) }
                 }
             }
@@ -420,24 +446,35 @@ private struct WatchCard: View {
         let avg = metric.isRate ? model.store.total(app, metric, from: from, to: to) : recent.reduce(0, +) / Double(max(recent.count, 1))
         let band: (Double, Double)? = before.count >= 28 ? (before[before.count / 10], before[before.count * 9 / 10]) : nil
         let has = NothingToFlag.hasData(model.store, app, metric)
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    IconSquare(symbol: MetricCard.symbol(metric), style: t.square(metric), size: 20)
-                    Text(MetricCard.label(metric)).font(t.font(13, .semibold)).lineLimit(1)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(has ? (metric.isRate ? Num.pct(avg) : Num.k(avg)) : "—").font(t.font(24, .bold)).monospacedDigit()
-                        .foregroundStyle(has ? t.label : t.label3)
-                    if has && !metric.isRate { Text("a day").font(t.font(12)).foregroundStyle(t.label2) }
-                }
-                Text(!has ? "Waiting for Apple's first report" : band.map { "Usual \(fmt($0.0))–\(fmt($0.1))" } ?? "Usual range after 13 weeks of data")
-                    .font(t.font(11)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
+        // Title on its own line (never truncated), value, then the sparkline across the card's width.
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                IconSquare(symbol: MetricCard.symbol(metric), style: t.square(metric), size: 20)
+                Text(MetricCard.label(metric)).font(t.font(13, .semibold)).lineLimit(1)
             }
-            Spacer(minLength: 0)
-            BandSpark(values: has ? recent : [], band: band, color: t.color(metric))
-                .frame(width: 96, height: 48)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(has ? (metric.isRate ? Num.pct(avg) : Num.k(avg)) : "—").font(t.font(24, .bold)).monospacedDigit()
+                    .foregroundStyle(has ? t.label : t.label3)
+                if has && !metric.isRate { Text("a day").font(t.font(12)).foregroundStyle(t.label2) }
+            }
+            Group {
+                if has {
+                    BandSpark(values: recent, band: band, color: t.color(metric))
+                } else {
+                    Text("Arrives with Apple's first analytics report, usually 24–48 hours after connecting.")
+                        .font(t.font(12)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 56, maxHeight: .infinity)
+            if has {
+                Text(band.map { "Usual \(fmt($0.0))–\(fmt($0.1))" } ?? "Usual range after 13 weeks of data")
+                    .font(t.font(11)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
+            } else {
+                Text(" ").font(t.font(11))
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .themedCard(padding: 16)
     }
 

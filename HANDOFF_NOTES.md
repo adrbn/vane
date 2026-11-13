@@ -16,7 +16,9 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
 - Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages").
 - Opening the chat widens the window by the panel's width (as far as the display allows) and closing it gives the width back, so screens keep their layout. A screen still too wide is clipped on the right, never pushing the sidebar off.
-- Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0.
+- Fixed-layout screens (Territories, Reviews, Listing, quiet Insights) fill the window at any size, full screen included: Territories gives ~45% of the height to the map and fits as many table rows as the rest allows; Reviews is two full-height panes (the list scrolls inside its own); quiet Insights stretches the Watching cards.
+- The insight engine also runs at launch, so stored insights pick up format changes (charts, number formats) before the next sync.
+- Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0. The Insights context includes the Watching numbers, and the prompt forbids claiming Almanac lacks a number it shows or sending the user to App Store Connect for it.
 
 ## Settings
 - Settings is a sheet **inside** the main window (blurred backdrop, theme colors), not a separate window. It opens with ⌘, from the menu, or with the gear at the bottom of the sidebar (or of the rail in Ticker).

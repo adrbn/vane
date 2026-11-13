@@ -27,18 +27,22 @@ struct ReviewsView: View {
                 && (search.isEmpty || "\($0.title) \($0.body) \($0.reviewer)".localizedCaseInsensitiveContains(search))
         }
         ZStack {
-            Screen(title: "Reviews", subtitle: "\(model.app?.name ?? "") · \(Num.int(Double(all.count))) written reviews", inspector: true) {
+            Screen(title: "Reviews", subtitle: "\(model.app?.name ?? "") · \(Num.int(Double(all.count))) written reviews", inspector: true, scrolls: false) {
                 controls(all, versions)
             } content: {
+                // Two panes that always reach the bottom of the window, like Mail: a short list leaves room
+                // inside its pane, never a hole under a floating card.
                 HStack(alignment: .top, spacing: 16) {
                     VStack(spacing: 16) {
                         summary(all)
                         versionCard(all, versions)
                         waitingCard(all)
+                        byVersion(all, versions)
                     }
                     .frame(width: 256)
                     list(shown, all: all, versions: versions)
                 }
+                .frame(maxHeight: .infinity, alignment: .top)
             }
             .blur(radius: replying == nil ? 0 : 16)
             if let r = replying {
@@ -178,6 +182,39 @@ struct ReviewsView: View {
         .themedCard(padding: 20)
     }
 
+    /// Every release with its written reviews: count and average, newest first. Fills the rest of the column.
+    private func byVersion(_ all: [Review], _ versions: [VersionMark]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("By version").font(t.font(11)).foregroundStyle(t.label2)
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(versions.enumerated().reversed()), id: \.offset) { i, v in
+                        let end = i + 1 < versions.count ? versions[i + 1].day : "9999"
+                        let rs = all.filter { $0.created >= v.day && $0.created < end }
+                        HStack(spacing: 8) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(v.version).font(t.font(13, .semibold)).monospacedDigit()
+                                Text(AppStoreData.md(v.day)).font(t.font(11)).foregroundStyle(t.label2)
+                            }
+                            Spacer(minLength: 4)
+                            if rs.isEmpty {
+                                Text("No reviews").font(t.font(11)).foregroundStyle(t.label3)
+                            } else {
+                                Text(String(format: "%.1f ★ · %d", ReviewInfo.average(rs), rs.count)).font(t.font(12, .semibold)).monospacedDigit()
+                            }
+                        }
+                        .frame(height: 40)
+                        .overlay(alignment: .top) { if i != versions.count - 1 { t.sep.frame(height: 1) } }
+                    }
+                    if versions.isEmpty { Text("No releases recorded yet").font(t.font(13)).foregroundStyle(t.label3) }
+                }
+            }
+            .scrollIndicators(.never)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .themedCard(padding: 20)
+    }
+
     // MARK: List
 
     @ViewBuilder private func list(_ shown: [Review], all: [Review], versions: [VersionMark]) -> some View {
@@ -187,15 +224,27 @@ struct ReviewsView: View {
                 Text(all.isEmpty ? "Written App Store reviews show up here after a refresh." : search.isEmpty ? "Try All ratings, All territories or All versions." : "Search looks at titles, review text and reviewer names.")
                     .font(t.font(13)).foregroundStyle(t.label2)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .themedCard(padding: 24)
         } else {
-            VStack(spacing: 0) {
-                ForEach(Array(shown.enumerated()), id: \.element.id) { i, r in
-                    ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying)
-                        .overlay(alignment: .top) { if i > 0 { t.sep.frame(height: 1) } }
+            GeometryReader { g in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { i, r in
+                            ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying)
+                                .overlay(alignment: .top) { if i > 0 { t.sep.frame(height: 1) } }
+                        }
+                        Spacer(minLength: 24)
+                        Text(shown.count == all.count ? "That's every written review. New ones arrive with each refresh."
+                             : "\(shown.count) of \(all.count) written reviews match these filters.")
+                            .font(t.font(12)).foregroundStyle(t.label3).padding(.bottom, 20)
+                    }
+                    .frame(minHeight: g.size.height)
                 }
+                .scrollIndicators(.never)
             }
             .themedCard(padding: 0)
+            .frame(maxHeight: .infinity)
         }
     }
 }

@@ -15,12 +15,18 @@ struct TerritoriesView: View {
 
     var body: some View {
         let d = TerritoryData(store: model.store, app: model.appId ?? "", days: days)
-        Screen(title: "Territories", subtitle: "\(model.app?.name ?? "") · First-time downloads · \(AppStoreData.md(d.from)) – \(AppStoreData.md(d.to))", inspector: true) {
+        Screen(title: "Territories", subtitle: "\(model.app?.name ?? "") · First-time downloads · \(AppStoreData.md(d.from)) – \(AppStoreData.md(d.to))", inspector: true, scrolls: false) {
             GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
         } content: {
-            VStack(alignment: .leading, spacing: 16) {
-                mapCard(d)
-                table(d)
+            // Same proportions at every window size: the map takes ~45% of the height, the table the rest,
+            // with as many rows as fit. Full screen gets a bigger map and more rows, never a hole.
+            GeometryReader { g in
+                let mapH = max(300, (g.size.height - 16) * 0.45)
+                let tableH = g.size.height - 16 - mapH
+                VStack(alignment: .leading, spacing: 16) {
+                    mapCard(d).frame(height: mapH)
+                    table(d, height: tableH)
+                }
             }
         }
         .onAppear { model.chatContext = d.chatContext }
@@ -33,7 +39,7 @@ struct TerritoriesView: View {
         let bins = ThemedWorldMap.bins(d.rows.map(\.downloads).max() ?? 0)
         return HStack(alignment: .top, spacing: 24) {
             ThemedWorldMap(values: Dictionary(uniqueKeysWithValues: d.rows.map { ($0.code, $0.downloads) }), bins: bins)
-                .frame(maxWidth: .infinity).frame(height: 300)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("Downloads by territory").font(t.font(15, .bold))
@@ -65,6 +71,7 @@ struct TerritoriesView: View {
             }
             .frame(width: 300)
         }
+        .frame(maxHeight: .infinity)
         .themedCard(padding: 24)
     }
 
@@ -117,9 +124,12 @@ struct TerritoriesView: View {
 
     private static let widths: [Key: CGFloat?] = [.name: nil, .impressions: 110, .conversion: 100, .downloads: 100, .change: 90, .share: 200]
 
-    private func table(_ d: TerritoryData) -> some View {
+    private func table(_ d: TerritoryData, height: CGFloat) -> some View {
         let rows = sorted(d.rows)
-        let shown = showAll ? rows : Array(rows.prefix(9))
+        let fit = max(3, Int((height - 36 - 40) / 32))
+        let shown = showAll ? rows : Array(rows.prefix(fit))
+        // Rows share the leftover height so the last one sits on the footer, no gap.
+        let rowH = showAll || shown.count < fit ? 32 : (height - 36 - 40) / CGFloat(fit)
         return VStack(spacing: 0) {
             HStack(spacing: 16) {
                 ForEach(Key.allCases, id: \.self) { k in
@@ -137,27 +147,34 @@ struct TerritoriesView: View {
             }
             .lineLimit(1).padding(.horizontal, 16).frame(height: 36)
             .overlay(alignment: .bottom) { t.sep.frame(height: 1) }
-            ForEach(Array(shown.enumerated()), id: \.element.id) { i, r in
-                row(r, max: rows.map(\.share).max() ?? 1)
-                    .background(i % 2 == 1 ? t.fill2 : .clear)
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { i, r in
+                        row(r, max: rows.map(\.share).max() ?? 1, height: rowH)
+                            .background(i % 2 == 1 ? t.fill2 : .clear)
+                    }
+                }
             }
+            .scrollIndicators(.never).scrollDisabled(!showAll)
+            .frame(maxHeight: .infinity, alignment: .top)
             HStack {
                 Text(showAll ? "All \(rows.count) territories" : "Top \(shown.count) of \(rows.count) territories")
                     .font(t.font(12)).foregroundStyle(t.label2)
                 Spacer()
-                if rows.count > 9 {
-                    Button(showAll ? "Show Top 9" : "Show All") { showAll.toggle() }
+                if rows.count > fit {
+                    Button(showAll ? "Show Top \(fit)" : "Show All") { showAll.toggle() }
                         .buttonStyle(.plain).font(t.font(12, .semibold)).foregroundStyle(t.accentText)
                 }
             }
             .padding(.horizontal, 16).frame(height: 40)
             .overlay(alignment: .top) { t.sep.frame(height: 1) }
         }
+        .frame(height: height)
         .themedCard(padding: 0)
         .clipShape(RoundedRectangle(cornerRadius: t.r, style: .continuous))
     }
 
-    private func row(_ r: TerritoryData.Row, max: Double) -> some View {
+    private func row(_ r: TerritoryData.Row, max: Double, height: CGFloat) -> some View {
         HStack(spacing: 16) {
             HStack(spacing: 10) {
                 Text(Territories.flag(r.code)).font(.system(size: 14))
@@ -186,7 +203,7 @@ struct TerritoriesView: View {
             .frame(width: Self.widths[.share]!)
         }
         .lineLimit(1)
-        .padding(.horizontal, 16).frame(height: 32)
+        .padding(.horizontal, 16).frame(height: height)
     }
 
     private func cell(_ s: String, _ k: Key, dim: Bool) -> some View {

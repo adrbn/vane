@@ -86,6 +86,8 @@ final class AppModel {
             .compactMap(Metric.init(rawValue:))
         reload()
         if apps.isEmpty && (demo || !Keychain.credentials().isComplete) { loadDemo() }
+        // Re-run the engine on launch so stored insights pick up the current format (charts, wording) before the next sync.
+        else { runEngine() }
         appId = UserDefaults.standard.string(forKey: "selectedApp").flatMap { id in apps.contains { $0.id == id } ? id : nil } ?? apps.first?.id
     }
 

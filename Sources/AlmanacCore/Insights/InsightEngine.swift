@@ -233,7 +233,11 @@ public struct InsightEngine {
             return Insight(id: id("surge", code + Day.weekStart(asOf)), appId: app, kind: "surge", category: .markets,
                            title: "\(Territories.flag(code)) \(Territories.name(code)) is picking up",
                            body: "\(Int(v)) downloads this week, up from about \(Int(b)) a week. A localized listing for this market could compound it.",
-                           day: asOf, action: .openMetric("territories"))
+                           day: asOf,
+                           chart: InsightChart(label: "Weekly downloads", points: (0..<8).reversed().map { w in
+                               ChartPoint(Point(day: day(-6 - 7 * w), value: store.total(app, .downloads, territory: code, from: day(-6 - 7 * w), to: day(-7 * w))))
+                           }, baselineLabel: "Usual: \(Int(b)) a week", baseline: b, headline: Int(v).formatted(.number.locale(enUS))),
+                           action: .openMetric("territories"))
         }
         .sorted { $0.title < $1.title }.prefix(3).map { $0 }
     }
