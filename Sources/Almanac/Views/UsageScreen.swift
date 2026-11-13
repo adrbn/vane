@@ -36,7 +36,13 @@ struct UsageScreen: View {
         }
         .onAppear {
             model.chatContext = "Screen: Usage for \(model.app?.name ?? ""), \(from) to \(to)\n"
-                + [Metric.sessions, .crashes, .ratingsTotal, .activeSubs].map { "- \($0.title): \($0.format(model.store.total(app, $0, from: from, to: to)))" }.joined(separator: "\n")
+                + [Metric.sessions, .crashes, .activeSubs].map { m in
+                    // A metric with no rows at all hasn't arrived from Apple yet: say so instead of passing a misleading 0.
+                    model.store.series(app, m).isEmpty ? "- \(m.title): not available yet (waiting for Apple's first analytics report)"
+                        : "- \(m.title): \(m.format(model.store.total(app, m, from: from, to: to)))"
+                }.joined(separator: "\n")
+                + "\n- Ratings on the App Store: \(model.store.series(app, .ratingsTotal).last.map { Num.int($0.value) } ?? "not available yet")"
+                + "\n- Written reviews: \(model.store.reviews(app).count), average \(String(format: "%.1f", ReviewInfo.average(model.store.reviews(app))))"
         }
     }
 }

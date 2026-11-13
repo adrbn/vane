@@ -21,13 +21,16 @@ import AppKit
             e.trackSwipeEvent(options: [.lockDirection, .clampGestureAmount],
                               dampenAmountThresholdMin: model.canGoForward ? -1 : 0,
                               max: model.canGoBack ? 1 : 0) { amount, phase, complete, _ in
+                // The handler keeps firing while the system animates the end of the swipe; only live finger
+                // movement drives the slide, and the screen always ends back at rest.
                 switch phase {
+                case .began, .changed: model.swipeProgress = amount
                 case .ended:
-                    if amount > 0 { model.goBack() } else if amount < 0 { model.goForward() }
                     model.swipeProgress = 0
-                case .cancelled: model.swipeProgress = 0
-                default: if !complete { model.swipeProgress = amount }
+                    if amount > 0 { model.goBack() } else if amount < 0 { model.goForward() }
+                default: model.swipeProgress = 0
                 }
+                if complete { model.swipeProgress = 0 }
             }
             return nil
         }

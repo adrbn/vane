@@ -16,11 +16,14 @@ struct RootView: View {
                 VStack(spacing: 0) {
                     if model.isDemo { DemoBanner().clipShape(RoundedRectangle(cornerRadius: t.rS)).padding(.horizontal, 24).padding(.top, 8) }
                     detail
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .id("\(model.appId ?? "")-\(model.revision)")
                         .offset(x: model.swipeProgress * 60)
                         .opacity(1 - abs(model.swipeProgress) * 0.35)
                 }
+                // A screen wider than its slot must never push the sidebar or the chat off the window.
+                .frame(minWidth: 0)
+                .clipped()
                 if model.chatOpen {
                     InspectorPanel()
                         .frame(width: 304)
@@ -48,6 +51,7 @@ struct RootView: View {
         .animation(.default, value: model.chatOpen)
         .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
         .task { openLaunchReport(); SwipeNavigation.install(model) }
+        .onChange(of: model.chatOpen) { _, open in ChatRoom.fit(open: open) }
     }
 
     @Environment(\.openWindow) private var openWindow
@@ -308,6 +312,31 @@ import AppKit
 
 /// Gives the window an empty unified toolbar so the traffic lights sit 52 pt tall, inside the sidebar's rounded corner.
 /// In full screen the toolbar is removed: there it would draw an opaque bar over the top of the content.
+/// The chat panel takes room from the window, not from the screen: opening it widens the window
+/// (as far as the display allows) so the screen keeps its width; closing it gives the width back.
+@MainActor enum ChatRoom {
+    static let panel: CGFloat = 320
+    private static var grown: CGFloat = 0
+
+    static func fit(open: Bool) {
+        guard let w = NSApp.windows.first(where: { $0.title == "Almanac" && $0.isVisible }), !w.styleMask.contains(.fullScreen), let screen = w.screen else { return }
+        var f = w.frame
+        let room = screen.visibleFrame
+        if open {
+            let add = min(panel, room.width - f.width)
+            guard add > 0 else { return }
+            f.size.width += add
+            if f.maxX > room.maxX { f.origin.x = max(room.minX, room.maxX - f.width) }
+            grown = add
+        } else {
+            guard grown > 0 else { return }
+            f.size.width -= grown
+            grown = 0
+        }
+        w.setFrame(f, display: true, animate: true)
+    }
+}
+
 struct WindowChrome: NSViewRepresentable {
     final class Coordinator { var observers: [NSObjectProtocol] = [] }
     func makeCoordinator() -> Coordinator { Coordinator() }

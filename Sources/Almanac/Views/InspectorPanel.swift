@@ -111,8 +111,7 @@ struct InspectorPanel: View {
                 }
             }
         default:
-            Text((try? AttributedString(markdown: m.text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(m.text))
-                .font(t.font(13)).lineSpacing(3)
+            ChatMarkdown(text: m.text)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contextMenu {
@@ -140,6 +139,65 @@ struct InspectorPanel: View {
             catch { messages.append(ChatMessage(role: "error", text: error.localizedDescription)) }
             busy = false
         }
+    }
+}
+
+/// Markdown for a narrow panel: paragraphs, bullets, numbered items and headings. Tables become
+/// "cell · cell" lines (their separator rows dropped) so nothing shows raw pipes.
+private struct ChatMarkdown: View {
+    @Environment(\.theme) private var t
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
+                switch b.kind {
+                case .heading: inline(b.text).font(t.font(13, .semibold))
+                case .bullet(let mark):
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(mark).font(t.font(13)).foregroundStyle(t.label2).monospacedDigit()
+                        inline(b.text).font(t.font(13))
+                    }
+                case .row: inline(b.text).font(t.font(12)).foregroundStyle(t.label2).monospacedDigit()
+                case .paragraph: inline(b.text).font(t.font(13))
+                }
+            }
+        }
+        .lineSpacing(3)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func inline(_ s: String) -> Text {
+        Text((try? AttributedString(markdown: s, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(s))
+    }
+
+    enum Kind { case heading, bullet(String), row, paragraph }
+    struct Block { let kind: Kind; let text: String }
+
+    var blocks: [Block] {
+        var out: [Block] = []
+        var para: [String] = []
+        func flush() { if !para.isEmpty { out.append(Block(kind: .paragraph, text: para.joined(separator: " "))); para = [] } }
+        for raw in text.components(separatedBy: .newlines) {
+            let l = raw.trimmingCharacters(in: .whitespaces)
+            if l.isEmpty { flush(); continue }
+            if l.hasPrefix("|") {
+                flush()
+                let cells = l.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                if cells.allSatisfy({ $0.allSatisfy { "-: ".contains($0) } }) { continue }
+                out.append(Block(kind: .row, text: cells.joined(separator: " · ")))
+            } else if l.hasPrefix("#") {
+                flush(); out.append(Block(kind: .heading, text: l.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)))
+            } else if l.hasPrefix("- ") || l.hasPrefix("* ") || l.hasPrefix("• ") {
+                flush(); out.append(Block(kind: .bullet("•"), text: String(l.dropFirst(2))))
+            } else if let dot = l.firstIndex(of: "."), l[..<dot].allSatisfy(\.isNumber), !l[..<dot].isEmpty, l[l.index(after: dot)...].hasPrefix(" ") {
+                flush(); out.append(Block(kind: .bullet(String(l[...dot])), text: String(l[l.index(dot, offsetBy: 2)...])))
+            } else {
+                para.append(l)
+            }
+        }
+        flush()
+        return out
     }
 }
 #endif

@@ -80,7 +80,7 @@ struct InsightsView: View {
                 grid(shown)
                 // A quiet feed still shows what is being watched, as when there is nothing to flag.
                 group("Watching", "Last 28 days against each metric's usual range").padding(.top, 8)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 16)], spacing: 16) {
                     ForEach(NothingToFlag.watched, id: \.self) { WatchCard(metric: $0, app: model.appId ?? "") }
                 }
             } else {
@@ -358,7 +358,7 @@ private struct NothingToFlag: View {
                     Text("Watching").font(t.font(15, .bold))
                     Text("Last 28 days against each metric's usual range").font(t.font(13)).foregroundStyle(t.label2).lineLimit(1)
                 }
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 16)], spacing: 16) {
                     ForEach(Self.watched, id: \.self) { WatchCard(metric: $0, app: app) }
                 }
             }
