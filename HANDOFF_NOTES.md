@@ -28,7 +28,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
   - the "Share with the assistant" picker;
   - "signed in" for the CLI. The app only knows whether the command is in PATH, so it shows that path.
 - "Notify me about new insights" is real. The background agent reads `notifyInsights`.
-- Added beyond the mockup: the Vane-on-iPhone QR code, the Claude model field, and the Appearance section.
+- Added beyond the mockup: the Vane-on-iPhone QR code, the Claude model field, the Appearance section, and "Open Demo Window" (Data), which launches a second instance with `--demo` so sample data never mixes with real data.
 
 ## Data honesty
 - Charts show complete buckets only. Yearly charts use complete weeks: a partial first or last week would draw a false drop.

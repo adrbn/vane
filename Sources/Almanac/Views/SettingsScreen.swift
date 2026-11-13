@@ -37,6 +37,16 @@ struct MacSettingsView: View {
                         row(t, "Stored on this Mac · \(storeSize)", (Store.defaultPath as NSString).deletingLastPathComponent.replacingOccurrences(of: NSHomeDirectory(), with: "~")) {
                             SmallButton(label: "Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: Store.defaultPath)]) }
                         }
+                        if !model.isDemo {
+                            row(t, "Sample data", "Opens a second Almanac with demo apps and every metric filled in. Your data isn't touched.") {
+                                SmallButton(label: "Open Demo Window") {
+                                    let config = NSWorkspace.OpenConfiguration()
+                                    config.createsNewApplicationInstance = true
+                                    config.arguments = ["--demo"]
+                                    NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config)
+                                }
+                            }
+                        }
                     }
                 }
                 .padding(.bottom, 4)
