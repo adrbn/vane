@@ -86,7 +86,7 @@ struct ListingView: View {
                             }
                         }
                         .padding(.horizontal, 10).frame(height: 32)
-                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.inner(6), style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -105,6 +105,8 @@ struct ListingView: View {
         }
         .frame(width: 240)
     }
+
+    static func previewPad(_ t: AlmanacTheme) -> CGFloat { min(max(t.r - 10, 10), 18) }
 
     /// How the name and subtitle read in App Store search, plus the keywords as Apple indexes them.
     private func preview(_ l: ListingLocale) -> some View {
@@ -140,7 +142,8 @@ struct ListingView: View {
                 .mask(LinearGradient(stops: [.init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .themedCard(padding: 14)
+        // The 44 pt icon has a ~10 pt radius: card radius = icon radius + padding keeps them concentric.
+        .themedCard(padding: Self.previewPad(t), radius: Self.previewPad(t) + 10)
     }
 
     static func languageName(_ code: String) -> String { Locale(identifier: "en").localizedString(forIdentifier: code) ?? code }

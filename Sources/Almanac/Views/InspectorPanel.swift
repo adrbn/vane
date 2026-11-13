@@ -75,8 +75,8 @@ struct InspectorPanel: View {
             }
             .padding(.leading, 14).padding(.trailing, 6)
             .frame(minHeight: 36)
-            .background(t.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(t.sep2, lineWidth: 1))
+            .background(t.field, in: RoundedRectangle(cornerRadius: t.inner(12, in: t.r - 4), style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: t.inner(12, in: t.r - 4), style: .continuous).strokeBorder(t.sep2, lineWidth: 1))
             .padding(12)
         }
         .onAppear(perform: consumeSeed)

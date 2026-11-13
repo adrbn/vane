@@ -156,6 +156,11 @@ struct ThemedSidebar: View {
             .scrollIndicators(.never)
             HStack(alignment: .center, spacing: 4) {
                 ThemedSyncFooter()
+                Button { Task { await model.refresh() } } label: {
+                    Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .semibold)).foregroundStyle(t.label2)
+                        .frame(width: 28, height: 28).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain).disabled(model.syncing).help("Refresh Now (⌘R)")
                 SettingsGear(size: 28)
             }
             .padding(8)
@@ -185,7 +190,7 @@ struct ThemedSidebar: View {
                 if dot { UnseenDot() }
             }
             .padding(.horizontal, 6).frame(height: 34)
-            .background(isOn(p) ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+            .background(isOn(p) ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -199,7 +204,7 @@ struct ThemedSidebar: View {
                 Spacer(minLength: 0)
             }
             .padding(.leading, 10).padding(.trailing, 6).frame(height: 30)
-            .background(model.section == .metric(m) ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+            .background(model.section == .metric(m) ? t.navSel : .clear, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -226,7 +231,7 @@ struct ThemedAppSwitcher: View {
                 Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold)).foregroundStyle(t.label2)
             }
             .padding(.horizontal, 8).frame(height: 52)
-            .background(t.fill, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+            .background(t.fill, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
             .contentShape(Rectangle())
         }
         .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)

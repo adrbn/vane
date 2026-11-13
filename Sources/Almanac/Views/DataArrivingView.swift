@@ -149,7 +149,7 @@ struct AnalyticsPending: View {
             .font(t.font(13)).foregroundStyle(t.label2)
         let check = SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
         let icon = Image(systemName: "clock").font(.system(size: 15, weight: .semibold)).foregroundStyle(t.accentText)
-            .frame(width: 36, height: 36).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(width: 36, height: 36).background(t.accentSoft, in: RoundedRectangle(cornerRadius: t.inner(14), style: .continuous))
         if compact {
             HStack(spacing: 14) {
                 icon

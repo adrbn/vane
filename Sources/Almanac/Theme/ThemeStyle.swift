@@ -45,6 +45,8 @@ extension AlmanacTheme {
 
     var r: CGFloat { pt("r") }
     var rS: CGFloat { pt("rS") }
+    /// Radius for a shape `inset` pt inside a container of radius `outer` (default `r`), so the corners stay concentric.
+    func inner(_ inset: CGFloat, in outer: CGFloat? = nil) -> CGFloat { max((outer ?? r) - inset, 6) }
     var heroPad: CGFloat { pt("heroPad") }
     var hasShadow: Bool { id == "candy" }
     var blurredCards: Bool { tokens["cardBlur"] != "none" }

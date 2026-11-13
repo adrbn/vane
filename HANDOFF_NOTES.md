@@ -17,6 +17,8 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
   - Sales: summary card (totals + stacked bars, release chips on their bar) over a table capped to its rows, fixed column widths and row height, a Release column, "Partial" on incomplete periods.
   - Usage: sessions/crashes cards plus a Ratings card (total, written-review distribution, latest reviews).
 - Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
+- Nested corners are concentric: a shape `inset` pt inside a container uses `t.inner(inset, in: outer)` = outer radius − inset (6 pt floor). Applied to the sidebar rows and app switcher, the Listing language selection, the pending-banner icon and the chat field. Shapes sitting farther in than the container's radius (fields 24 pt inside a card) keep their own radius. The "In search" card sizes its padding to the theme and takes icon radius + padding, so the app icon's corner follows the card's.
+- Manual refresh: ⌘R, the ↻ button next to the sync status at the bottom of the sidebar, or "Check Now" on pending banners.
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
 - Tiles are links: a Watching card or a Usage card opens its metric (Ratings opens Reviews), an insight card opens what its Open button opens, and the Reviews context numbers open Downloads / Usage.
