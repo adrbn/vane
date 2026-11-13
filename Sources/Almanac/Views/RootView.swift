@@ -78,11 +78,7 @@ struct RootView: View {
 
 struct DemoBanner: View {
     @Environment(AppModel.self) private var model
-    #if os(macOS)
-    @Environment(\.openSettings) private var openSettings
-    #else
     private func openSettings() { model.settingsOpen = true }
-    #endif
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "sparkles")

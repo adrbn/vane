@@ -13,6 +13,9 @@ struct AlmanacApp: App {
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1240, height: 820)
         .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") { model.settingsOpen = true }.keyboardShortcut(",")
+            }
             CommandGroup(after: .newItem) {
                 Button("Refresh") { Task { await model.refresh() } }.keyboardShortcut("r")
             }
@@ -28,9 +31,5 @@ struct AlmanacApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1240, height: 820)
-
-        Settings {
-            SettingsView().environment(model).frame(width: 540)
-        }
     }
 }

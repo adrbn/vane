@@ -157,7 +157,8 @@ private struct ReportBody: View {
                 }
             }
             HStack(alignment: .top, spacing: 12) {
-                ForEach(report.headline) { kpi($0) }
+                ForEach(report.headline) { kpi($0).frame(maxWidth: 220) }
+                Spacer(minLength: 0)
             }
             .fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .top, spacing: 40) {

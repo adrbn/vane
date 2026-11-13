@@ -29,6 +29,12 @@ struct RootView: View {
                 }
             }
         }
+        .overlay {
+            if model.settingsOpen {
+                CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
+                    .transition(.opacity)
+            }
+        }
         .background(WindowChrome())
         .ignoresSafeArea()
         .foregroundStyle(t.label)
@@ -37,6 +43,7 @@ struct RootView: View {
         .environment(\.theme, t)
         .preferredColorScheme(t.scheme)
         .animation(.default, value: model.chatOpen)
+        .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
         .task { openLaunchReport() }
     }
 
@@ -143,7 +150,11 @@ struct ThemedSidebar: View {
                 .padding(.top, 12)
             }
             .scrollIndicators(.never)
-            ThemedSyncFooter().padding(8)
+            HStack(alignment: .center, spacing: 4) {
+                ThemedSyncFooter()
+                SettingsGear(size: 28)
+            }
+            .padding(8)
         }
         .padding([.horizontal, .bottom], 10)
         .frame(width: 224)
@@ -231,7 +242,7 @@ struct ThemedSyncFooter: View {
                 Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(1)
             } else if let d = model.lastSync {
                 Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
-                Text("Next refresh in the background").foregroundStyle(t.label3)
+                Text("Next refresh in the background").foregroundStyle(t.label3).lineLimit(1).minimumScaleFactor(0.8)
             }
             if !model.syncErrors.isEmpty {
                 Text("\(model.syncErrors.count) problem\(model.syncErrors.count == 1 ? "" : "s") with the last refresh")
@@ -241,6 +252,23 @@ struct ThemedSyncFooter: View {
         .font(t.font(11))
         .frame(maxWidth: .infinity, alignment: .leading)
         .contextMenu { Button("Refresh Now") { Task { await model.refresh() } } }
+    }
+}
+
+/// Opens Settings as a sheet inside the window.
+struct SettingsGear: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    var size: CGFloat
+    var body: some View {
+        Button { model.settingsOpen = true } label: {
+            Image(systemName: "gearshape").font(.system(size: size > 30 ? 16 : 14, weight: .semibold))
+                .foregroundStyle(t.label2)
+                .frame(width: size, height: size)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("Settings (⌘,)")
     }
 }
 
@@ -271,6 +299,7 @@ struct IconRail: View {
                 .help(p.title)
             }
             Spacer()
+            SettingsGear(size: 40).padding(.bottom, 12)
         }
         .frame(width: 92)
         .overlay(alignment: .trailing) { t.sep.frame(width: 1) }

@@ -30,8 +30,12 @@ public struct Assistant: Sendable {
         }
     }
 
-    public func isInstalled() async -> Bool {
-        (try? await Self.shell("command -v \(provider.rawValue)", stdin: "")).map { !$0.isEmpty } ?? false
+    public func isInstalled() async -> Bool { await location() != nil }
+
+    /// Where the command lives in the user's shell PATH, nil if it isn't there.
+    public func location() async -> String? {
+        (try? await Self.shell("command -v \(provider.rawValue)", stdin: ""))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
     }
 
     public func ask(_ question: String, context: String, history: [(role: String, text: String)] = []) async throws -> String {

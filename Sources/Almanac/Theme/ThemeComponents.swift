@@ -268,6 +268,7 @@ struct Spark: View {
 
 struct CenteredSheet<Content: View>: View {
     @Environment(\.theme) private var t
+    var width: CGFloat = 600
     var onDismiss: () -> Void
     @ViewBuilder var content: Content
     var body: some View {
@@ -276,12 +277,15 @@ struct CenteredSheet<Content: View>: View {
                 .onTapGesture(perform: onDismiss)
             content
                 .padding(24)
-                .frame(width: 600)
+                .frame(width: width)
                 .background(t.sheet, in: RoundedRectangle(cornerRadius: t.r, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: t.r, style: .continuous).strokeBorder(t.cardBorder, lineWidth: 1))
                 .shadow(color: .black.opacity(0.25), radius: 30, y: 16)
+                .padding(.vertical, 40)
         }
+        #if os(macOS)
         .onExitCommand(perform: onDismiss)
+        #endif
     }
 }
 

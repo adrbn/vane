@@ -5,18 +5,6 @@ import UniformTypeIdentifiers
 import CoreImage.CIFilterBuiltins
 #endif
 
-struct SettingsView: View {
-    var body: some View {
-        TabView {
-            AccountSettings().tabItem { Label("App Store Connect", systemImage: "key") }
-            AISettingsView().tabItem { Label("AI", systemImage: "sparkles") }
-            AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }
-        }
-        .padding(20)
-        .frame(width: 560, height: 620)
-    }
-}
-
 struct AccountSettings: View {
     @Environment(AppModel.self) private var model
     @State private var creds = Keychain.credentials()
@@ -70,14 +58,20 @@ struct AccountSettings: View {
             }
         }
         .formStyle(.grouped)
-        .fileImporter(isPresented: $importing, allowedContentTypes: [UTType(filenameExtension: "p8") ?? .data, .data]) { result in
+        .fileImporter(isPresented: $importing, allowedContentTypes: Self.keyTypes) { result in
             guard case .success(let url) = result else { return }
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            creds.privateKeyPEM = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-            // AuthKey_<KEYID>.p8 → fill the key ID for free.
-            if creds.keyId.isEmpty, let m = url.lastPathComponent.firstMatch(of: #/AuthKey_([A-Z0-9]+)\.p8/#) { creds.keyId = String(m.1) }
+            Self.load(url, into: &creds)
         }
+    }
+
+    static let keyTypes = [UTType(filenameExtension: "p8") ?? .data, .data]
+
+    static func load(_ url: URL, into creds: inout ASCCredentials) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        creds.privateKeyPEM = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        // AuthKey_<KEYID>.p8 → fill the key ID for free.
+        if creds.keyId.isEmpty, let m = url.lastPathComponent.firstMatch(of: #/AuthKey_([A-Z0-9]+)\.p8/#) { creds.keyId = String(m.1) }
     }
 
     @ViewBuilder private func field(_ label: String, _ text: Binding<String>, prompt: String? = nil) -> some View {
@@ -100,49 +94,6 @@ struct AccountSettings: View {
             await model.refresh()
             status = model.syncErrors.isEmpty ? "All set." : model.syncErrors.joined(separator: "\n")
         } catch { status = error.localizedDescription }
-    }
-}
-
-struct AppearanceSettings: View {
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
-    var body: some View {
-        Form {
-            Picker("Theme", selection: $themeId) {
-                ForEach(AlmanacTheme.all, id: \.id) { Text($0.name).tag($0.id) }
-            }
-            .pickerStyle(.inline)
-            Text("Ticker and Nocturne are dark, Color Blocks and Candy Glass are light. The theme applies to every window.")
-                .font(.caption).foregroundStyle(.secondary)
-        }
-        .formStyle(.grouped)
-    }
-}
-
-struct AISettingsView: View {
-    @AppStorage("aiProvider") private var provider = Assistant.Provider.claude.rawValue
-    @AppStorage("aiModel") private var aiModel = "sonnet"
-    @State private var installed: Bool?
-
-    var body: some View {
-        Form {
-            Picker("Use", selection: $provider) {
-                ForEach(Assistant.Provider.allCases) { Text($0.title).tag($0.rawValue) }
-            }
-            if provider == Assistant.Provider.claude.rawValue {
-                TextField("Model", text: $aiModel, prompt: Text("sonnet, opus, haiku…"))
-            }
-            LabeledContent("Status") {
-                switch installed {
-                case .some(true): Label("Found", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                case .some(false): Label("Not found in your shell's PATH", systemImage: "xmark.circle").foregroundStyle(.red)
-                case nil: ProgressView().controlSize(.small)
-                }
-            }
-            Text("Almanac runs the command-line tool you already use, signed in with your own subscription. No API key, and nothing goes through a third-party server.")
-                .font(.caption).foregroundStyle(.secondary)
-        }
-        .formStyle(.grouped)
-        .task(id: provider) { installed = nil; installed = await AISettings.assistant.isInstalled() }
     }
 }
 

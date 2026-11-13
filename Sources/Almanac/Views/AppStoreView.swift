@@ -47,9 +47,15 @@ struct AppStoreData {
         return Day.between(pFrom, first) <= 1
     }
     /// Daily, or weekly sums past 90 days.
-    func spark(_ m: Metric) -> [Double] {
+    func spark(_ m: Metric) -> [Double] { points(m).map(\.value) }
+    /// Daily, or weekly past 90 days with complete weeks only: a partial first or last week would read as a drop.
+    func points(_ m: Metric) -> [Point] {
         let p = store.series(app, m, from: from, to: to)
-        return (days > 90 ? p.bucketed(.week) : p).map(\.value)
+        guard days > 90 else { return p }
+        var w = p.bucketed(.week)
+        if Day.weekStart(from) != from, !w.isEmpty { w.removeFirst() }
+        if Day.add(6, to: Day.weekStart(to)) != to, !w.isEmpty { w.removeLast() }
+        return w
     }
     var daily: [Point] { store.series(app, .firstDownloads, from: from, to: to) }
     var best: Point? { daily.max { $0.value < $1.value } }
@@ -132,7 +138,7 @@ private struct Hero: View {
     }
 
     @ViewBuilder private var chart: some View {
-        let v = d.days > 90 ? d.daily.bucketed(.week).map(\.value) : d.daily.map(\.value)
+        let v = d.spark(.firstDownloads)
         let area = LinePath(values: v, floorZero: true, closed: true)
         let line = LinePath(values: v, floorZero: true)
         let style = StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
@@ -276,7 +282,7 @@ private struct TickerOverview: View {
                 Spark(values: d.spark(m), color: c.flat ? t.label2 : t.color(m, up: c.up), width: 1.5).frame(width: 72, height: 28)
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(Num.value(m, d.value(m))).font(t.font(16, .semibold)).monospacedDigit()
-                    Text(c.flat ? (m.isRate ? "0.0 pts" : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
+                    Text(c.text == Change.noHistory.text ? "—" : c.flat ? (m.isRate ? "0.0 pts" : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
                         .foregroundStyle(.black).padding(.horizontal, 8).frame(minWidth: 72, alignment: .trailing).frame(height: 24)
                         .background(c.flat ? Color(css: "#8E8E93") : c.up ? t.pos : t.neg, in: RoundedRectangle(cornerRadius: 6))
                 }
@@ -322,8 +328,7 @@ private struct TickerOverview: View {
     }
 
     private func store(_ m: Metric) -> [Point] {
-        let p = model.store.series(d.app, m, from: d.from, to: d.to)
-        return d.days > 90 ? p.bucketed(.week) : p
+        d.points(m)
     }
 
     private func axisLabels(_ p: [Point]) -> [String] {

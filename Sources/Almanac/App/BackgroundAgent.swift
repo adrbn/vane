@@ -33,6 +33,7 @@ enum BackgroundAgent {
     }
 
     static func notify(_ insights: [Insight]) async {
+        guard UserDefaults.standard.object(forKey: "notifyInsights") as? Bool ?? true else { return }
         let center = UNUserNotificationCenter.current()
         guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return }
         for i in insights.prefix(5) {

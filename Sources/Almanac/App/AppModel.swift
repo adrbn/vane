@@ -34,7 +34,7 @@ final class AppModel {
         set { selection = newValue }
     }
     var chatOpen = CommandLine.arguments.contains("--chat")
-    var settingsOpen = false   // iOS only: the Mac uses the Settings scene
+    var settingsOpen = CommandLine.arguments.contains("--settings")   // Mac: in-window sheet; iOS: modal sheet
     var chatContext = ""
     var chatSeed: String?               // question pre-filled by "Ask about this" buttons
     var syncing = false
