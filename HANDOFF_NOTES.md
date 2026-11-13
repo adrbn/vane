@@ -1,0 +1,65 @@
+# Mac redesign — implementation notes
+
+Decisions taken while implementing the handoff (`design_handoff_almanac_macos`), where the spec was silent or reality disagreed with the mockups.
+
+## Themes and chrome
+- Default theme: **Nocturne**. Each theme keeps a fixed scheme: Ticker and Nocturne dark, Color Blocks and Candy Glass light. The system appearance is ignored.
+- Theme tokens live verbatim in `Theme/Themes.swift`; `ThemeStyle.swift` gives them types.
+- Unified empty toolbar, so the traffic lights sit inside the sidebar's rounded corner. Ticker uses a 92 pt icon rail instead of the sidebar.
+- Screen header: 8 pt more space on top than the mockup (title block at 20 pt), at Adrien's request. The mockups felt bottom-heavy.
+- UI in English, with en_US number and date formats everywhere, whatever the Mac's locale.
+- Sales and Usage were not designed. They keep their previous content under the shared screen header.
+
+## Settings
+- Settings is a sheet **inside** the main window (blurred backdrop, theme colors), not a separate window. It opens with ⌘, from the menu, or with the gear at the bottom of the sidebar (or of the rail in Ticker).
+- Themes are picked from four live miniatures drawn in each theme's own colors.
+- Things the mockup shows but the app doesn't have were left out rather than faked:
+  - the "Share with the assistant" picker;
+  - "signed in" for the CLI. The app only knows whether the command is in PATH, so it shows that path.
+- "Notify me about new insights" is real. The background agent reads `notifyInsights`.
+- Added beyond the mockup: the Vane-on-iPhone QR code, the Claude model field, and the Appearance section.
+
+## Data honesty
+- Charts show complete buckets only. Yearly charts use complete weeks: a partial first or last week would draw a false drop.
+- Comparisons ("vs last week") appear only when the previous period has full history. Otherwise "No earlier data" in reports and "—" in App Store pills.
+- The recomputed lead change was removed.
+- Values that aren't available yet read "Expected in 24–48 hours". No skeletons.
+- Usual range = p10 to p90 of the 63 prior days.
+- Insights:
+  - Dismissed insights are shown as "Recently resolved".
+  - "Nothing to flag" stays honest before analytics arrive.
+- Territories: first-time downloads only, log-scaled color bins, a growth floor so tiny markets don't top the list.
+- Reviews:
+  - The version is inferred from the review date.
+  - Written reviews are counted, not total ratings.
+  - Translation runs automatically only if the language pack is already installed.
+
+## Listing
+- Upload sends only the fields that changed.
+- "Add Language…" is omitted: it needs a create call to the API, out of scope.
+- Selected locale, compare toggle and the upload message live in scene storage, because the detail view is re-created after each store change.
+
+## Report window
+- Its own themed window with no sidebar. It shows complete periods only; prev/next are disabled outside the data span.
+- The prose is templated from the numbers, not "Written by Claude".
+- Headline:
+  - with analytics: first-time downloads, impressions, tap-through rate, conversion, proceeds;
+  - without analytics: downloads, plus proceeds, ratings and subscriptions when they're non-zero.
+- Lone KPI cards are capped at 220 pt wide.
+- Removed the "Write with AI" and "Chat about this" buttons. Share sends plain text; Export PDF renders the report.
+
+## iOS
+- Vane keeps the Legacy views until its own redesign. Mac-only screens are wrapped in `#if os(macOS)`.
+- After adding Swift files, run `xcodegen generate` in `ios/`.
+
+## Launch flags (screenshots and testing)
+`open -n build/Almanac.app --args …`
+
+| Flag | Effect |
+|------|--------|
+| `--demo` | Demo database (temp dir, persists between launches; delete `$(getconf DARWIN_USER_TEMP_DIR)almanac-demo.sqlite*` to reset) |
+| `--pane <name>` | Opens that screen |
+| `--report week\|month\|year` | Opens the report window for the current app |
+| `--settings` | Opens the Settings sheet |
+| `--chat` | Opens the inspector chat |
+| `-theme <ticker\|blocks\|nocturne\|candy>` | Overrides the theme for this launch |
