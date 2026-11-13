@@ -5,7 +5,7 @@ import SwiftUI
 /// Window shell: themed background, glass sidebar (or Ticker's icon rail), screen, inspector.
 struct RootView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)

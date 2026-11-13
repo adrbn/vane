@@ -4,7 +4,7 @@ import SwiftUI
 /// Typed access to the token strings in Themes.swift (which stays a verbatim copy of the handoff).
 extension AlmanacTheme {
     static let storageKey = "theme"
-    static func named(_ id: String) -> AlmanacTheme { all.first { $0.id == id } ?? .nocturne }
+    static func named(_ id: String) -> AlmanacTheme { all.first { $0.id == id } ?? .blocks }
 
     var name: String { ["ticker": "Ticker", "blocks": "Color Blocks", "nocturne": "Nocturne", "candy": "Candy Glass"][id] ?? id }
     var scheme: ColorScheme { id == "ticker" || id == "nocturne" ? .dark : .light }
@@ -152,7 +152,7 @@ extension Color {
     }
 }
 
-private struct ThemeKey: EnvironmentKey { static let defaultValue = AlmanacTheme.nocturne }
+private struct ThemeKey: EnvironmentKey { static let defaultValue = AlmanacTheme.blocks }
 extension EnvironmentValues {
     var theme: AlmanacTheme {
         get { self[ThemeKey.self] }

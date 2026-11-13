@@ -14,7 +14,12 @@ rm -rf "$APP" build/Almanac.app   # old name
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents"
 cp "$BIN" "$APP/Contents/MacOS/Almanac"
 cp Resources/countries.json "$APP/Contents/Resources/"
-[ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$APP/Contents/Resources/"
+# The icon is an Icon Composer document: actool (Xcode 26) renders it into Assets.car (Liquid Glass layers)
+# plus an AppIcon.icns fallback.
+rm -rf build/icon && mkdir -p build/icon
+xcrun actool Resources/AppIcon.icon --compile build/icon --platform macosx --minimum-deployment-target 26.0 \
+  --app-icon AppIcon --output-partial-info-plist build/icon/partial.plist >/dev/null
+cp build/icon/Assets.car build/icon/AppIcon.icns "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -27,6 +32,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundleDisplayName</key><string>Vane</string>
   <key>CFBundleExecutable</key><string>Almanac</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIconName</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>
@@ -50,7 +56,9 @@ EOF
 
 IDENTITY="$(security find-identity -v -p codesigning | grep -m1 'Developer ID Application' | sed -E 's/.*"(.*)".*/\1/' || true)"
 if [ -n "$IDENTITY" ]; then
-  codesign --force --options runtime --timestamp=none --sign "$IDENTITY" "$APP"
+  # Release builds get a secure timestamp, which notarization requires.
+  TS="--timestamp=none"; [ "$CONFIG" = release ] && TS="--timestamp"
+  codesign --force --options runtime "$TS" --sign "$IDENTITY" "$APP"
 else
   codesign --force --sign - "$APP"
 fi

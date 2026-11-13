@@ -47,7 +47,7 @@ extension SettingsBlocks {
 
 /// The four theme miniatures; picking one switches the whole app.
 struct ThemePicker: View {
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     var body: some View {
         let t = AlmanacTheme.named(themeId)
         HStack(spacing: 12) {
@@ -76,7 +76,7 @@ struct ThemePicker: View {
 /// Issuer ID, key ID, .p8 (chosen or dropped anywhere on the form), vendor number, then a checked save.
 struct ConnectForm: View, SettingsBlocks {
     @Environment(AppModel.self) private var model
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     var caption: String? = "Create a key with the Sales and Reports role in Users and Access → Integrations."
     /// Called once the key is checked and saved, before the import finishes.
     var onConnected: () -> Void = {}
@@ -163,7 +163,7 @@ struct ConnectForm: View, SettingsBlocks {
 
 /// Background refresh and insight notifications.
 struct RefreshSettings: View, SettingsBlocks {
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @AppStorage("notifyInsights") private var notify = true
     @State private var agentOn = BackgroundAgent.isEnabled
     @State private var error: String?

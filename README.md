@@ -3,6 +3,8 @@
   <img src="docs/assets/blocks/hero.svg" width="100%" alt="Vane's window cycling through four real screens with demo data: the App Store dashboard, Insights, the first-time downloads chart and the Territories map, above a ticker of the demo app's numbers.">
 </picture>
 
+<p align="center"><img src="docs/assets/icon.png" width="112" alt="Vane"></p>
+
 <h1 align="center">Vane</h1>
 
 <p align="center"><b>Your App Store Connect numbers, read for you.</b><br>A Mac app that pulls your sales and analytics reports with your own API key, keeps them on your Mac, and tells you what changed.</p>

@@ -8,7 +8,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - After the bundle path changed, the background agent had to be turned off and on again to register under the new path.
 
 ## Themes and chrome
-- Default theme: **Nocturne**. Each theme keeps a fixed scheme: Ticker and Nocturne dark, Color Blocks and Candy Glass light. The system appearance is ignored.
+- Default theme: **Color Blocks**, listed first in the picker. Each theme keeps a fixed scheme: Ticker and Nocturne dark, Color Blocks and Candy Glass light. The system appearance is ignored.
 - Theme tokens live verbatim in `Theme/Themes.swift`; `ThemeStyle.swift` gives them types.
 - Unified empty toolbar, so the traffic lights sit inside the sidebar's rounded corner. Ticker uses a 92 pt icon rail instead of the sidebar.
 - Screen header: 8 pt more space on top than the mockup (title block at 20 pt), at the owner's request. The mockups felt bottom-heavy.

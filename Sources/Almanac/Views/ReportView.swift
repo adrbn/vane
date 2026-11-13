@@ -6,7 +6,7 @@ import SwiftUI
 /// Weekly / Monthly / Yearly report: its own window, no sidebar. Only complete periods are shown.
 struct ReportView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @State var ref: ReportRef
     @State private var section = "Summary"
 

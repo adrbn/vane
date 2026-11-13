@@ -3,6 +3,8 @@
   <img src="docs/assets/blocks/hero.svg" width="100%" alt="La fenêtre de Vane passe en boucle sur quatre vrais écrans avec les données de démo : le tableau de bord App Store, Insights, le graphique des premiers téléchargements et la carte des pays, au-dessus d'un bandeau des chiffres de l'app de démo.">
 </picture>
 
+<p align="center"><img src="docs/assets/icon.png" width="112" alt="Vane"></p>
+
 <h1 align="center">Vane</h1>
 
 <p align="center"><b>Vos chiffres App Store Connect, lus pour vous.</b><br>Une app Mac qui récupère vos rapports de ventes et d'analytics avec votre propre clé d'API, les garde sur votre Mac et vous dit ce qui a changé.</p>

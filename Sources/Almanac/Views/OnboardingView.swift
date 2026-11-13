@@ -7,7 +7,7 @@ import SwiftUI
 /// Shown over the demo dashboard (blurred) until finished or skipped; `onboarded` remembers it.
 struct OnboardingView: View, SettingsBlocks {
     @Environment(AppModel.self) private var model
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @State private var step = 0
     @State private var connected = Keychain.credentials().isComplete
 

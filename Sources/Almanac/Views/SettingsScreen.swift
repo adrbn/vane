@@ -6,7 +6,7 @@ import SwiftUI
 /// Mac Settings, shown as a sheet inside the main window: themes with previews, App Store Connect, Refresh, Assistant, Data.
 struct MacSettingsView: View, SettingsBlocks {
     @Environment(AppModel.self) private var model
-    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.nocturne.id
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @AppStorage("aiProvider") private var provider = Assistant.Provider.claude.rawValue
     @AppStorage("aiModel") private var aiModel = "sonnet"
     @State private var cli: String??

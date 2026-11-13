@@ -3,6 +3,8 @@
   <img src="docs/assets/blocks/hero.svg" width="100%" alt="Vane 的窗口用演示数据轮流展示四个真实界面：App Store 仪表盘、Insights、首次下载图表和地区地图，下方是演示 App 的数据滚动条。">
 </picture>
 
+<p align="center"><img src="docs/assets/icon.png" width="112" alt="Vane"></p>
+
 <h1 align="center">Vane</h1>
 
 <p align="center"><b>你的 App Store Connect 数据，替你读懂。</b><br>一款 Mac App：用你自己的 API 密钥拉取销售和分析报告，数据只存在你的 Mac 上，并告诉你哪些地方变了。</p>
