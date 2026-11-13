@@ -212,29 +212,86 @@ struct ThemedSidebar: View {
 struct ThemedAppSwitcher: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
+    @State private var open = false
+    private static let rowHeight: CGFloat = 52
+    private static let maxRows = 5
+
     var body: some View {
-        Menu {
-            ForEach(model.apps) { app in Button(app.name) { model.appId = app.id } }
-        } label: {
-            HStack(spacing: 10) {
-                if let app = model.app { AppIconView(app: app, size: 34) }
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(model.app?.name ?? "No app").font(t.font(14, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                    Text(subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+        let radius = t.inner(10, in: t.r - 4)
+        let others = model.apps.filter { $0.id != model.appId }
+        VStack(spacing: 0) {
+            Button { withAnimation(.snappy(duration: 0.25)) { open.toggle() } } label: {
+                HStack(spacing: 10) {
+                    if let app = model.app { label(app) } else { Text("No app").font(t.font(14, .bold)) }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold)).foregroundStyle(t.label2)
+                        .rotationEffect(.degrees(open ? 180 : 0))
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold)).foregroundStyle(t.label2)
+                .padding(.horizontal, 8).padding(.vertical, 8).frame(minHeight: Self.rowHeight)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 8).padding(.vertical, 8).frame(minHeight: 52)
-            .background(t.fill, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .disabled(others.isEmpty)
+            .accessibilityLabel("Switch app")
+            if open && !others.isEmpty {
+                VStack(spacing: 0) {
+                    t.sep.frame(height: 1).padding(.horizontal, 8)
+                    // ponytail: past 5 apps the list scrolls inside a fixed height.
+                    if others.count > Self.maxRows {
+                        ScrollView { rows(others, radius: radius) }.scrollIndicators(.never)
+                            .frame(height: Self.rowHeight * CGFloat(Self.maxRows) + 8)
+                    } else {
+                        rows(others, radius: radius)
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
-        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+        .background(t.fill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .onChange(of: model.section) { open = false }
+        .onExitCommand { withAnimation(.snappy(duration: 0.25)) { open = false } }
     }
 
-    private var subtitle: String {
-        guard let app = model.app else { return "" }
-        return model.store.versions(app.id).last.map { "iOS · Version \($0.version)" } ?? "iOS"
+    private func rows(_ apps: [AppRecord], radius: CGFloat) -> some View {
+        VStack(spacing: 2) {
+            ForEach(apps) { app in
+                Button {
+                    withAnimation(.snappy(duration: 0.25)) { model.appId = app.id; open = false }
+                } label: {
+                    HStack(spacing: 10) { label(app); Spacer(minLength: 0) }
+                        .padding(.horizontal, 4).padding(.vertical, 6).frame(minHeight: Self.rowHeight - 8)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(SwitcherRowStyle(radius: t.inner(4, in: radius), hover: t.navSel.opacity(0.5)))
+            }
+        }
+        .padding(4)
+    }
+
+    private func label(_ app: AppRecord) -> some View {
+        HStack(spacing: 10) {
+            AppIconView(app: app, size: 34)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(app.name).font(t.font(14, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                Text(subtitle(app)).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+            }
+        }
+    }
+
+    private func subtitle(_ app: AppRecord) -> String {
+        model.store.versions(app.id).last.map { "iOS · Version \($0.version)" } ?? "iOS"
+    }
+}
+
+private struct SwitcherRowStyle: ButtonStyle {
+    let radius: CGFloat
+    let hover: Color
+    @State private var hovering = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(hovering || configuration.isPressed ? hover : .clear, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .onHover { hovering = $0 }
     }
 }
 
