@@ -33,6 +33,9 @@ TAPE = [("First-time downloads", "12,553", "+5.3%", True), ("Impressions", "736.
         ("Sessions", "383,756", "+9.9%", True), ("Crashes", "726", "+27.3%", False),
         ("Active subscriptions", "330", "+8.2%", True)]
 
+# Each feature card is a flat colour block, in the App Store screen's own tile colours (Color Blocks).
+CARD_FILL = ["#4433E0", "#ED7357", "#D1F17E", "#141414", "#8DC4FA", "#4433E0"]
+
 HERO = [("appstore", "App Store", "the whole funnel on one screen"),
         ("insights", "Insights", "what changed, in plain words"),
         ("m-first_downloads", "Every metric", "7 days to a year, day by day"),
@@ -178,7 +181,7 @@ def hero(theme, light):
 
 
 # --- cards ------------------------------------------------------------------------------------------------
-def card(theme, i, spec):
+def card(theme, i, spec, fill=None):
     """The whole window first, cut out on the card; then a zoom onto one panel, framed to its edges."""
     t = THEMES[theme]
     cap, title, sub, (x0, y0, x1, y1) = spec
@@ -205,14 +208,17 @@ def card(theme, i, spec):
     rr = anim("rx", kf(f(r0), f(r1)), total)
     defs = (f'<clipPath id="c{i}"><rect x="{f(c0[0])}" y="{f(c0[1])}" width="{f(c0[2])}" height="{f(c0[3])}" '
             f'rx="{f(r0)}">{box}{rr}</rect></clipPath>')
-    body = (f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="20" fill="{t["card"]}" '
-            f'stroke="{t["card_edge"]}"/>'
-            + text(24, 44, title, 20, t["card_fg"], 700) + text(24, 68, sub, 14, t["card_fg2"])
+    bg, edge, fg = (fill, fill, "#111111" if fill in ("#D1F17E", "#8DC4FA") else "#FFFFFF") if fill else \
+        (t["card"], t["card_edge"], None)
+    head = (text(24, 44, title, 20, fg, 800) + text(24, 68, sub, 14, fg, 500, extra=' fill-opacity=".78"') if fill
+            else text(24, 44, title, 20, t["card_fg"], 700) + text(24, 68, sub, 14, t["card_fg2"]))
+    body = (f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="24" fill="{bg}" stroke="{edge}"/>' + head
             + f'<g clip-path="url(#c{i})"><g transform="translate({ix} {iy})"><g transform="translate({f(p0[0])} '
             f'{f(p0[1])})">{move}<g transform="scale({s0:.3f})">{scale}'
             f'<image href="{uri(src, theme)}" width="{iw}" height="{ih_img:.1f}"/></g></g></g></g>'
             f'<rect x="{f(c0[0])}" y="{f(c0[1])}" width="{f(c0[2])}" height="{f(c0[3])}" rx="{f(r0)}" fill="none" '
-            f'stroke="{t["card_edge"]}" stroke-width="1.5">{box}{rr}</rect>')
+            f'stroke="{"#000" if fill else t["card_edge"]}" stroke-opacity="{.12 if fill else 1}" '
+            f'stroke-width="1.5">{box}{rr}</rect>')
     return svg(W, H, body, f"{title}: {sub}", defs)
 
 
@@ -292,7 +298,8 @@ def build(theme):
     (out / "hero.svg").write_text(hero(theme, False))
     (out / "hero-light.svg").write_text(hero(theme, True))
     for i, spec in enumerate(CARDS[theme]):
-        (out / f"card-{spec[0].replace('m-first_downloads', 'metrics')}.svg").write_text(card(theme, i, spec))
+        (out / f"card-{spec[0].replace('m-first_downloads', 'metrics')}.svg").write_text(
+            card(theme, i, spec, CARD_FILL[i] if theme == "blocks" else None))
     for icon, primary, labels in BUTTONS:
         for lang, label in labels.items():
             (out / f"btn-{icon}{suffix(lang)}.svg").write_text(button(theme, icon, label, primary))
