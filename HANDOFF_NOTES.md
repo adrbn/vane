@@ -15,11 +15,17 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
 - Tiles are links: a Watching card or a Usage card opens its metric (Ratings opens Reviews), an insight card opens what its Open button opens, and the Reviews context numbers open Downloads / Usage.
+- The swipe arrow is clipped with the screen, so it slides out from behind the sidebar.
 - Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages"). The swipe shows an arrow bubble sliding in from the edge, filled with the accent once it will go through; the screen itself doesn't move.
 - Opening the chat widens the window by the panel's width (as far as the display allows) and closing it gives the width back, so screens keep their layout. A screen still too wide is clipped on the right, never pushing the sidebar off.
 - Fixed-layout screens (Territories, Reviews, Listing, quiet Insights) fill the window at any size, full screen included: Territories gives ~45% of the height to the map and fits as many table rows as the rest allows; Reviews is two full-height panes (the list scrolls inside its own; with 4 reviews or fewer, the room under them shows "Reviews against downloads": downloads per review, answered, days since the last one, ratings count, and weekly downloads with each review pinned on its week); quiet Insights stretches the Watching cards.
 - The insight engine also runs at launch, so stored insights pick up format changes (charts, number formats) before the next sync.
 - Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0. The Insights context includes the Watching numbers, and the prompt forbids claiming Almanac lacks a number it shows or sending the user to App Store Connect for it.
+
+## Onboarding
+- First launch without a key shows three steps over the blurred demo dashboard: welcome and theme picker; a guided key (where to create it, the Sales and Reports role, the one-time .p8 download, the vendor number, with links to App Store Connect) and the connect form; then what arrives when (sales now, analytics in 1–2 days, insights) with the refresh and notification toggles.
+- "Look Around with Demo Data" or "Skip for Now" end it; `onboarded` in UserDefaults keeps it from coming back. Never shown with `--demo` unless `--onboarding` is passed.
+- The .p8 can be dropped anywhere on the connect form (Settings too).
 
 ## Settings
 - Settings has four tabs (General, App Store Connect, Assistant, Data); it opens on App Store Connect until a key is saved. The sheet stays centered and sizes to the tab, animating its height; the screen behind is blurred at 32 pt. Its cards use the small radius, since they sit inside the sheet.
@@ -79,6 +85,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 | `--pane <name>` | Opens that screen |
 | `--report week\|month\|year` | Opens the report window for the current app |
 | `--settings` | Opens the Settings sheet |
+| `--onboarding` | Shows the onboarding (shows your saved key on step 2) |
 | `--chat` | Opens the inspector chat |
 | `--swipe-preview <-1…1>` | Freezes the swipe arrow (negative = forward) |
 | `-theme <ticker\|blocks\|nocturne\|candy>` | Overrides the theme for this launch |

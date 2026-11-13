@@ -21,8 +21,9 @@ struct RootView: View {
                 }
                 // A screen wider than its slot must never push the sidebar or the chat off the window.
                 .frame(minWidth: 0)
-                .clipped()
+                // Clipped with the screen, so the arrow slides out from behind the sidebar instead of over it.
                 .overlay(alignment: model.swipeProgress < 0 ? .trailing : .leading) { SwipeArrow(progress: model.swipeProgress) }
+                .clipped()
                 if model.chatOpen {
                     InspectorPanel()
                         .frame(width: 304)
@@ -33,9 +34,12 @@ struct RootView: View {
                 }
             }
         }
-        .blur(radius: model.settingsOpen ? 32 : 0)
+        .blur(radius: model.settingsOpen || model.onboardingOpen ? 32 : 0)
         .overlay {
-            if model.settingsOpen {
+            if model.onboardingOpen {
+                CenteredSheet(width: 640, onDismiss: {}) { OnboardingView() }
+                    .transition(.opacity)
+            } else if model.settingsOpen {
                 CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
                     .transition(.opacity)
             }
@@ -49,6 +53,7 @@ struct RootView: View {
         .preferredColorScheme(t.scheme)
         .animation(.default, value: model.chatOpen)
         .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
+        .animation(.easeOut(duration: 0.18), value: model.onboardingOpen)
         .task { openLaunchReport(); SwipeNavigation.install(model) }
         .onChange(of: model.chatOpen) { _, open in ChatRoom.fit(open: open) }
     }

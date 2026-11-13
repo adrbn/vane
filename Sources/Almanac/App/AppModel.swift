@@ -65,6 +65,9 @@ final class AppModel {
     }
     var chatOpen = CommandLine.arguments.contains("--chat")
     var settingsOpen = CommandLine.arguments.contains("--settings")   // Mac: in-window sheet; iOS: modal sheet
+    /// First launch without a key (never in `--demo`); `--onboarding` forces it for screenshots.
+    var onboardingOpen = CommandLine.arguments.contains("--onboarding")
+        || (!CommandLine.arguments.contains("--demo") && !Keychain.credentials().isComplete && !UserDefaults.standard.bool(forKey: "onboarded"))
     var chatContext = ""
     var chatSeed: String?               // question pre-filled by "Ask about this" buttons
     var syncing = false

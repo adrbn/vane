@@ -26,7 +26,7 @@ import AppKit
             // rubber-band nudges the screen and snaps it back on every movement, which reads as jitter.
             let fingersRight = e.isDirectionInvertedFromDevice ? e.scrollingDeltaX > 0 : e.scrollingDeltaX < 0
             guard NSEvent.isSwipeTrackingFromScrollEventsEnabled, abs(e.scrollingDeltaX) > abs(e.scrollingDeltaY) * 1.5,
-                  !model.settingsOpen else { return e }
+                  !model.settingsOpen, !model.onboardingOpen else { return e }
             guard fingersRight ? model.canGoBack : model.canGoForward else { swallowing = true; return nil }
             // Fingers moving right (positive amount) go back, as in Safari.
             e.trackSwipeEvent(options: [.lockDirection, .clampGestureAmount],
