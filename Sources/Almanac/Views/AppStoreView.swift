@@ -134,7 +134,7 @@ private struct Hero: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("First-time downloads, last \(d.per)").font(t.font(15, .semibold)).foregroundStyle(t.heroFg2)
                     Text(Num.int(d.value(.firstDownloads))).font(t.heroFont).tracking(t.heroTracking).monospacedDigit()
-                        .foregroundStyle(t.heroFg).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 10).padding(.leading, -4)
+                        .foregroundStyle(t.heroFg).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 10).padding(.leading, -4).padding(.trailing, max(0, -t.heroTracking))
                     (Text(c.text).foregroundStyle(t.heroBackground == nil ? c.color(t) : t.heroFg).fontWeight(.bold)
                         + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)").foregroundStyle(t.heroFg2).fontWeight(.medium))
                         .font(t.font(17)).monospacedDigit().padding(.top, 10)
@@ -319,7 +319,7 @@ private struct TickerOverview: View {
         let peak = pts.max { $0.value < $1.value }
         return VStack(alignment: .leading, spacing: 0) {
             Text(MetricCard.label(m)).font(t.font(17)).foregroundStyle(t.label2)
-            Text(d.shown(m)).font(t.heroFont).tracking(t.heroTracking).monospacedDigit().lineLimit(1).frame(height: 84)
+            Text(d.shown(m)).font(t.heroFont).tracking(t.heroTracking).monospacedDigit().lineLimit(1).padding(.trailing, max(0, -t.heroTracking)).frame(height: 84)
             (Text(d.has(m) ? c.text : AnalyticsPending.expected).foregroundStyle(d.has(m) ? c.color(t) : t.label2) + Text(c.text == Change.noHistory.text ? "" : " on the previous \(d.per)").foregroundStyle(t.label2).fontWeight(.regular))
                 .font(t.font(17, .semibold)).monospacedDigit()
             GeometryReader { g in

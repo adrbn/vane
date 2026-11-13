@@ -300,9 +300,18 @@ public struct Syncer: Sendable {
     func syncRatings(app: String) async throws {
         // ponytail: US storefront only. Summing every storefront means ~175 lookups per app.
         let (data, _) = try await URLSession.shared.data(from: URL(string: "https://itunes.apple.com/lookup?id=\(app)&country=us")!)
-        guard let r = ((try JSONSerialization.jsonObject(with: data) as? JSON)?["results"] as? [JSON])?.first else { return }
-        if let count = r["userRatingCount"] as? Int { try store.write([.init(app, Day.today(), .ratingsTotal, "", Double(count))]) }
-        if let icon = r["artworkUrl100"] as? String { store.setMeta("icon_\(app)", icon) }
+        let r = ((try JSONSerialization.jsonObject(with: data) as? JSON)?["results"] as? [JSON])?.first
+        if let count = r?["userRatingCount"] as? Int { try store.write([.init(app, Day.today(), .ratingsTotal, "", Double(count))]) }
+        if let icon = r?["artworkUrl100"] as? String { store.setMeta("icon_\(app)", icon) }
+        // Not on the US store (unreleased, removed, other countries only): take the icon of the latest build instead.
+        else if let icon = try? await buildIcon(app: app) { store.setMeta("icon_\(app)", icon) }
+    }
+
+    private func buildIcon(app: String) async throws -> String? {
+        let builds = try await client.json("v1/builds", query: ["filter[app]": app, "sort": "-uploadedDate", "limit": "1", "fields[builds]": "iconAssetToken"])
+        let token = ((builds["data"] as? [JSON])?.first?["attributes"] as? JSON)?["iconAssetToken"] as? JSON
+        return (token?["templateUrl"] as? String)?
+            .replacingOccurrences(of: "{w}", with: "200").replacingOccurrences(of: "{h}", with: "200").replacingOccurrences(of: "{f}", with: "png")
     }
 }
 

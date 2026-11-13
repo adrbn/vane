@@ -19,6 +19,8 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
 - Nested corners are concentric: a shape `inset` pt inside a container uses `t.inner(inset, in: outer)` = outer radius − inset (6 pt floor). Applied to the sidebar rows and app switcher, the Listing language selection, the pending-banner icon and the chat field. Shapes sitting farther in than the container's radius (fields 24 pt inside a card) keep their own radius. The "In search" card sizes its padding to the theme and takes icon radius + padding, so the app icon's corner follows the card's.
 - No "…" on content text: app name, "In search" name and subtitle, review titles and meta, chat starters, banner text and sync status wrap to two lines instead of truncating. Single-line numbers shrink (minimumScaleFactor) rather than cut. Reviews show the territory with its flag.
+- App icons come from the public iTunes lookup (US store); an app missing there (unreleased, removed, other countries only) takes the icon of its latest build from the API (`iconAssetToken`).
+- Hero numbers get trailing padding equal to their negative tracking, otherwise the last digit is clipped.
 - Manual refresh: ⌘R, the ↻ button in every screen header (left of the assistant button; it spins while a sync runs), or "Check Now" on pending banners.
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
