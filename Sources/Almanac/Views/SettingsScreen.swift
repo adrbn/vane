@@ -17,6 +17,9 @@ struct MacSettingsView: View {
     @State private var showingQR = false
     @State private var agentOn = BackgroundAgent.isEnabled
     @State private var cli: String??
+    @State private var tab: Tab = Keychain.credentials().isComplete ? .general : .account
+
+    enum Tab: String, CaseIterable { case general = "General", account = "App Store Connect", assistant = "Assistant", data = "Data" }
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)
@@ -27,31 +30,12 @@ struct MacSettingsView: View {
                 SmallButton(label: "Done", prominent: true) { model.settingsOpen = false }
                     .keyboardShortcut(.cancelAction)
             }
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    group(t, "Appearance") { themes(t) }
-                    connect(t)
-                    refresh(t)
-                    assistant(t)
-                    group(t, "Data") {
-                        row(t, "Stored on this Mac · \(storeSize)", (Store.defaultPath as NSString).deletingLastPathComponent.replacingOccurrences(of: NSHomeDirectory(), with: "~")) {
-                            SmallButton(label: "Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: Store.defaultPath)]) }
-                        }
-                        if !model.isDemo {
-                            row(t, "Sample data", "Opens a second Almanac with demo apps and every metric filled in. Your data isn't touched.") {
-                                SmallButton(label: "Open Demo Window") {
-                                    let config = NSWorkspace.OpenConfiguration()
-                                    config.createsNewApplicationInstance = true
-                                    config.arguments = ["--demo"]
-                                    NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config)
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(.bottom, 4)
+            GlassSegments(options: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab)
+            // Sized to the tab's content so short tabs don't leave an empty sheet; scrolls only when the window is too short.
+            ViewThatFits(in: .vertical) {
+                page(t)
+                ScrollView { page(t) }.scrollIndicators(.never)
             }
-            .scrollIndicators(.never)
         }
         .foregroundStyle(t.label)
         .font(t.font(13))
@@ -65,10 +49,42 @@ struct MacSettingsView: View {
 
     // MARK: Sections
 
+    private func page(_ t: AlmanacTheme) -> some View {
+        VStack(alignment: .leading, spacing: 24) {
+            switch tab {
+            case .general:
+                group(t, "Appearance") { themes(t) }
+                refresh(t)
+            case .account: connect(t)
+            case .assistant: assistant(t)
+            case .data: data(t)
+            }
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func data(_ t: AlmanacTheme) -> some View {
+        group(t, "") {
+            row(t, "Stored on this Mac · \(storeSize)", (Store.defaultPath as NSString).deletingLastPathComponent.replacingOccurrences(of: NSHomeDirectory(), with: "~")) {
+                SmallButton(label: "Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: Store.defaultPath)]) }
+            }
+            if !model.isDemo {
+                row(t, "Sample data", "Opens a second Almanac with demo apps and every metric filled in. Your data isn't touched.") {
+                    SmallButton(label: "Open Demo Window") {
+                        let config = NSWorkspace.OpenConfiguration()
+                        config.createsNewApplicationInstance = true
+                        config.arguments = ["--demo"]
+                        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config)
+                    }
+                }
+            }
+        }
+    }
+
     private func connect(_ t: AlmanacTheme) -> some View {
         let saved = Keychain.credentials()
         let dirty = creds != saved
-        return group(t, "App Store Connect", "Create a key with the Sales and Reports role in Users and Access → Integrations.") {
+        return group(t, "", "Create a key with the Sales and Reports role in Users and Access → Integrations.") {
             row(t, "Issuer ID") { input(t, $creds.issuerId, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", width: 300) }
             row(t, "Key ID") { input(t, $creds.keyId, "e.g. 2X9R4HXF34") }
             row(t, "Private key") {
@@ -133,7 +149,7 @@ struct MacSettingsView: View {
         case .some(.none): "\(p.title) isn't in your shell's PATH"
         case .some(.some(let path)): "\(p.title) at \(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))"
         }
-        return group(t, "Assistant", nil, footer: "Raw reports and your private key never leave this Mac. The assistant runs your own command-line tool and only sees the numbers on the screen you ask about.") {
+        return group(t, "", nil, footer: "Raw reports and your private key never leave this Mac. The assistant runs your own command-line tool and only sees the numbers on the screen you ask about.") {
             row(t, "Provider", found, warn: cli == .some(nil)) {
                 GlassSegments(options: Assistant.Provider.allCases.map { ($0.rawValue, $0 == .claude ? "Claude" : "Codex CLI") }, selection: $provider)
             }
@@ -170,13 +186,17 @@ struct MacSettingsView: View {
 
     private func group<C: View>(_ t: AlmanacTheme, _ title: String, _ caption: String? = nil, footer: String? = nil, @ViewBuilder _ rows: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(t.font(15, .bold))
-                if let caption { Text(caption).font(t.font(11)).foregroundStyle(t.label2) }
+            // A tab holding a single group passes no title: the tab already names it.
+            if !title.isEmpty || caption != nil {
+                VStack(alignment: .leading, spacing: 2) {
+                    if !title.isEmpty { Text(title).font(t.font(15, .bold)) }
+                    if let caption { Text(caption).font(t.font(11)).foregroundStyle(t.label2) }
+                }
+                .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 4)
+            // Smaller than the sheet's radius: these cards sit 24 pt inside it, so the same radius looks swollen.
             _VariadicView.Tree(Separated(sep: t.sep)) { rows() }
-                .themedCard(padding: 0)
+                .themedCard(padding: 0, radius: t.rS + 2)
             if let footer { Text(footer).font(t.font(11)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4) }
         }
     }

@@ -36,7 +36,7 @@ struct RootView: View {
         .blur(radius: model.settingsOpen ? 16 : 0)
         .overlay {
             if model.settingsOpen {
-                CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
+                CenteredSheet(width: 640, pinnedTop: 96, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
                     .transition(.opacity)
             }
         }

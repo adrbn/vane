@@ -148,8 +148,9 @@ struct ThemedCard: ViewModifier {
     var padding: CGFloat = 20
     var fill: Color?
     var highlighted = false
+    var radius: CGFloat?
     func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: t.r, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: radius ?? t.r, style: .continuous)
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -163,8 +164,8 @@ struct ThemedCard: ViewModifier {
 }
 
 extension View {
-    func themedCard(padding: CGFloat = 20, fill: Color? = nil, highlighted: Bool = false) -> some View {
-        modifier(ThemedCard(padding: padding, fill: fill, highlighted: highlighted))
+    func themedCard(padding: CGFloat = 20, fill: Color? = nil, highlighted: Bool = false, radius: CGFloat? = nil) -> some View {
+        modifier(ThemedCard(padding: padding, fill: fill, highlighted: highlighted, radius: radius))
     }
     /// Makes a whole tile a link to its screen: click anywhere (inner buttons keep their own action), pointing-hand cursor.
     @ViewBuilder func opens(_ action: (() -> Void)?) -> some View {
@@ -314,10 +315,12 @@ struct Spark: View {
 struct CenteredSheet<Content: View>: View {
     @Environment(\.theme) private var t
     var width: CGFloat = 600
+    /// Pins the sheet's top edge so its height can change (Settings tabs) without the header jumping.
+    var pinnedTop: CGFloat? = nil
     var onDismiss: () -> Void
     @ViewBuilder var content: Content
     var body: some View {
-        ZStack {
+        ZStack(alignment: pinnedTop == nil ? .center : .top) {
             // The screen behind is blurred by its owner; no tint, so dark themes don't go darker.
             Color.clear.contentShape(Rectangle()).ignoresSafeArea()
                 .onTapGesture(perform: onDismiss)
@@ -327,7 +330,7 @@ struct CenteredSheet<Content: View>: View {
                 .background(t.sheet, in: RoundedRectangle(cornerRadius: t.r, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: t.r, style: .continuous).strokeBorder(t.cardBorder, lineWidth: 1))
                 .shadow(color: .black.opacity(0.25), radius: 30, y: 16)
-                .padding(.vertical, 40)
+                .padding(.top, pinnedTop ?? 40).padding(.bottom, 40)
         }
         #if os(macOS)
         .onExitCommand(perform: onDismiss)
