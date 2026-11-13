@@ -1,6 +1,7 @@
 #if os(macOS)
 import AlmanacCore
 import NaturalLanguage
+import Charts
 import SwiftUI
 import Translation
 
@@ -234,7 +235,14 @@ struct ReviewsView: View {
                             ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying)
                                 .overlay(alignment: .top) { if i > 0 { t.sep.frame(height: 1) } }
                         }
-                        Spacer(minLength: 24)
+                        // A short list leaves room: use it for the context of those reviews, from real data.
+                        if shown.count <= 4 {
+                            ReviewContext(reviews: all, versions: versions)
+                                .frame(minHeight: 240, maxHeight: .infinity)
+                                .overlay(alignment: .top) { t.sep.frame(height: 1) }
+                        } else {
+                            Spacer(minLength: 24)
+                        }
                         Text(shown.count == all.count ? "That's every written review. New ones arrive with each refresh."
                              : "\(shown.count) of \(all.count) written reviews match these filters.")
                             .font(t.font(12)).foregroundStyle(t.label3).padding(.bottom, 20)
@@ -246,6 +254,66 @@ struct ReviewsView: View {
             .themedCard(padding: 0)
             .frame(maxHeight: .infinity)
         }
+    }
+}
+
+/// Where the written reviews sit against downloads: a few counts, then weekly downloads with each review pinned on its week.
+private struct ReviewContext: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    let reviews: [Review]
+    let versions: [VersionMark]
+
+    var body: some View {
+        let app = model.appId ?? ""
+        let daily = model.store.series(app, .downloads)
+        let weeks = Dictionary(grouping: daily) { Day.weekStart($0.day) }.map { (day: $0.key, value: $0.value.map(\.value).reduce(0, +)) }.sorted { $0.day < $1.day }
+        let total = daily.map(\.value).reduce(0, +)
+        let replied = reviews.filter { $0.response != nil }.count
+        let last = reviews.map(\.created).max()
+        let ratings = model.store.series(app, .ratingsTotal).last?.value
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Reviews against downloads").font(t.font(15, .bold))
+                Text("Weekly downloads, each written review pinned on its week").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
+            }
+            HStack(spacing: 0) {
+                stat(reviews.isEmpty ? "—" : Num.int(total / Double(reviews.count)), "downloads per written review")
+                stat("\(replied) of \(reviews.count)", "answered")
+                stat(last.map { "\(Day.between($0, Day.today())) days" } ?? "—", "since the last review")
+                stat(ratings.map(Num.int) ?? "—", "ratings on the App Store")
+            }
+            Chart {
+                ForEach(weeks, id: \.day) { w in
+                    BarMark(x: .value("Week", Day.date(w.day), unit: .weekOfYear), y: .value("Downloads", w.value))
+                        .foregroundStyle(t.accent.opacity(0.35)).cornerRadius(3)
+                }
+                ForEach(versions.filter { $0.day >= (weeks.first?.day ?? "0") }) { v in
+                    RuleMark(x: .value("Release", Day.date(v.day)))
+                        .foregroundStyle(t.label3).lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        .annotation(position: .top, alignment: .leading) { Text(v.version).font(t.font(10)).foregroundStyle(t.label2) }
+                }
+                ForEach(reviews) { r in
+                    let w = Day.weekStart(r.created)
+                    PointMark(x: .value("Week", Day.date(w), unit: .weekOfYear), y: .value("Downloads", weeks.first { $0.day == w }?.value ?? 0))
+                        .symbol { Image(systemName: "star.fill").font(.system(size: 11)).foregroundStyle(t.accent) }
+                        .annotation(position: .top) { Text("\(r.rating)★").font(t.font(10, .semibold)).foregroundStyle(t.label) }
+                }
+            }
+            .chartYAxis { AxisMarks(position: .trailing) { AxisGridLine().foregroundStyle(t.sep); AxisValueLabel().font(t.font(10)).foregroundStyle(t.label2) } }
+            .chartXAxis { AxisMarks(values: .stride(by: .month)) { AxisValueLabel(format: .dateTime.month(.abbreviated).locale(Locale(identifier: "en_US"))).font(t.font(10)).foregroundStyle(t.label2) } }
+            .frame(maxHeight: .infinity)
+            .padding(.top, 14)
+        }
+        .padding(20)
+    }
+
+    private func stat(_ value: String, _ label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value).font(t.font(17, .bold)).monospacedDigit().lineLimit(1)
+            Text(label).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
