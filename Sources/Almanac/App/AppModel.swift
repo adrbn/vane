@@ -87,13 +87,15 @@ final class AppModel {
         let demo = CommandLine.arguments.contains("--demo")
         let path = demo ? NSTemporaryDirectory() + "almanac-demo.sqlite" : Store.defaultPath
         do { store = try Store(path: path) } catch { fatalError("Can't open the database: \(error)") }
+        // Before reload(): it falls back to the first app, and that would overwrite the saved choice.
+        appId = UserDefaults.standard.string(forKey: "selectedApp")
         pinned = (UserDefaults.standard.stringArray(forKey: "pinned") ?? ["unique_impressions", "ttr", "downloads", "first_downloads", "active_subs"])
             .compactMap(Metric.init(rawValue:))
         reload()
         if apps.isEmpty && (demo || !Keychain.credentials().isComplete) { loadDemo() }
         // Re-run the engine on launch so stored insights pick up the current format (charts, wording) before the next sync.
         else { runEngine() }
-        appId = UserDefaults.standard.string(forKey: "selectedApp").flatMap { id in apps.contains { $0.id == id } ? id : nil } ?? apps.first?.id
+        if appId == nil || !apps.contains(where: { $0.id == appId }) { appId = apps.first?.id }
     }
 
     func reload() {

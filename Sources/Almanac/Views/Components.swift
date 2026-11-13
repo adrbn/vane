@@ -74,7 +74,7 @@ struct AppIconView: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.225, style: .continuous)
         Group {
-            if let url = model.store.meta("icon_\(app.id)").flatMap(URL.init(string:)) {
+            if let url = model.revision >= 0 ? model.store.meta("icon_\(app.id)").flatMap(URL.init(string:)) : nil {
                 AsyncImage(url: url) { $0.resizable() } placeholder: { fallback }
             } else { fallback }
         }

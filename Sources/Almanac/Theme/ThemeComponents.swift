@@ -160,6 +160,15 @@ struct RefreshButton: View {
     }
 }
 
+extension Text {
+    /// Tracking on every character but the last: negative tracking on the last one shrinks its box and SwiftUI clips the glyph.
+    static func tracked(_ s: String, _ k: CGFloat) -> Text {
+        var a = AttributedString(s)
+        if a.characters.count > 1 { a[a.startIndex..<a.index(a.endIndex, offsetByCharacters: -1)].tracking = k }
+        return Text(a)
+    }
+}
+
 // MARK: - Cards
 
 struct ThemedCard: ViewModifier {
