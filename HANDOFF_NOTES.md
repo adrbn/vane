@@ -11,7 +11,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Default theme: **Nocturne**. Each theme keeps a fixed scheme: Ticker and Nocturne dark, Color Blocks and Candy Glass light. The system appearance is ignored.
 - Theme tokens live verbatim in `Theme/Themes.swift`; `ThemeStyle.swift` gives them types.
 - Unified empty toolbar, so the traffic lights sit inside the sidebar's rounded corner. Ticker uses a 92 pt icon rail instead of the sidebar.
-- Screen header: 8 pt more space on top than the mockup (title block at 20 pt), at Adrien's request. The mockups felt bottom-heavy.
+- Screen header: 8 pt more space on top than the mockup (title block at 20 pt), at the owner's request. The mockups felt bottom-heavy.
 - UI in English, with en_US number and date formats everywhere, whatever the Mac's locale (forced through `AppleLocale` in `main.swift`; the insight engine formats with an explicit en_US locale).
 - Sales and Usage were not in the kit; they're designed in the kit's language:
   - Sales: summary card (totals + stacked bars, release chips on their bar) over a table capped to its rows, fixed column widths and row height, a Release column, "Partial" on incomplete periods.

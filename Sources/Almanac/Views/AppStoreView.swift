@@ -277,9 +277,9 @@ private struct TickerOverview: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Last \(d.per) · \(d.range)").font(t.font(13)).foregroundStyle(t.label2).padding(.horizontal, 14).padding(.bottom, 8)
                 ForEach(rows) { row($0) }
-                Spacer(minLength: 0)
             }
             .frame(width: 400)
+            .frame(maxHeight: .infinity, alignment: .top)
             chart
         }
     }
@@ -304,7 +304,7 @@ private struct TickerOverview: View {
                 }
                 .frame(width: 92, alignment: .trailing)
             }
-            .padding(.horizontal, 14).frame(height: 72)
+            .padding(.horizontal, 14).frame(minHeight: 72, maxHeight: 128)
             .background(on ? t.fill : .clear, in: RoundedRectangle(cornerRadius: 12))
             .overlay(alignment: .bottom) { if !on { t.sep.frame(height: 1) } }
             .contentShape(Rectangle())
