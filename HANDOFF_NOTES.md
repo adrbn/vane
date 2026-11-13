@@ -22,7 +22,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0. The Insights context includes the Watching numbers, and the prompt forbids claiming Almanac lacks a number it shows or sending the user to App Store Connect for it.
 
 ## Settings
-- Settings has four tabs (General, App Store Connect, Assistant, Data); it opens on App Store Connect until a key is saved. The sheet sizes to the tab and keeps its top edge fixed, so the tabs don't jump. Its cards use the small radius, since they sit inside the sheet.
+- Settings has four tabs (General, App Store Connect, Assistant, Data); it opens on App Store Connect until a key is saved. The sheet stays centered and sizes to the tab, animating its height; the screen behind is blurred at 32 pt. Its cards use the small radius, since they sit inside the sheet.
 - Settings is a sheet **inside** the main window (blurred backdrop, theme colors), not a separate window. It opens with ⌘, from the menu, or with the gear at the bottom of the sidebar (or of the rail in Ticker).
 - Themes are picked from four live miniatures drawn in each theme's own colors.
 - Things the mockup shows but the app doesn't have were left out rather than faked:

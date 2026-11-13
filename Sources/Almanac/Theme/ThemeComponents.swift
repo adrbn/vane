@@ -315,12 +315,10 @@ struct Spark: View {
 struct CenteredSheet<Content: View>: View {
     @Environment(\.theme) private var t
     var width: CGFloat = 600
-    /// Pins the sheet's top edge so its height can change (Settings tabs) without the header jumping.
-    var pinnedTop: CGFloat? = nil
     var onDismiss: () -> Void
     @ViewBuilder var content: Content
     var body: some View {
-        ZStack(alignment: pinnedTop == nil ? .center : .top) {
+        ZStack {
             // The screen behind is blurred by its owner; no tint, so dark themes don't go darker.
             Color.clear.contentShape(Rectangle()).ignoresSafeArea()
                 .onTapGesture(perform: onDismiss)
@@ -330,7 +328,7 @@ struct CenteredSheet<Content: View>: View {
                 .background(t.sheet, in: RoundedRectangle(cornerRadius: t.r, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: t.r, style: .continuous).strokeBorder(t.cardBorder, lineWidth: 1))
                 .shadow(color: .black.opacity(0.25), radius: 30, y: 16)
-                .padding(.top, pinnedTop ?? 40).padding(.bottom, 40)
+                .padding(.vertical, 40)
         }
         #if os(macOS)
         .onExitCommand(perform: onDismiss)

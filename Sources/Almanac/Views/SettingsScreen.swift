@@ -30,7 +30,7 @@ struct MacSettingsView: View {
                 SmallButton(label: "Done", prominent: true) { model.settingsOpen = false }
                     .keyboardShortcut(.cancelAction)
             }
-            GlassSegments(options: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab)
+            GlassSegments(options: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab.animation(.easeOut(duration: 0.2)))
             // Sized to the tab's content so short tabs don't leave an empty sheet; scrolls only when the window is too short.
             ViewThatFits(in: .vertical) {
                 page(t)
