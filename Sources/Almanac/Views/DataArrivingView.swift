@@ -8,7 +8,8 @@ struct DataArrivingView: View {
 
     var body: some View {
         let app = model.appId ?? ""
-        let salesDays = (model.store.meta("sales_days") ?? "").split(separator: ",").map(String.init).sorted()
+        // Days covered by the sales reports, read from what was actually stored.
+        let salesDays = model.store.lastDay(app, .firstDownloads).map { last in model.store.series(app, .firstDownloads, from: "2000-01-01", to: last).map(\.day) } ?? []
         Screen(title: "App Store", subtitle: "\(model.app?.name ?? "") · Waiting for Apple", inspector: false) {} content: {
             VStack(alignment: .leading, spacing: 24) {
                 status(salesDays)
@@ -72,12 +73,15 @@ struct DataArrivingView: View {
     }
 
     private func sales(_ app: String) -> some View {
-        let to = model.store.lastDay(app, .sales) ?? Day.today()
+        let to = model.store.lastDay(app, .firstDownloads) ?? Day.today()
         let from = Day.add(-27, to: to), pTo = Day.add(-1, to: from), pFrom = Day.add(-27, to: pTo)
-        let spark = model.store.series(app, .sales, from: from, to: to).map(\.value)
+        let spark = model.store.series(app, .firstDownloads, from: from, to: to).map(\.value)
+        // Compare only when the previous 28 days are fully covered, never against the launch weeks.
+        let full = model.store.series(app, .firstDownloads, from: "2000-01-01", to: to).first.map { $0.day <= pFrom } ?? false
         return HStack(spacing: 32) {
-            kpi("Units, last 28 days", .sales, app, from, to, pFrom, pTo)
-            kpi("Proceeds, last 28 days", .proceeds, app, from, to, pFrom, pTo)
+            kpi("First-time downloads, last 28 days", .firstDownloads, app, from, to, pFrom, pTo, full)
+            kpi("Redownloads", .redownloads, app, from, to, pFrom, pTo, full)
+            kpi("Proceeds", .proceeds, app, from, to, pFrom, pTo, full)
             ZStack {
                 LinePath(values: spark, floorZero: true, closed: true).fill(t.accent.opacity(0.1))
                 Spark(values: spark, color: t.accent)
@@ -88,25 +92,26 @@ struct DataArrivingView: View {
         .themedCard(padding: 20)
     }
 
-    private func kpi(_ label: String, _ m: Metric, _ app: String, _ from: String, _ to: String, _ pf: String, _ pt: String) -> some View {
+    private func kpi(_ label: String, _ m: Metric, _ app: String, _ from: String, _ to: String, _ pf: String, _ pt: String, _ full: Bool) -> some View {
         let v = model.store.total(app, m, from: from, to: to), p = model.store.total(app, m, from: pf, to: pt)
-        let c = Change(m, value: v, previous: p)
+        let c = full ? Change(m, value: v, previous: p) : Change.noHistory
         return VStack(alignment: .leading, spacing: 2) {
             Text(label).font(t.font(13)).foregroundStyle(t.label2)
             Text(m == .proceeds ? m.format(v) : Num.int(v)).font(t.numFont).tracking(-0.6).monospacedDigit()
-            (Text(c.text).foregroundStyle(c.color(t)).fontWeight(.bold) + Text(" was \(m == .proceeds ? m.format(p) : Num.int(p))").foregroundStyle(t.label2))
+            (Text(c.text).foregroundStyle(c.color(t)).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : " vs \(m == .proceeds ? m.format(p) : Num.int(p))").foregroundStyle(t.label2))
                 .font(t.font(13)).monospacedDigit()
         }
         .fixedSize()
     }
 
     private var pending: some View {
-        let items: [Metric] = [.impressions, .pageViews, .ttr, .firstDownloads, .redownloads, .pageCR]
+        // Downloads already come from the sales reports; only the funnel needs Apple's analytics report.
+        let items: [Metric] = [.impressions, .pageViews, .ttr, .pageCR]
         return Grid(horizontalSpacing: 0, verticalSpacing: 0) {
             ForEach(0..<2) { r in
                 GridRow {
-                    ForEach(0..<3) { c in
-                        let m = items[r * 3 + c]
+                    ForEach(0..<2) { c in
+                        let m = items[r * 2 + c]
                         HStack(spacing: 12) {
                             IconSquare(symbol: MetricCard.symbol(m), style: t.square(m), size: 28).opacity(0.55)
                             VStack(alignment: .leading, spacing: 0) {
@@ -124,5 +129,55 @@ struct DataArrivingView: View {
             }
         }
         .themedCard(padding: 0)
+    }
+}
+
+/// Apple's analytics report hasn't landed: says when, what's done, and offers a check. Sits inside the real layout.
+struct AnalyticsPending: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    let compact: Bool
+    static let expected = "Expected in 24–48 hours"
+
+    var body: some View {
+        let title = Text("App Store analytics arrive in 24–48 hours").font(t.font(compact ? 15 : 17, .bold))
+        let sub = Text("Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report.")
+            .font(t.font(13)).foregroundStyle(t.label2)
+        let check = SmallButton(label: model.syncing ? "Checking…" : "Check Now") { Task { await model.refresh() } }.disabled(model.syncing)
+        let icon = Image(systemName: "clock").font(.system(size: 15, weight: .semibold)).foregroundStyle(t.accentText)
+            .frame(width: 36, height: 36).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        if compact {
+            HStack(spacing: 14) {
+                icon
+                VStack(alignment: .leading, spacing: 2) { title; sub.lineLimit(1) }
+                Spacer(minLength: 12)
+                check
+            }
+            .themedCard(padding: 14)
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 14) {
+                    icon
+                    VStack(alignment: .leading, spacing: 4) { title; sub.fixedSize(horizontal: false, vertical: true) }
+                    Spacer(minLength: 12)
+                    check
+                }
+                Spacer(minLength: 16)
+                HStack(spacing: 16) {
+                    step("Sales history imported", true)
+                    step("Analytics report requested", true)
+                    step("First analytics report", false)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .themedCard()
+        }
+    }
+
+    private func step(_ s: String, _ done: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: done ? "checkmark.circle.fill" : "clock").font(.system(size: 14, weight: .semibold)).foregroundStyle(done ? t.accent : t.label2)
+            Text(s).font(t.font(13, .semibold)).foregroundStyle(done ? t.label : t.label2).lineLimit(1)
+        }
     }
 }

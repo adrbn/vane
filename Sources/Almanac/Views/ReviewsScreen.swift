@@ -40,6 +40,7 @@ struct ReviewsView: View {
                     list(shown, all: all, versions: versions)
                 }
             }
+            .blur(radius: replying == nil ? 0 : 16)
             if let r = replying {
                 CenteredSheet(onDismiss: { replying = nil }) {
                     ThemedReplySheet(review: r, version: ReviewInfo.version(r, versions), close: { replying = nil })

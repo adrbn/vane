@@ -1,5 +1,7 @@
 import Foundation
 
+private let enUS = Locale(identifier: "en_US")
+
 /// Rule-based insight detection over the local store. Deterministic, no AI:
 /// every insight is a number the developer can verify on the matching chart.
 public struct InsightEngine {
@@ -40,9 +42,9 @@ public struct InsightEngine {
         let months = max(1, s.count / 30)
         return Insight(id: id("best-day", asOf), appId: app, kind: "best-day", category: .milestones,
                        title: "Your best download day in \(months) months",
-                       body: "You got \(Int(last.value).formatted()) downloads on \(Day.date(asOf).formatted(.dateTime.month(.wide).day())), more than any day since \(Day.date(s[0].day).formatted(.dateTime.month(.wide).year())).",
+                       body: "You got \(Int(last.value).formatted(.number.locale(enUS))) downloads on \(Day.date(asOf).formatted(.dateTime.month(.wide).day().locale(enUS))), more than any day since \(Day.date(s[0].day).formatted(.dateTime.month(.wide).year().locale(enUS))).",
                        day: asOf, chart: InsightChart(label: "Daily downloads", points: s.suffix(30).map(ChartPoint.init),
-                                                      baselineLabel: "Previous best: \(Int(previousBest).formatted())", baseline: previousBest, headline: Int(last.value).formatted()))
+                                                      baselineLabel: "Previous best: \(Int(previousBest).formatted(.number.locale(enUS)))", baseline: previousBest, headline: Int(last.value).formatted(.number.locale(enUS))))
     }
 
     func downloadMilestones() -> [Insight] {
@@ -57,9 +59,9 @@ public struct InsightEngine {
                 // Only surface recent milestones; old ones are noise after the first import.
                 if Day.between(p.day, asOf) <= 30 {
                     out.append(Insight(id: id("milestone", "\(t)"), appId: app, kind: "milestone", category: .milestones,
-                                       title: "You passed \(t.formatted()) downloads",
-                                       body: "Your app has had \(Int(running).formatted()) downloads since \(Day.date(s[0].day).formatted(.dateTime.month(.wide).year())), including redownloads.",
-                                       day: p.day, chart: InsightChart(label: "", points: [], headline: t.formatted(), isBigNumber: true)))
+                                       title: "You passed \(t.formatted(.number.locale(enUS))) downloads",
+                                       body: "Your app has had \(Int(running).formatted(.number.locale(enUS))) downloads since \(Day.date(s[0].day).formatted(.dateTime.month(.wide).year().locale(enUS))), including redownloads.",
+                                       day: p.day, chart: InsightChart(label: "", points: [], headline: t.formatted(.number.locale(enUS)), isBigNumber: true)))
                 }
                 target = next.next()
             }
@@ -75,7 +77,7 @@ public struct InsightEngine {
         return Insight(id: id("streak", lastWeek.day), appId: app, kind: "streak", category: .milestones,
                        title: "Downloads grew for \(streak) straight weeks",
                        body: "Weekly downloads increased every week for \(streak) weeks in a row.", day: Day.add(6, to: lastWeek.day),
-                       chart: InsightChart(label: "Weekly downloads", points: weeks.suffix(streak + 1).map(ChartPoint.init), headline: Int(lastWeek.value).formatted()))
+                       chart: InsightChart(label: "Weekly downloads", points: weeks.suffix(streak + 1).map(ChartPoint.init), headline: Int(lastWeek.value).formatted(.number.locale(enUS))))
     }
 
     // MARK: discovery
@@ -95,7 +97,7 @@ public struct InsightEngine {
                        title: "Your app may be featured" + (lead.map { " " + Territories.flag($0) } ?? ""),
                        body: "Browse traffic is \(Int(recent / usual))× its usual level\(where_). An App Store feature or chart placement would explain it.",
                        day: peakDay, chart: InsightChart(label: "Daily browse impressions", points: s.map(ChartPoint.init),
-                                                         baselineLabel: "Usual: \(Int(usual).formatted())", baseline: usual, headline: Int(recent).formatted()))
+                                                         baselineLabel: "Usual: \(Int(usual).formatted(.number.locale(enUS)))", baseline: usual, headline: Int(recent).formatted(.number.locale(enUS))))
     }
 
     func listingIssues() -> [Insight] {
@@ -217,7 +219,7 @@ public struct InsightEngine {
                        title: "More devices are crashing",
                        body: "Crashes per session are \(String(format: "%.1f", r))× last month's rate. Check crash reports in Xcode Organizer, starting with recent releases.",
                        day: asOf, needsAttention: true,
-                       chart: InsightChart(label: "Daily crashes", points: store.series(app, .crashes, from: day(-34), to: asOf).map(ChartPoint.init), headline: Int(c7).formatted()))
+                       chart: InsightChart(label: "Daily crashes", points: store.series(app, .crashes, from: day(-34), to: asOf).map(ChartPoint.init), headline: Int(c7).formatted(.number.locale(enUS))))
     }
 
     // MARK: markets

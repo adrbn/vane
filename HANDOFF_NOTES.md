@@ -7,8 +7,13 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Theme tokens live verbatim in `Theme/Themes.swift`; `ThemeStyle.swift` gives them types.
 - Unified empty toolbar, so the traffic lights sit inside the sidebar's rounded corner. Ticker uses a 92 pt icon rail instead of the sidebar.
 - Screen header: 8 pt more space on top than the mockup (title block at 20 pt), at Adrien's request. The mockups felt bottom-heavy.
-- UI in English, with en_US number and date formats everywhere, whatever the Mac's locale.
-- Sales and Usage were not designed. They keep their previous content under the shared screen header.
+- UI in English, with en_US number and date formats everywhere, whatever the Mac's locale (forced through `AppleLocale` in `main.swift`; the insight engine formats with an explicit en_US locale).
+- Sales and Usage were not in the kit; they're designed in the kit's language:
+  - Sales: summary card (totals + stacked bars, release chips on their bar) over a table capped to its rows, fixed column widths and row height, a Release column, "Partial" on incomplete periods.
+  - Usage: sessions/crashes cards plus a Ratings card (total, written-review distribution, latest reviews).
+- Screen header: if title and controls don't fit (chat open), the controls wrap to a second row instead of truncating the title.
+- Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
+- Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages").
 
 ## Settings
 - Settings is a sheet **inside** the main window (blurred backdrop, theme colors), not a separate window. It opens with ⌘, from the menu, or with the gear at the bottom of the sidebar (or of the rail in Ticker).
@@ -24,6 +29,8 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Comparisons ("vs last week") appear only when the previous period has full history. Otherwise "No earlier data" in reports and "—" in App Store pills.
 - The recomputed lead change was removed.
 - Values that aren't available yet read "Expected in 24–48 hours". No skeletons.
+- Before Apple's first analytics report, App Store keeps the kit layout with "—" tiles and a pending banner; downloads already come from sales reports.
+- Sparse Insights (≤ 3, nothing new) show "Recent" plus a "Watching" grid of the metrics being tracked, instead of a half-empty page.
 - Usual range = p10 to p90 of the 63 prior days.
 - Insights:
   - Dismissed insights are shown as "Recently resolved".

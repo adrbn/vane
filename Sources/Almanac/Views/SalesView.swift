@@ -54,6 +54,10 @@ struct SalesView: View {
                 TableColumn("Sales per download") { r in Text(r.downloads > 0 ? Metric.sales.format(r.sales / r.downloads) : "—").monospacedDigit() }
                 TableColumn("Active subs") { r in Text(r.subs > 0 ? Num.int(r.subs) : "—").monospacedDigit() }
             }
+            #if os(macOS)
+            .scrollContentBackground(.hidden)
+            .alternatingRowBackgrounds(.disabled)
+            #endif
         }
         .onAppear {
             model.chatContext = "Screen: Sales by \(granularity.rawValue.lowercased()) for \(model.app?.name ?? "") (USD)\n"

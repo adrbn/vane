@@ -21,6 +21,9 @@ struct AlmanacApp: App {
             }
             CommandGroup(after: .sidebar) {
                 Button(model.chatOpen ? "Hide Chat" : "Show Chat") { model.chatOpen.toggle() }.keyboardShortcut("j")
+                Divider()
+                Button("Back") { model.goBack() }.keyboardShortcut("[").disabled(!model.canGoBack)
+                Button("Forward") { model.goForward() }.keyboardShortcut("]").disabled(!model.canGoForward)
             }
         }
 

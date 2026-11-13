@@ -175,7 +175,7 @@ struct MetricDetailView: View {
                 AxisGridLine().foregroundStyle(t.sep)
                 AxisValueLabel {
                     if let x = v.as(Double.self) {
-                        Text(metric.isRate ? String(format: "%.0f%%", x * 100) : x.formatted(.number.notation(.compactName)))
+                        Text(metric.isRate ? String(format: "%.0f%%", x * 100) : x.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US"))))
                             .font(t.font(11)).foregroundStyle(t.label2)
                     }
                 }

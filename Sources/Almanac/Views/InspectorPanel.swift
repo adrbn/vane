@@ -100,7 +100,16 @@ struct InspectorPanel: View {
                 .frame(maxWidth: 232, alignment: .trailing)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case "error":
-            Label(m.text, systemImage: "exclamationmark.triangle").font(t.font(13)).foregroundStyle(t.warn)
+            VStack(alignment: .leading, spacing: 8) {
+                Label(m.text, systemImage: "exclamationmark.triangle").font(t.font(13)).foregroundStyle(t.warn)
+                if m.text.contains("signed out") {
+                    // One click instead of "open Terminal and type this": Terminal runs the CLI's own sign-in.
+                    SmallButton(label: "Sign In in Terminal") {
+                        let script = "tell application \"Terminal\"\n activate\n do script \"claude /login\"\nend tell"
+                        NSAppleScript(source: script)?.executeAndReturnError(nil)
+                    }
+                }
+            }
         default:
             Text((try? AttributedString(markdown: m.text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(m.text))
                 .font(t.font(13)).lineSpacing(3)

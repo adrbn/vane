@@ -28,10 +28,29 @@ final class AppModel {
     let store: Store
     var apps: [AppRecord] = []
     var appId: String? { didSet { UserDefaults.standard.set(appId, forKey: "selectedApp") } }
-    var selection: Pane? = Pane.fromLaunchArgument ?? .insights   // bound straight to the sidebar List
+    var selection: Pane? = Pane.fromLaunchArgument ?? .insights { // bound straight to the sidebar List
+        didSet {
+            guard !navigating, let old = oldValue, old != selection else { return }
+            backStack.append(old); forwardStack = []
+        }
+    }
     var section: Pane {
         get { selection ?? .insights }
         set { selection = newValue }
+    }
+    // Back/forward through visited screens, like Safari: ⌘[ ⌘] or a two-finger swipe.
+    private var backStack: [Pane] = []
+    private var forwardStack: [Pane] = []
+    @ObservationIgnored private var navigating = false
+    var swipeProgress: CGFloat = 0      // -1…1 while a swipe is tracked; drives the screen's slide
+    var canGoBack: Bool { !backStack.isEmpty }
+    var canGoForward: Bool { !forwardStack.isEmpty }
+    func goBack() { step(from: &backStack, to: &forwardStack) }
+    func goForward() { step(from: &forwardStack, to: &backStack) }
+    private func step(from: inout [Pane], to: inout [Pane]) {
+        guard let p = from.popLast() else { return }
+        to.append(section)
+        navigating = true; selection = p; navigating = false
     }
     var chatOpen = CommandLine.arguments.contains("--chat")
     var settingsOpen = CommandLine.arguments.contains("--settings")   // Mac: in-window sheet; iOS: modal sheet

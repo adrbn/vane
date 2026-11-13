@@ -17,19 +17,22 @@ struct Screen<Controls: View, Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(title).font(t.titleFont).tracking(-0.2).lineLimit(1).frame(height: 26)
-                    Text(subtitle).font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
+            // One row when it fits; otherwise the controls drop to a second row instead of truncating the title.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    heading.fixedSize()
+                    Spacer(minLength: 12)
+                    controls.fixedSize()
+                    ask
                 }
-                Spacer(minLength: 12)
-                controls.fixedSize()
-                if inspector {
-                    GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
+                .padding(.top, 20).padding(.leading, 28).padding(.trailing, 20)
+                .frame(height: 80)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) { heading; Spacer(minLength: 12); ask }
+                    HStack(spacing: 8) { controls }.fixedSize()
                 }
+                .padding(.top, 20).padding(.leading, 28).padding(.trailing, 20).padding(.bottom, 4)
             }
-            .padding(.top, 20).padding(.leading, 28).padding(.trailing, 20)
-            .frame(height: 80)
             Group {
                 if scrolls {
                     ScrollView { content.padding(.top, 12).padding(.leading, 28).padding([.trailing, .bottom], 24) }
@@ -41,6 +44,21 @@ struct Screen<Controls: View, Content: View>: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
+extension Screen {
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title).font(t.titleFont).tracking(-0.2).lineLimit(1).frame(height: 26)
+            Text(subtitle).font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
+        }
+    }
+
+    @ViewBuilder private var ask: some View {
+        if inspector {
+            GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
         }
     }
 }
@@ -264,7 +282,7 @@ struct Spark: View {
     }
 }
 
-// MARK: - Centered sheet on a blurred scrim.
+// MARK: - Centered sheet over the blurred screen.
 
 struct CenteredSheet<Content: View>: View {
     @Environment(\.theme) private var t
@@ -273,7 +291,8 @@ struct CenteredSheet<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
         ZStack {
-            Rectangle().fill(.ultraThinMaterial).overlay(t.scrim).ignoresSafeArea()
+            // The screen behind is blurred by its owner; no tint, so dark themes don't go darker.
+            Color.clear.contentShape(Rectangle()).ignoresSafeArea()
                 .onTapGesture(perform: onDismiss)
             content
                 .padding(24)

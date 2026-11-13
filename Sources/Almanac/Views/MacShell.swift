@@ -18,6 +18,8 @@ struct RootView: View {
                     detail
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .id("\(model.appId ?? "")-\(model.revision)")
+                        .offset(x: model.swipeProgress * 60)
+                        .opacity(1 - abs(model.swipeProgress) * 0.35)
                 }
                 if model.chatOpen {
                     InspectorPanel()
@@ -29,6 +31,7 @@ struct RootView: View {
                 }
             }
         }
+        .blur(radius: model.settingsOpen ? 16 : 0)
         .overlay {
             if model.settingsOpen {
                 CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
@@ -44,7 +47,7 @@ struct RootView: View {
         .preferredColorScheme(t.scheme)
         .animation(.default, value: model.chatOpen)
         .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
-        .task { openLaunchReport() }
+        .task { openLaunchReport(); SwipeNavigation.install(model) }
     }
 
     @Environment(\.openWindow) private var openWindow
@@ -68,15 +71,8 @@ struct RootView: View {
             case .listing: ListingView()
             case .reviews: ReviewsView()
             case .appStore: AppStoreView()
-            // Sales and Usage are not in the redesign: kept as they were, under the shared header.
-            case .usage:
-                Screen(title: "Usage", subtitle: "\(model.app?.name ?? "") · Sessions, crashes and ratings", inspector: true, scrolls: false, padded: false) {} content: {
-                    OverviewView(kind: .usage)
-                }
-            case .sales:
-                Screen(title: "Sales", subtitle: "\(model.app?.name ?? "") · Units and proceeds from Apple's sales reports", inspector: true, scrolls: false, padded: false) {} content: {
-                    SalesView()
-                }
+            case .usage: UsageScreen()
+            case .sales: SalesScreen()
             case .territories: TerritoriesView()
             case .metric(let m): MetricDetailView(metric: m)
             }
@@ -311,20 +307,36 @@ struct IconRail: View {
 import AppKit
 
 /// Gives the window an empty unified toolbar so the traffic lights sit 52 pt tall, inside the sidebar's rounded corner.
+/// In full screen the toolbar is removed: there it would draw an opaque bar over the top of the content.
 struct WindowChrome: NSViewRepresentable {
+    final class Coordinator { var observers: [NSObjectProtocol] = [] }
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeNSView(context: Context) -> NSView {
         let v = NSView()
         DispatchQueue.main.async {
             guard let w = v.window, w.toolbar == nil else { return }
-            let tb = NSToolbar(identifier: "almanac.main")
-            tb.showsBaselineSeparator = false
-            w.toolbar = tb
-            w.toolbarStyle = .unified
+            Self.install(w)
             w.titleVisibility = .hidden
             w.titlebarAppearsTransparent = true
+            let nc = NotificationCenter.default
+            context.coordinator.observers = [
+                nc.addObserver(forName: NSWindow.willEnterFullScreenNotification, object: w, queue: .main) { _ in w.toolbar = nil },
+                nc.addObserver(forName: NSWindow.didExitFullScreenNotification, object: w, queue: .main) { _ in Self.install(w) },
+            ]
         }
         return v
     }
     func updateNSView(_ nsView: NSView, context: Context) {}
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.observers.forEach(NotificationCenter.default.removeObserver)
+    }
+
+    private static func install(_ w: NSWindow) {
+        let tb = NSToolbar(identifier: "almanac.main")
+        tb.showsBaselineSeparator = false
+        w.toolbar = tb
+        w.toolbarStyle = .unified
+    }
 }
 #endif

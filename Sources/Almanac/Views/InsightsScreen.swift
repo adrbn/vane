@@ -28,6 +28,7 @@ struct InsightsView: View {
                 list(shown)
             }
         }
+        .blur(radius: fixing == nil ? 0 : 16)
         .overlay {
             if let f = fixing {
                 CenteredSheet(onDismiss: { fixing = nil }) { KeywordFixSheet(insight: f, close: { fixing = nil }) }
@@ -71,14 +72,26 @@ struct InsightsView: View {
         let week = shown.filter { $0.day < Day.add(-1, to: today) && $0.day >= Day.add(-7, to: today) }
         let older = shown.filter { $0.day < Day.add(-7, to: today) }
         let lead = new.first { $0.needsAttention && !$0.dismissed } ?? new.first
+        // A handful of cards reads better as one row than as three half-empty groups; each card carries its date.
+        let few = shown.count <= 3 && new.isEmpty
         return VStack(alignment: .leading, spacing: 16) {
-            if !new.isEmpty {
-                group("New", "\(new.count) since yesterday")
-                if let lead { InsightCardView(insight: lead, lead: true, asked: $asked, fixing: $fixing) }
-                grid(new.filter { $0.id != lead?.id })
+            if few {
+                group("Recent", "\(shown.count) insight\(shown.count == 1 ? "" : "s") in the last \(Day.between(shown.map(\.day).min() ?? today, today) + 1) days")
+                grid(shown)
+                // A quiet feed still shows what is being watched, as when there is nothing to flag.
+                group("Watching", "Last 28 days against each metric's usual range").padding(.top, 8)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
+                    ForEach(NothingToFlag.watched, id: \.self) { WatchCard(metric: $0, app: model.appId ?? "") }
+                }
+            } else {
+                if !new.isEmpty {
+                    group("New", "\(new.count) since yesterday")
+                    if let lead { InsightCardView(insight: lead, lead: true, asked: $asked, fixing: $fixing) }
+                    grid(new.filter { $0.id != lead?.id })
+                }
+                if !week.isEmpty { group("Earlier this week", nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
+                if !older.isEmpty { group("Earlier", nil).padding(.top, 8); grid(older) }
             }
-            if !week.isEmpty { group("Earlier this week", nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
-            if !older.isEmpty { group("Earlier", nil).padding(.top, 8); grid(older) }
         }
     }
 
@@ -90,7 +103,8 @@ struct InsightsView: View {
     }
 
     private func grid(_ items: [Insight]) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 16, alignment: .top)], spacing: 16) {
+        // Few cards stretch across the row instead of leaving an empty column.
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .top), count: items.count == 1 ? 2 : max(1, min(items.count, 3))), spacing: 16) {
             ForEach(items) { InsightCardView(insight: $0, lead: false, asked: $asked, fixing: $fixing) }
         }
     }
