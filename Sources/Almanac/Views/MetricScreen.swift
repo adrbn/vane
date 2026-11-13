@@ -9,18 +9,19 @@ struct MetricDetailView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
     var metric: Metric
-    @State private var g: Granularity = .day
+    /// Shared with App Store and Usage, so a tile and the screen it opens show the same period.
+    @AppStorage("period") private var days = 28
     @State private var lastYear = true
     @State private var territory = ""
     @State private var hover: Date?
 
     var body: some View {
-        let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, g: g, territory: territory)
+        let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, days: days, territory: territory)
         let up = Change(metric, value: d.value, previous: d.previous).up
         let color = t.color(metric, up: up)
         let place = territory.isEmpty ? "All territories" : Territories.name(territory)
-        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(metric.isAppStore ? "App Store" : "Sales") · \(place)", inspector: true) {
-            GlassSegments(options: [(Granularity.day, "Day"), (.week, "Week"), (.month, "Month")], selection: $g)
+        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(metric.isAppStore ? "App Store" : [.sessions, .crashes].contains(metric) ? "Usage" : "Sales") · \(place)", inspector: true) {
+            GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
             GlassGroup {
                 if metric.hasTerritories { territoryMenu(d) }
                 Button { lastYear.toggle() } label: {
@@ -54,7 +55,7 @@ struct MetricDetailView: View {
             }
         }
         .onAppear { model.chatContext = d.chatContext(model.app?.name ?? "") }
-        .onChange(of: g) { model.chatContext = d.chatContext(model.app?.name ?? "") }
+        .onChange(of: days) { model.chatContext = d.chatContext(model.app?.name ?? "") }
         .onChange(of: territory) { model.chatContext = d.chatContext(model.app?.name ?? "") }
     }
 
@@ -185,7 +186,7 @@ struct MetricDetailView: View {
             AxisMarks(values: .automatic(desiredCount: 5)) { v in
                 AxisValueLabel {
                     if let x = v.as(Date.self) {
-                        Text(g == .month ? x.formatted(.dateTime.month(.abbreviated)) : x.formatted(.dateTime.month(.abbreviated).day()))
+                        Text(x.formatted(.dateTime.month(.abbreviated).day()))
                             .font(t.font(11)).foregroundStyle(t.label2)
                     }
                 }
@@ -274,27 +275,20 @@ struct MetricData {
     }
 
     let store: Store, app: String, metric: Metric, g: Granularity, territory: String
+    var days: Int { Day.between(from, to) + 1 }
     let from: String, to: String, pFrom: String, pTo: String
     let value: Double, previous: Double, lastYearValue: Double
     let hasPrevious: Bool, hasLastYear: Bool
     let rows: [Row]
     let versions: [VersionMark]
 
-    init(store: Store, app: String, metric: Metric, g: Granularity, territory: String) {
-        self.store = store; self.app = app; self.metric = metric; self.g = g; self.territory = territory
-        let last = store.lastDay(app, metric) ?? store.lastDay(app) ?? Day.today()
-        // Weeks and months end on the last complete one, so a partial bucket never looks like a drop.
-        let end: String = switch g {
-        case .week: Day.add(6, to: Day.weekStart(last)) == last ? last : Day.add(-1, to: Day.weekStart(last))
-        case .month: Day.monthStart(Day.add(1, to: last)) != Day.monthStart(last) ? last : Day.add(-1, to: Day.monthStart(last))
-        default: last
-        }
-        // Day = 28 days, Week = 26 weeks, Month = 12 calendar months.
-        let start: String = switch g {
-        case .week: Day.weekStart(Day.add(-25 * 7, to: end))
-        case .month: Day.monthStart(Day.add(-334, to: Day.monthStart(end)))
-        default: Day.add(-27, to: end)
-        }
+    init(store: Store, app: String, metric: Metric, days: Int, territory: String) {
+        self.store = store; self.app = app; self.metric = metric; self.territory = territory
+        // Daily up to 90 days, weekly for a year (as the App Store sparklines).
+        let g: Granularity = days > 90 ? .week : .day
+        self.g = g
+        let end = Self.anchor(store, app, metric)
+        let start = Day.add(-(days - 1), to: end)
         from = start; to = end
         pTo = Day.add(-1, to: start)
         pFrom = Day.add(-Day.between(start, end), to: pTo)
@@ -311,14 +305,30 @@ struct MetricData {
         let cur = store.series(app, metric, territory: territory, from: start, to: end).bucketed(g, average: avg)
         let ly = Dictionary(uniqueKeysWithValues: store.series(app, metric, territory: territory, from: Day.add(-364, to: start), to: Day.add(-364, to: end))
             .bucketed(g, average: avg).map { ($0.day, $0.value) })
-        rows = cur.map { Row(day: $0.day, value: $0.value, lastYear: ly[g.bucket(Day.add(-364, to: $0.day))]) }
+        var r = cur.map { Row(day: $0.day, value: $0.value, lastYear: ly[g.bucket(Day.add(-364, to: $0.day))]) }
+        // Complete weeks only: a partial first or last week would read as a drop. The total above still covers every day.
+        if g == .week {
+            if Day.weekStart(start) != start, !r.isEmpty { r.removeFirst() }
+            if Day.add(6, to: Day.weekStart(end)) != end, !r.isEmpty { r.removeLast() }
+        }
+        rows = r
         versions = store.versions(app).filter { $0.day >= start && $0.day <= end }
     }
 
-    var rangeName: String { g == .day ? "Last 28 days" : g == .week ? "Last 26 weeks" : "Last 12 months" }
-    var periodNoun: String { g == .day ? "28 days" : g == .week ? "26 weeks" : "12 months" }
+    /// Where a metric's period ends: the same day the tile that opens it ends on.
+    static func anchor(_ s: Store, _ app: String, _ m: Metric) -> String {
+        let latest = s.lastDay(app) ?? Day.today()
+        switch m {
+        case .sessions, .crashes: return s.lastDay(app, .sessions) ?? latest
+        case .activeSubs, .ratingsTotal, .newRatings, .sales, .proceeds: return s.lastDay(app, m) ?? latest
+        default: return s.lastDay(app, .impressions) ?? s.lastDay(app, .firstDownloads) ?? latest
+        }
+    }
+
+    var rangeName: String { "Last \(periodNoun)" }
+    var periodNoun: String { "\(days) days" }
     var rangeLabel: String {
-        let f: (String) -> String = { Day.date($0).formatted(g == .month ? .dateTime.month(.abbreviated).year() : .dateTime.month(.abbreviated).day()) }
+        let f: (String) -> String = { Day.date($0).formatted(days > 90 ? .dateTime.month(.abbreviated).day().year() : .dateTime.month(.abbreviated).day()) }
         return "\(f(from)) – \(f(to))"
     }
 

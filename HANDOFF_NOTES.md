@@ -25,6 +25,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Manual refresh: ⌘R, the ↻ button in every screen header (left of the assistant button; it spins while a sync runs), or "Check Now" on pending banners.
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
+- A metric screen uses the same period as the tiles (the shared 7 / 28 / 90 days / Year picker, daily up to 90 days, complete weeks for a year) and ends on the same day as the tile that opens it (App Store metrics on the last analytics day, Usage on the last sessions day), so the numbers match.
 - Tiles are links: a Watching card or a Usage card opens its metric (Ratings opens Reviews), an insight card opens what its Open button opens, and the Reviews context numbers open Downloads / Usage.
 - The swipe arrow is clipped with the screen, so it slides out from behind the sidebar.
 - Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages"). The swipe shows an arrow bubble sliding in from the edge, filled with the accent once it will go through; the screen itself doesn't move.
