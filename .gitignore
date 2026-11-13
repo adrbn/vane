@@ -3,3 +3,6 @@
 .build/
 build/
 ios/Vane.xcodeproj/
+docs/assets/captures/
+preview/
+docs/assets/readme-src/ticker/
