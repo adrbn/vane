@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Builds a notarized, stapled Vane DMG in build/release/.
 #   scripts/release.sh            uses VERSION from bundle.sh
-# Needs the Developer ID certificate and a notarytool keychain profile (NOTARY_PROFILE, default "vane").
+# Needs the Developer ID certificate and a notarytool keychain profile (NOTARY_PROFILE, default "haze").
 set -euo pipefail
 cd "$(dirname "$0")/.."
-NOTARY_PROFILE="${NOTARY_PROFILE:-vane}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-haze}"
 APP=build/Vane.app
 OUT=build/release
 die() { printf '\n✗ %s\n' "$1" >&2; exit 1; }
