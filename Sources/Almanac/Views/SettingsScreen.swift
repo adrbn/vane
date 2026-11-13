@@ -85,8 +85,8 @@ struct MacSettingsView: View {
                 connectionText(t, saved: saved, dirty: dirty)
                 Spacer(minLength: 8)
                 if !model.isDemo && !creds.isComplete { SmallButton(label: "Show Demo Data") { model.loadDemo() } }
-                SmallButton(label: testing ? "Checking…" : dirty ? "Save and Connect" : "Test Connection", prominent: dirty) { Task { await save() } }
-                    .disabled(!creds.isComplete || testing).opacity(!creds.isComplete || testing ? 0.5 : 1)
+                SmallButton(label: testing ? "Checking…" : dirty ? "Save and Connect" : "Test Connection", prominent: dirty, busy: testing) { Task { await save() } }
+                    .disabled(!creds.isComplete).opacity(!creds.isComplete ? 0.5 : 1)
             }
             .padding(.horizontal, 12).frame(minHeight: 44)
             if saved.isComplete {

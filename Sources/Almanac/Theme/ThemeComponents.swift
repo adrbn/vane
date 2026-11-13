@@ -197,11 +197,14 @@ struct SmallButton: View {
     var label: String
     var symbol: String? = nil
     var prominent = false
+    /// Shows a spinning arc in place of the symbol and ignores clicks, without the disabled dimming.
+    var busy = false
     var action: () -> Void
     var body: some View {
-        Button(action: action) {
+        Button { if !busy { action() } } label: {
             HStack(spacing: 6) {
-                if let symbol { Image(systemName: symbol).font(.system(size: 11, weight: .bold)) }
+                if busy { Spinner() }
+                else if let symbol { Image(systemName: symbol).font(.system(size: 11, weight: .bold)) }
                 Text(label).lineLimit(1)
             }
             .font(t.font(13, .semibold))
@@ -211,6 +214,20 @@ struct SmallButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Small arc turning at a steady pace, in the label's color.
+struct Spinner: View {
+    var size: CGFloat = 11
+    @State private var on = false
+    var body: some View {
+        Circle().trim(from: 0, to: 0.7)
+            .stroke(.foreground, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+            .frame(width: size, height: size)
+            .rotationEffect(.degrees(on ? 360 : 0))
+            .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: on)
+            .onAppear { on = true }
     }
 }
 

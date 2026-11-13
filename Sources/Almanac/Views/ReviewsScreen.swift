@@ -474,7 +474,7 @@ struct ThemedReplySheet: View {
                 Text("\(Num.int(Double(text.count))) / 5,970").font(t.font(11)).monospacedDigit().foregroundStyle(text.count > 5970 ? t.neg : t.label2)
             }
             HStack(spacing: 8) {
-                SmallButton(label: busy ? "Drafting…" : "Regenerate", symbol: "sparkles") { Task { await draft() } }.disabled(busy)
+                SmallButton(label: busy ? "Drafting…" : "Regenerate", symbol: "sparkles", busy: busy) { Task { await draft() } }
                 Spacer()
                 SmallButton(label: "Cancel") { close() }.keyboardShortcut(.cancelAction)
                 SmallButton(label: model.isDemo ? "Send Reply (demo)" : "Send Reply", prominent: true) { Task { await send() } }

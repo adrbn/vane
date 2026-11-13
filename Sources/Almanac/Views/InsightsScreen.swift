@@ -426,7 +426,7 @@ private struct NothingToFlag: View {
                 }
             }
             Spacer(minLength: 0)
-            SmallButton(label: model.syncing ? "Checking…" : "Check Now") { Task { await model.refresh() } }.disabled(model.syncing)
+            SmallButton(label: model.syncing ? "Checking…" : "Check Now", busy: model.syncing) { Task { await model.refresh() } }
         }
         .themedCard(padding: 28)
     }

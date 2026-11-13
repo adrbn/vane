@@ -31,11 +31,11 @@ struct ListingView: View {
                 GlassItem(label: "Discard Changes") { drafts = [:]; message = nil }
                     .disabled(changed.isEmpty).opacity(changed.isEmpty ? 0.45 : 1)
             }
-            SmallButton(label: busy ? "Uploading…" : model.isDemo ? "Upload (demo)" : "Upload to App Store Connect", prominent: true) {
+            SmallButton(label: busy ? "Uploading…" : model.isDemo ? "Upload (demo)" : "Upload to App Store Connect", prominent: true, busy: busy) {
                 Task { await upload(changed) }
             }
-            .disabled(busy || changed.isEmpty || changed.contains { ListingCheck(drafts[$0.locale]!).overBudget })
-            .opacity(busy || changed.isEmpty ? 0.5 : 1)
+            .disabled(!busy && (changed.isEmpty || changed.contains { ListingCheck(drafts[$0.locale]!).overBudget }))
+            .opacity(!busy && changed.isEmpty ? 0.5 : 1)
         } content: {
             if let l = selected {
                 HStack(alignment: .top, spacing: 24) {
