@@ -17,7 +17,7 @@ struct RootView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .id("\(model.appId ?? "")-\(model.revision)")
             }
-            .navigationTitle(model.app?.name ?? "Almanac")
+            .navigationTitle(model.app?.name ?? "Vane")
             .navigationSubtitle(title)
         }
         .inspector(isPresented: $model.chatOpen) {

@@ -26,7 +26,7 @@ struct DataArrivingView: View {
                     .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Your first App Store report arrives in 24–48 hours").font(t.font(26, .bold)).tracking(-0.26)
-                    Text("Apple publishes App Store analytics one to two days after each day ends. Almanac requested the report for \(model.app?.name ?? "this app"), checks for it in the background and notifies you when it lands.")
+                    Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? "this app"), checks for it in the background and notifies you when it lands.")
                         .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 620, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)

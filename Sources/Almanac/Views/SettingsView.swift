@@ -46,7 +46,7 @@ struct AccountSettings: View {
                     .onChange(of: agentOn) { _, on in
                         do { try BackgroundAgent.setEnabled(on) } catch { status = error.localizedDescription; agentOn = BackgroundAgent.isEnabled }
                     }
-                Text("Every 6 hours, even when Almanac is closed. You'll get a notification when something needs attention.")
+                Text("Every 6 hours, even when Vane is closed. You'll get a notification when something needs attention.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             #endif

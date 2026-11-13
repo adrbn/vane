@@ -2,6 +2,11 @@
 
 Decisions taken while implementing the handoff (`design_handoff_almanac_macos`), where the spec was silent or reality disagreed with the mockups.
 
+## Name
+- The product is **Vane** on Mac and iPhone (it was Almanac on Mac). Only what users see changed: bundle name, `build/Vane.app`, window title, UI text, the assistant's prompt. The SwiftPM target, executable, bundle id `dev.almanac.app`, data folder `~/Library/Application Support/Almanac`, Keychain entry and agent label `dev.almanac.agent` keep the old name so existing data and settings carry over.
+- Trademark screen (2026-11-13): VANE is registered for software in the EU (Friend & Foe AB, the game) and the UK (Grillo Ltd, 2026). Accepted for a free open-source app; use a descriptive App Store subtitle and don't file a mark.
+- After the bundle path changed, the background agent had to be turned off and on again to register under the new path.
+
 ## Themes and chrome
 - Default theme: **Nocturne**. Each theme keeps a fixed scheme: Ticker and Nocturne dark, Color Blocks and Candy Glass light. The system appearance is ignored.
 - Theme tokens live verbatim in `Theme/Themes.swift`; `ThemeStyle.swift` gives them types.
@@ -77,7 +82,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - After adding Swift files, run `xcodegen generate` in `ios/`.
 
 ## Launch flags (screenshots and testing)
-`open -n build/Almanac.app --args …`
+`open -n build/Vane.app --args …`
 
 | Flag | Effect |
 |------|--------|

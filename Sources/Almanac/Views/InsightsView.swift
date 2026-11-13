@@ -17,7 +17,7 @@ struct LegacyInsightsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header(counts: Dictionary(grouping: all, by: \.category).mapValues(\.count))
                 if shown.isEmpty {
-                    EmptyHint(title: "Nothing to flag", message: "Almanac checks your data after every refresh and lists what's worth knowing here.", symbol: "checkmark.seal")
+                    EmptyHint(title: "Nothing to flag", message: "Vane checks your data after every refresh and lists what's worth knowing here.", symbol: "checkmark.seal")
                         .padding(.top, 60)
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 290, maximum: 420), spacing: 14, alignment: .top)], spacing: 14) {

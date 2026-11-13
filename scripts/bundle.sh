@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds Almanac.app into build/. Signs with the first "Developer ID Application"
+# Builds Vane.app (the Mac app; target and data paths are still named Almanac) into build/. Signs with the first "Developer ID Application"
 # identity found, or ad-hoc otherwise. Usage: scripts/bundle.sh [debug|release]
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -9,8 +9,8 @@ VERSION="0.1.0"
 swift build -c "$CONFIG" --product Almanac
 BIN="$(swift build -c "$CONFIG" --show-bin-path)/Almanac"
 
-APP="build/Almanac.app"
-rm -rf "$APP"
+APP="build/Vane.app"
+rm -rf "$APP" build/Almanac.app   # old name
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents"
 cp "$BIN" "$APP/Contents/MacOS/Almanac"
 cp Resources/countries.json "$APP/Contents/Resources/"
@@ -23,8 +23,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundleIdentifier</key><string>dev.almanac.app</string>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleLocalizations</key><array><string>en</string></array>
-  <key>CFBundleName</key><string>Almanac</string>
-  <key>CFBundleDisplayName</key><string>Almanac</string>
+  <key>CFBundleName</key><string>Vane</string>
+  <key>CFBundleDisplayName</key><string>Vane</string>
   <key>CFBundleExecutable</key><string>Almanac</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>

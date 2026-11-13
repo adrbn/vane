@@ -47,7 +47,7 @@ struct OnboardingView: View, SettingsBlocks {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .center, spacing: 14) {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
-                heading(t, "Welcome to Almanac", "Your App Store Connect numbers, on your Mac. It reads Apple's reports and tells you what changed.")
+                heading(t, "Welcome to Vane", "Your App Store Connect numbers, on your Mac. It reads Apple's reports and tells you what changed.")
             }
             HStack(alignment: .top, spacing: 12) {
                 feature(t, "lightbulb.fill", "Insights", "Milestones, drops and keyword issues, spotted for you.")
@@ -74,7 +74,7 @@ struct OnboardingView: View, SettingsBlocks {
 
     private func connect(_ t: AlmanacTheme) -> some View {
         VStack(alignment: .leading, spacing: 20) {
-            heading(t, "Connect App Store Connect", "Almanac reads your reports with an API key. The key stays in your Keychain and never leaves this Mac.")
+            heading(t, "Connect App Store Connect", "Vane reads your reports with an API key. The key stays in your Keychain and never leaves this Mac.")
             group(t, "") {
                 guide(t, 1, "Create a key", "Users and Access → Integrations → App Store Connect API. Give it the Sales and Reports role.",
                       link: ("Open", "https://appstoreconnect.apple.com/access/integrations/api"))
@@ -106,7 +106,7 @@ struct OnboardingView: View, SettingsBlocks {
     private func next(_ t: AlmanacTheme) -> some View {
         VStack(alignment: .leading, spacing: 20) {
             heading(t, connected ? "Here's what happens next" : "Look around first",
-                    connected ? "Apple doesn't send everything at once. Almanac fills in as each report arrives."
+                    connected ? "Apple doesn't send everything at once. Vane fills in as each report arrives."
                               : "You're looking at demo apps. Connect your key in Settings → App Store Connect whenever you're ready.")
             group(t, "") {
                 timeline(t, "Sales history", connected ? "Now. Downloads, proceeds and territories, as far back as Apple keeps them." : "Right after you connect.",
@@ -150,7 +150,7 @@ struct OnboardingView: View, SettingsBlocks {
             case 1:
                 SmallButton(label: connected ? "Continue" : "Skip for Now", prominent: connected) { step = 2 }
             default:
-                SmallButton(label: connected ? "Open Almanac" : "Start", prominent: true) { finish() }.keyboardShortcut(.defaultAction)
+                SmallButton(label: connected ? "Open Vane" : "Start", prominent: true) { finish() }.keyboardShortcut(.defaultAction)
             }
         }
     }

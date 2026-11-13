@@ -58,7 +58,7 @@ struct MacSettingsView: View, SettingsBlocks {
                 SmallButton(label: "Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: Store.defaultPath)]) }
             }
             if !model.isDemo {
-                row(t, "Sample data", "Opens a second Almanac with demo apps and every metric filled in. Your data isn't touched.") {
+                row(t, "Sample data", "Opens a second Vane with demo apps and every metric filled in. Your data isn't touched.") {
                     SmallButton(label: "Open Demo Window") {
                         let config = NSWorkspace.OpenConfiguration()
                         config.createsNewApplicationInstance = true

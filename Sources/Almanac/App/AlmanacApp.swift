@@ -5,7 +5,7 @@ struct AlmanacApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("Almanac") {
+        WindowGroup("Vane") {
             RootView()
                 .environment(model)
                 .frame(minWidth: 1100, minHeight: 760)

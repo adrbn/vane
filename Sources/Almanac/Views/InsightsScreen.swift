@@ -357,7 +357,7 @@ extension InsightsView {
                 : model.store.series(app, m, from: from, to: to).map(\.value).reduce(0, +) / 28
             return "- \(MetricCard.label(m)): \(m.isRate ? Num.pct(v) : Num.k(v) + " a day") over the last 28 days"
         }
-        return LegacyInsightsView.context(shown, app: model.app?.name ?? "") + "\nShown in Almanac (Watching):\n" + lines.joined(separator: "\n")
+        return LegacyInsightsView.context(shown, app: model.app?.name ?? "") + "\nShown in Vane (Watching):\n" + lines.joined(separator: "\n")
     }
 }
 
@@ -417,8 +417,8 @@ private struct NothingToFlag: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Nothing to flag").font(t.font(26, .bold)).tracking(-0.26)
                 Text(live == Self.watched.count
-                     ? "Almanac compared \(live) metrics with their usual range. Everything is normal, so there is nothing to act on today. New insights appear here when a metric leaves its range or a review needs you."
-                     : "Almanac watches \(live) of \(Self.watched.count) metrics so far and none needs you. The others start once Apple's first analytics report arrives, usually 24–48 hours after you connect.")
+                     ? "Vane compared \(live) metrics with their usual range. Everything is normal, so there is nothing to act on today. New insights appear here when a metric leaves its range or a review needs you."
+                     : "Vane watches \(live) of \(Self.watched.count) metrics so far and none needs you. The others start once Apple's first analytics report arrives, usually 24–48 hours after you connect.")
                     .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 560, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 if let d = model.lastSync {
                     Text("Checked \(d.formatted(.relative(presentation: .named))) · Checks again after every refresh")

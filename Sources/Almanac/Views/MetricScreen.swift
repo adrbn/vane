@@ -256,7 +256,7 @@ struct MetricDetailView: View {
 
     private func export(_ d: MetricData) {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "\(model.app?.name ?? "Almanac") \(metric.title).csv"
+        panel.nameFieldStringValue = "\(model.app?.name ?? "Vane") \(metric.title).csv"
         panel.allowedContentTypes = [.commaSeparatedText]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do { try d.csv(lastYear: lastYear).write(to: url, atomically: true, encoding: .utf8) } catch {

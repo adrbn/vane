@@ -70,7 +70,7 @@ struct RootView: View {
 
     @ViewBuilder private var detail: some View {
         if model.app == nil {
-            Screen(title: "Almanac", subtitle: "") {} content: {
+            Screen(title: "Vane", subtitle: "") {} content: {
                 EmptyHint(title: "No apps yet", message: "Add your App Store Connect key in Settings, then refresh.", symbol: "app.dashed")
             }
         } else {
@@ -333,7 +333,7 @@ import AppKit
     private static var grown: CGFloat = 0
 
     static func fit(open: Bool) {
-        guard let w = NSApp.windows.first(where: { $0.title == "Almanac" && $0.isVisible }), !w.styleMask.contains(.fullScreen), let screen = w.screen else { return }
+        guard let w = NSApp.windows.first(where: { $0.title == "Vane" && $0.isVisible }), !w.styleMask.contains(.fullScreen), let screen = w.screen else { return }
         var f = w.frame
         let room = screen.visibleFrame
         if open {
