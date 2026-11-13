@@ -14,7 +14,7 @@ struct RootView: View {
             HStack(spacing: 0) {
                 if t.usesRail { IconRail() } else { ThemedSidebar() }
                 VStack(spacing: 0) {
-                    if model.isDemo { DemoBanner().clipShape(RoundedRectangle(cornerRadius: t.rS)).padding(.horizontal, 24).padding(.top, 8) }
+                    if model.isDemo && t.usesRail { DemoBanner().clipShape(RoundedRectangle(cornerRadius: t.rS)).padding(.horizontal, 24).padding(.top, 8) }
                     detail
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .id("\(model.appId ?? "")-\(model.revision)")
@@ -154,6 +154,7 @@ struct ThemedSidebar: View {
                 .padding(.top, 12)
             }
             .scrollIndicators(.never)
+            if model.isDemo { demoNote }
             HStack(alignment: .center, spacing: 4) {
                 ThemedSyncFooter()
                 SettingsGear(size: 28)
@@ -166,6 +167,21 @@ struct ThemedSidebar: View {
         .overlay(RoundedRectangle(cornerRadius: t.r - 4, style: .continuous).strokeBorder(t.sideBorder, lineWidth: 1))
         .shadow(color: t.hasShadow ? Color(css: "rgba(80,60,140,0.08)") : .clear, radius: 15, y: 8)
         .padding([.leading, .vertical], 8)
+    }
+
+    private var demoNote: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "sparkles").font(.system(size: 12, weight: .semibold)).foregroundStyle(t.accent).padding(.top, 1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Demo data").font(t.font(12, .semibold))
+                Text("Three made-up apps. Your own data isn't touched.").font(t.font(11)).foregroundStyle(t.label2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(t.accentSoft, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
+        .padding(.top, 8)
     }
 
     private func header(_ s: String) -> some View {
@@ -245,7 +261,7 @@ struct ThemedSyncFooter: View {
         VStack(alignment: .leading, spacing: 0) {
             if model.syncing {
                 Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            } else if let d = model.lastSync {
+            } else if !model.isDemo, let d = model.lastSync {
                 Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
                 Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)
             }
