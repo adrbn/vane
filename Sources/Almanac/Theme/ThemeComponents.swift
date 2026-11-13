@@ -57,6 +57,7 @@ extension Screen {
     }
 
     @ViewBuilder private var ask: some View {
+        RefreshButton()
         if inspector {
             GlassIconButton(symbol: "sparkles", on: model.chatOpen, help: "Ask about this screen") { model.chatOpen.toggle() }
         }
@@ -138,6 +139,24 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.plain)
         .help(help)
+    }
+}
+
+/// Header refresh: the arrow spins while a sync runs.
+struct RefreshButton: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    var body: some View {
+        GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : "Refresh Now (⌘R)") { Task { await model.refresh() } }
+            .overlay {
+                TimelineView(.animation(paused: !model.syncing)) { tl in
+                    Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)
+                        .rotationEffect(.degrees(model.syncing ? tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1) * 360 : 0))
+                }
+                .allowsHitTesting(false)
+            }
+            .disabled(model.syncing)
+            .accessibilityLabel("Refresh")
     }
 }
 

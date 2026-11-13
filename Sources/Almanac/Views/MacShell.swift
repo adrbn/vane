@@ -156,11 +156,6 @@ struct ThemedSidebar: View {
             .scrollIndicators(.never)
             HStack(alignment: .center, spacing: 4) {
                 ThemedSyncFooter()
-                Button { Task { await model.refresh() } } label: {
-                    Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .semibold)).foregroundStyle(t.label2)
-                        .frame(width: 28, height: 28).contentShape(Rectangle())
-                }
-                .buttonStyle(.plain).disabled(model.syncing).help("Refresh Now (⌘R)")
                 SettingsGear(size: 28)
             }
             .padding(8)
@@ -252,7 +247,7 @@ struct ThemedSyncFooter: View {
                 Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(1)
             } else if let d = model.lastSync {
                 Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
-                Text("Next refresh in the background").foregroundStyle(t.label3).lineLimit(1).minimumScaleFactor(0.8)
+                Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)
             }
             if !model.syncErrors.isEmpty {
                 Text("\(model.syncErrors.count) problem\(model.syncErrors.count == 1 ? "" : "s") with the last refresh")
