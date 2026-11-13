@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import VisionKit
 
-/// First launch: pick a look (Color Blocks preselected), then connect with the Mac's code, your own key, or the demo.
+/// First launch: what Vane is, then one way in: the Mac's code, your own key, or the demo. The look waits in Settings.
 struct WelcomeFlow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
@@ -14,17 +14,25 @@ struct WelcomeFlow: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    VaneIcon(size: 72).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)).padding(.top, 32)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Vane").font(t.font(40, .heavy)).tracking(-1)
                         Text("Your App Store Connect numbers, read for you.").font(t.font(17)).foregroundStyle(t.label2)
                     }
-                    .padding(.top, 24)
-                    PhoneSectionTitle(title: "Choose a look", detail: "You can change it in Settings")
-                    PhoneThemeGrid()
+                    VStack(alignment: .leading, spacing: 14) {
+                        point("lightbulb.fill", .insights, "Insights", "Milestones, drops and keyword issues, spotted for you.")
+                        point("chart.xyaxis.line", .appstore, "Every metric", "Downloads, conversion, sales and sessions.")
+                        point("text.bubble.fill", .reviews, "Reviews and listing", "Answer reviews and fix your metadata.")
+                    }
+                    .phoneCard()
+                    .padding(.top, 8)
                     Spacer(minLength: 12)
                     PhoneButton(label: "Scan the Code on Your Mac") { path.append(.scan) }
-                    PhoneButton(label: "Use My Own API Key", prominent: false) { path.append(.key) }
-                    Button("Try the demo") { finish() }
+                    Text("Already using Vane on a Mac? It shows the code in Settings.")
+                        .font(t.font(12)).foregroundStyle(t.label2).frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                    PhoneButton(label: "Enter an API Key", prominent: false) { path.append(.key) }
+                    Button("Try the Demo") { finish() }
                         .font(t.font(15, .semibold)).foregroundStyle(t.accentText)
                         .frame(maxWidth: .infinity).frame(height: 44)
                 }
@@ -36,8 +44,18 @@ struct WelcomeFlow: View {
             .navigationDestination(for: WelcomeStep.self) { s in
                 switch s {
                 case .scan: PhoneScan { finish() }
-                case .key: PushedScreen(title: "Without a Mac", subtitle: "Connect with an App Store Connect API key") { PhoneKeyForm { finish() } }
+                case .key: PushedScreen(title: "API key", subtitle: "The same key Vane uses on the Mac") { PhoneKeyForm { finish() } }
                 }
+            }
+        }
+    }
+
+    private func point(_ symbol: String, _ section: AlmanacTheme.Section, _ title: LocalizedStringKey, _ text: LocalizedStringKey) -> some View {
+        HStack(spacing: 12) {
+            IconSquare(symbol: symbol, style: t.square(section), size: 32)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(t.font(15, .semibold))
+                Text(text).font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -87,7 +105,7 @@ struct PhoneScan: View {
     @State private var found: ASCCredentials?
 
     var body: some View {
-        PushedScreen(title: "Scan code", subtitle: "On your Mac: Vane → Settings → Show Setup Code") {
+        PushedScreen(title: "Scan code", subtitle: "On the Mac: Vane → Settings → App Store Connect → Show Setup Code") {
             if DataScannerViewController.isSupported && DataScannerViewController.isAvailable {
                 QRScanner { if found == nil, let url = URL(string: $0) { found = SetupLink.credentials(from: url) } }
                     .frame(height: 360)

@@ -102,16 +102,42 @@ struct AccountSettings: View {
 struct SetupQR: View {
     var url: URL
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Scan with your iPhone").font(.title2.weight(.semibold))
-            if let image { Image(nsImage: image).interpolation(.none).resizable().frame(width: 300, height: 300) }
-            Text("Open the Camera, point it here, tap Open in Vane. This code contains your private key: don't screenshot or share it.")
-                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(width: 340)
-            Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+        let t = AlmanacTheme.named(themeId)
+        VStack(spacing: 18) {
+            VStack(spacing: 4) {
+                Text("Vane on iPhone").font(t.font(20, .bold))
+                Text("Scan once and the iPhone uses the same key.").font(t.font(13)).foregroundStyle(t.label2)
+            }
+            if let image {
+                Image(nsImage: image).interpolation(.none).resizable().frame(width: 240, height: 240)
+                    .padding(14).background(.white, in: RoundedRectangle(cornerRadius: t.rS + 6, style: .continuous))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                step(t, 1, "Install Vane on the iPhone and open it.")
+                step(t, 2, "Tap Scan the Code on Your Mac, or point the Camera here.")
+                step(t, 3, "Confirm. Your numbers load in a few seconds.")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .themedCard(padding: 14, radius: t.rS + 2)
+            Label("This code holds your private key. Don't screenshot or share it.", systemImage: "lock.fill")
+                .font(t.font(11)).foregroundStyle(t.label2)
+            SmallButton(label: "Done", prominent: true) { dismiss() }.keyboardShortcut(.defaultAction)
         }
-        .padding(28)
+        .foregroundStyle(t.label)
+        .padding(28).frame(width: 400)
+        .background(ThemeBackground())
+        .environment(\.theme, t)
+    }
+
+    private func step(_ t: AlmanacTheme, _ n: Int, _ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(n)").font(t.font(11, .bold)).foregroundStyle(t.accent)
+                .frame(width: 20, height: 20).background(t.accentSoft, in: Circle())
+            Text(text).font(t.font(13)).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var image: NSImage? {

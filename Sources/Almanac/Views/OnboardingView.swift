@@ -3,13 +3,14 @@ import AlmanacCore
 import AppKit
 import SwiftUI
 
-/// First launch: welcome and theme, a guided App Store Connect key, then what arrives when.
+/// First launch: welcome, a guided App Store Connect key, then what arrives when.
 /// Shown over the demo dashboard (blurred) until finished or skipped; `onboarded` remembers it.
 struct OnboardingView: View, SettingsBlocks {
     @Environment(AppModel.self) private var model
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @State private var step = 0
     @State private var connected = Keychain.credentials().isComplete
+    @State private var showingQR = false
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)
@@ -31,6 +32,7 @@ struct OnboardingView: View, SettingsBlocks {
         .font(t.font(13))
         .tint(t.accent)
         .animation(.easeOut(duration: 0.2), value: step)
+        .sheet(isPresented: $showingQR) { SetupQR(url: SetupLink.url(for: Keychain.credentials())) }
     }
 
     @ViewBuilder private func page(_ t: AlmanacTheme) -> some View {
@@ -55,7 +57,8 @@ struct OnboardingView: View, SettingsBlocks {
                 feature(t, "text.bubble.fill", "Listing and reviews", "Edit your metadata and answer reviews in one place.")
             }
             .fixedSize(horizontal: false, vertical: true)
-            group(t, "Pick a look", "Change it any time in Settings.") { ThemePicker() }
+            Text("Setup takes about five minutes: you create an API key in App Store Connect and add it here. Or look around with demo apps first.")
+                .font(t.font(12)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -78,7 +81,7 @@ struct OnboardingView: View, SettingsBlocks {
             group(t, "") {
                 guide(t, 1, "Create a key", "Users and Access → Integrations → App Store Connect API. Give it the Sales and Reports role.",
                       link: ("Open", "https://appstoreconnect.apple.com/access/integrations/api"))
-                guide(t, 2, "Download the .p8", "Apple lets you download it only once. Copy the Issuer ID and Key ID shown above the keys.")
+                guide(t, 2, "Download the .p8 and drop it below", "Apple lets you download it only once. Vane reads the Key ID from the file name; copy the Issuer ID shown above the keys.")
                 guide(t, 3, "Find your vendor number", "Payments and Financial Reports, at the top left of the page.",
                       link: ("Open", "https://appstoreconnect.apple.com/itc/payments_and_financial_reports"))
             }
@@ -113,6 +116,13 @@ struct OnboardingView: View, SettingsBlocks {
                          state: !connected ? .waiting : model.syncing ? .working : .done)
                 timeline(t, "Apple's analytics", "In 1 to 2 days. Impressions, page views, conversion and sessions, as Apple publishes each report.", state: .waiting)
                 timeline(t, "Insights", "As soon as there's something to say: milestones, drops, keyword issues.", state: .waiting)
+            }
+            if connected {
+                group(t, "") {
+                    row(t, "Vane on iPhone", "Scan a code with the iPhone app to use the same key there.") {
+                        SmallButton(label: "Show Code…") { showingQR = true }
+                    }
+                }
             }
             RefreshSettings(title: "Stay up to date")
         }
