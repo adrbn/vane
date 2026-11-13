@@ -86,14 +86,14 @@ struct ListingView: View {
                             }
                         }
                         .padding(.horizontal, 10).frame(height: 32)
-                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.inner(6), style: .continuous))
+                        .background(on ? t.accentSoft : .clear, in: RoundedRectangle(cornerRadius: t.inner(6, in: t.rS), style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(6)
-            .themedCard(padding: 0)
+            .themedCard(padding: 0, radius: t.rS) // same corner as the fields beside it
             if live.count > 1, let issue = shared.sorted().first {
                 Label("\(issue) in every language", systemImage: "exclamationmark.circle")
                     .font(t.font(11)).foregroundStyle(t.warn).padding(.horizontal, 4)
@@ -114,15 +114,18 @@ struct ListingView: View {
         let repeats = Set(ListingCheck.repeated(l))
         return VStack(alignment: .leading, spacing: 12) {
             Text("In search").font(t.font(11, .semibold)).foregroundStyle(t.label2)
+            // App Store layout: Get on the right. Name and subtitle take two lines at most and shrink a little
+            // rather than end in "…" (30 characters each fit at 75 %).
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 44) }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold))
+                        .lineLimit(2).minimumScaleFactor(0.75)
+                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2)
+                        .lineLimit(2).minimumScaleFactor(0.75)
                 }
-                Spacer(minLength: 4)
-                Text("Get").font(t.font(12, .bold)).foregroundStyle(t.accentText)
-                    .padding(.horizontal, 12).frame(height: 24).background(t.fill, in: Capsule())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                getButton
             }
             if !words.isEmpty {
                 Text("Keywords · \(words.count)").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
@@ -137,13 +140,28 @@ struct ListingView: View {
             }
             // What shows under the screenshots: the promotional text, else the start of the description.
             Text(l.promoText.isEmpty ? "Product page · description" : "Product page · promotional text").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
-            Text(l.promoText.isEmpty ? l.description : l.promoText).font(t.font(12)).foregroundStyle(t.label2).lineSpacing(2)
-                .frame(maxHeight: .infinity, alignment: .top).clipped()
+            // The text lays out at full height in an overlay, which doesn't size the card: the fade cuts it, not a "…".
+            Color.clear.frame(maxHeight: .infinity)
+                .overlay(alignment: .top) {
+                    Text(l.promoText.isEmpty ? l.description : l.promoText).font(t.font(12)).foregroundStyle(t.label2).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .clipped()
                 .mask(LinearGradient(stops: [.init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        // The 44 pt icon has a ~10 pt radius: card radius = icon radius + padding keeps them concentric.
-        .themedCard(padding: Self.previewPad(t), radius: Self.previewPad(t) + 10)
+        .themedCard(padding: Self.previewPad(t), radius: t.rS) // same corner as the fields beside it
+    }
+
+    /// Opens the app's public App Store page. Demo apps have made-up IDs, so there it's only a label.
+    @ViewBuilder private var getButton: some View {
+        let label = Text("Get").font(t.font(12, .bold)).foregroundStyle(t.accentText)
+            .padding(.horizontal, 12).frame(height: 24).background(t.fill, in: Capsule())
+        if let app = model.app, !model.isDemo, let url = URL(string: "https://apps.apple.com/app/id\(app.id)") {
+            Link(destination: url) { label }.buttonStyle(.plain).help("Open on the App Store")
+        } else {
+            label
+        }
     }
 
     static func languageName(_ code: String) -> String { Locale(identifier: "en").localizedString(forIdentifier: code) ?? code }
