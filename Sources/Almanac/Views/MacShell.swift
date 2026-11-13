@@ -18,12 +18,11 @@ struct RootView: View {
                     detail
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .id("\(model.appId ?? "")-\(model.revision)")
-                        .offset(x: model.swipeProgress * 60)
-                        .opacity(1 - abs(model.swipeProgress) * 0.35)
                 }
                 // A screen wider than its slot must never push the sidebar or the chat off the window.
                 .frame(minWidth: 0)
                 .clipped()
+                .overlay(alignment: model.swipeProgress < 0 ? .trailing : .leading) { SwipeArrow(progress: model.swipeProgress) }
                 if model.chatOpen {
                     InspectorPanel()
                         .frame(width: 304)
@@ -376,6 +375,29 @@ struct WindowChrome: NSViewRepresentable {
         tb.showsBaselineSeparator = false
         w.toolbar = tb
         w.toolbarStyle = .unified
+    }
+}
+#endif
+
+#if os(macOS)
+/// Back/forward swipe feedback, as in browsers: an arrow bubble slides in from the edge and fills once the swipe will go through.
+private struct SwipeArrow: View {
+    @Environment(\.theme) private var t
+    var progress: CGFloat
+    var body: some View {
+        let p = min(abs(progress), 1)
+        let ready = p > 0.33          // ~where the system commits the swipe
+        Image(systemName: progress < 0 ? "chevron.right" : "chevron.left")
+            .font(.system(size: 17, weight: .bold))
+            .foregroundStyle(ready ? t.onAccent : t.label)
+            .frame(width: 44, height: 44)
+            .background(ready ? t.accent : t.card, in: Circle())
+            .overlay(Circle().strokeBorder(t.sep2, lineWidth: ready ? 0 : 1))
+            .scaleEffect(0.7 + 0.3 * min(p * 3, 1))
+            .offset(x: (progress < 0 ? 1 : -1) * (56 - 76 * min(p * 3, 1)))
+            .opacity(p == 0 ? 0 : 1)
+            .animation(.snappy(duration: 0.15), value: ready)
+            .allowsHitTesting(false)
     }
 }
 #endif

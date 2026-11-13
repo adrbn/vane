@@ -15,7 +15,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Sheets (Settings, reply, keyword fix) blur the screen behind without darkening it.
 - Opens on App Store (the dashboard). Insights shows a red dot in the sidebar/rail while it holds insights you haven't opened yet; opening the screen clears it.
 - Tiles are links: a Watching card or a Usage card opens its metric (Ratings opens Reviews), an insight card opens what its Open button opens, and the Reviews context numbers open Downloads / Usage.
-- Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages").
+- Navigation history: ⌘[ / ⌘] and a two-finger horizontal swipe (system swipe tracking, honours "Swipe between pages"). The swipe shows an arrow bubble sliding in from the edge, filled with the accent once it will go through; the screen itself doesn't move.
 - Opening the chat widens the window by the panel's width (as far as the display allows) and closing it gives the width back, so screens keep their layout. A screen still too wide is clipped on the right, never pushing the sidebar off.
 - Fixed-layout screens (Territories, Reviews, Listing, quiet Insights) fill the window at any size, full screen included: Territories gives ~45% of the height to the map and fits as many table rows as the rest allows; Reviews is two full-height panes (the list scrolls inside its own; with 4 reviews or fewer, the room under them shows "Reviews against downloads": downloads per review, answered, days since the last one, ratings count, and weekly downloads with each review pinned on its week); quiet Insights stretches the Watching cards.
 - The insight engine also runs at launch, so stored insights pick up format changes (charts, number formats) before the next sync.
@@ -76,4 +76,5 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 | `--report week\|month\|year` | Opens the report window for the current app |
 | `--settings` | Opens the Settings sheet |
 | `--chat` | Opens the inspector chat |
+| `--swipe-preview <-1…1>` | Freezes the swipe arrow (negative = forward) |
 | `-theme <ticker\|blocks\|nocturne\|candy>` | Overrides the theme for this launch |

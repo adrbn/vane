@@ -51,7 +51,9 @@ final class AppModel {
     private var backStack: [Pane] = []
     private var forwardStack: [Pane] = []
     @ObservationIgnored private var navigating = false
-    var swipeProgress: CGFloat = 0      // -1…1 while a swipe is tracked; drives the screen's slide
+    // -1…1 while a swipe is tracked; drives the edge arrow. `--swipe-preview 0.5` freezes it for screenshots.
+    var swipeProgress: CGFloat = CommandLine.arguments.firstIndex(of: "--swipe-preview").flatMap { i in
+        i + 1 < CommandLine.arguments.count ? Double(CommandLine.arguments[i + 1]).map { CGFloat($0) } : nil } ?? 0
     var canGoBack: Bool { !backStack.isEmpty }
     var canGoForward: Bool { !forwardStack.isEmpty }
     func goBack() { step(from: &backStack, to: &forwardStack) }
