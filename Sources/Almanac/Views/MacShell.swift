@@ -14,7 +14,6 @@ struct RootView: View {
             HStack(spacing: 0) {
                 if t.usesRail { IconRail() } else { ThemedSidebar() }
                 VStack(spacing: 0) {
-                    if model.isDemo && t.usesRail { DemoBanner().clipShape(RoundedRectangle(cornerRadius: t.rS)).padding(.horizontal, 24).padding(.top, 8) }
                     detail
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .id("\(model.appId ?? "")-\(model.revision)")
@@ -329,6 +328,15 @@ struct IconRail: View {
                 .help(p.title)
             }
             Spacer()
+            if model.isDemo {
+                VStack(spacing: 3) {
+                    Image(systemName: "sparkles").font(.system(size: 12, weight: .semibold)).foregroundStyle(t.accent)
+                    Text("Demo").font(t.font(11, .semibold))
+                }
+                .frame(width: 60, height: 44)
+                .background(t.accentSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .help("Demo data: three made-up apps. Your own data isn't touched.")
+            }
             SettingsGear(size: 40).padding(.bottom, 12)
         }
         .frame(width: 92)

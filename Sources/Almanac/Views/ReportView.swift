@@ -45,13 +45,12 @@ struct ReportView: View {
     private func header(_ r: Report, _ span: ClosedRange<String>?) -> some View {
         let t = AlmanacTheme.named(themeId)
         let next = shifted(ref, 1)
-        // Title line and controls share the traffic lights' center line (26 pt); the subtitle hangs below.
-        return HStack(alignment: .top, spacing: 8) {
+        // Title block sits under the traffic lights, on the same centered 880 pt column as the body.
+        return HStack(alignment: .center, spacing: 8) {
             VStack(alignment: .leading, spacing: 0) {
                 Text.tracked("\(r.period.title) Report", -0.2).font(t.titleFont).lineLimit(1).frame(height: 26)
                 Text("\(r.appName) · \(r.periodLabel)").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
             }
-            .padding(.top, 4)
             Spacer(minLength: 12)
             GlassSegments(options: ReportPeriod.allCases.map { ($0, $0.title) }, selection: Binding(
                 get: { ref.period },
@@ -71,8 +70,9 @@ struct ReportView: View {
             }
             .fixedSize()
         }
-        .padding(.top, 9).padding(.leading, 88).padding(.trailing, 20)
-        .frame(height: 60, alignment: .top)
+        .frame(maxWidth: 880).frame(maxWidth: .infinity)
+        .padding(.top, 44).padding(.horizontal, 24)
+        .frame(height: 88, alignment: .top)
     }
 
     private func chevron(_ symbol: String, help: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
