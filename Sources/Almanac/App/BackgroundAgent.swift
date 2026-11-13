@@ -27,7 +27,8 @@ enum BackgroundAgent {
             for app in store.apps() {
                 fresh += (try? store.merge(insights: InsightEngine(store: store, app: app.id).run())) ?? []
             }
-            await notify(fresh.filter { $0.needsAttention || $0.category == .milestones || $0.kind == "featured" })
+            let muted = InsightCategory.muted
+            await notify(fresh.filter { !muted.contains($0.category) && ($0.needsAttention || $0.category == .milestones || $0.kind == "featured") })
         }
         done.wait()
     }

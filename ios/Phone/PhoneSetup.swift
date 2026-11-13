@@ -219,6 +219,37 @@ struct PhoneSettings: View {
             PhoneKeyForm()
             PhoneSectionTitle(title: "Look")
             PhoneThemeGrid()
+            PhoneSectionTitle(title: "Insights", detail: "Fixed rules, no AI")
+            @Bindable var m = model
+            VStack(spacing: 0) {
+                ForEach(Array(InsightCategory.allCases.enumerated()), id: \.element) { i, c in
+                    if i > 0 { Divider().overlay(t.sep).padding(.leading, 52) }
+                    Toggle(isOn: Binding(get: { !m.mutedCategories.contains(c) },
+                                         set: { on in if on { m.mutedCategories.remove(c) } else { m.mutedCategories.insert(c) } })) {
+                        HStack(spacing: 12) {
+                            IconSquare(symbol: c.symbol, style: t.square(c.section), size: 26)
+                            Text(c.title).font(t.font(15))
+                        }
+                    }
+                    .tint(t.accent)
+                    .padding(.horizontal, 14).frame(height: 50)
+                }
+            }
+            .phoneCard(padding: 0)
+            NavigationLink(value: PhoneRoute.about) {
+                HStack(spacing: 12) {
+                    VaneIcon(size: 32)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("About Vane").font(t.font(15, .semibold))
+                        Text("Version \(AboutView.version) · Source code · Ko-fi").font(t.font(12)).foregroundStyle(t.label2)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(t.label3)
+                }
+                .phoneCard(padding: 14)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 12)
         }
     }
 }

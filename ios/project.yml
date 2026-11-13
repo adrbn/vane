@@ -12,7 +12,7 @@ targets:
       - path: VaneApp.swift
       - path: Phone
       - path: Widget/VaneSnapshot.swift
-      - path: AppIcon.icon
+      - path: ../Resources/AppIcon.icon
       - path: ../Resources/countries.json
       - path: ../Sources/Almanac
         excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift]

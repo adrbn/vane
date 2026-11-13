@@ -13,6 +13,9 @@ struct AlmanacApp: App {
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1240, height: 820)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Vane") { model.settingsAbout = true; model.settingsOpen = true }
+            }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") { model.settingsOpen = true }.keyboardShortcut(",")
             }

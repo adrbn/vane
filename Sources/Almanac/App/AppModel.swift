@@ -40,12 +40,20 @@ final class AppModel {
     }
     // Insights the user hasn't looked at yet: a red dot on Insights in the sidebar until the screen is opened.
     var seenInsights = Set(UserDefaults.standard.stringArray(forKey: "insights.seen") ?? [])
-    var hasUnseenInsights: Bool { store.insights(appId ?? "").contains { !seenInsights.contains($0.id) } }
+    var hasUnseenInsights: Bool { insights().contains { !seenInsights.contains($0.id) } }
     func markInsightsSeen() {
-        let ids = Set(store.insights(appId ?? "").map(\.id))
+        let ids = Set(insights().map(\.id))
         guard !ids.isSubset(of: seenInsights) else { return }
         seenInsights.formUnion(ids)
         UserDefaults.standard.set(Array(seenInsights), forKey: "insights.seen")
+    }
+    /// Categories the user turned off: hidden everywhere and never notified.
+    var mutedCategories = InsightCategory.muted {
+        didSet { UserDefaults.standard.set(mutedCategories.map(\.rawValue).sorted(), forKey: InsightCategory.mutedKey) }
+    }
+    /// The selected app's insights without the muted categories.
+    func insights(includeDismissed: Bool = false) -> [Insight] {
+        store.insights(appId ?? "", includeDismissed: includeDismissed).filter { !mutedCategories.contains($0.category) }
     }
     // Back/forward through visited screens, like Safari: ⌘[ ⌘] or a two-finger swipe.
     private var backStack: [Pane] = []
@@ -64,7 +72,8 @@ final class AppModel {
         navigating = true; selection = p; navigating = false
     }
     var chatOpen = CommandLine.arguments.contains("--chat")
-    var settingsOpen = CommandLine.arguments.contains("--settings")   // Mac: in-window sheet; iOS: modal sheet
+    var settingsOpen = CommandLine.arguments.contains("--settings") || CommandLine.arguments.contains("--about")   // Mac: in-window sheet; iOS: modal sheet
+    var settingsAbout = CommandLine.arguments.contains("--about")   // Mac: open Settings on the About tab
     /// First launch without a key (never in `--demo`); `--onboarding` forces it for screenshots.
     var onboardingOpen = CommandLine.arguments.contains("--onboarding")
         || (!CommandLine.arguments.contains("--demo") && !Keychain.credentials().isComplete && !UserDefaults.standard.bool(forKey: "onboarded"))
@@ -153,5 +162,12 @@ final class AppModel {
     var syncer: Syncer? {
         let c = Keychain.credentials()
         return c.isComplete && !isDemo ? Syncer(client: ASCClient(credentials: c), store: store) : nil
+    }
+}
+
+extension InsightCategory {
+    static let mutedKey = "insights.muted"
+    static var muted: Set<InsightCategory> {
+        Set((UserDefaults.standard.stringArray(forKey: mutedKey) ?? []).compactMap(InsightCategory.init(rawValue:)))
     }
 }

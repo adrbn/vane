@@ -13,8 +13,8 @@ struct InsightsView: View {
 
     var body: some View {
         let app = model.appId ?? ""
-        let active = model.store.insights(app)
-        let all = showDismissed ? model.store.insights(app, includeDismissed: true) : active
+        let active = model.insights()
+        let all = showDismissed ? model.insights(includeDismissed: true) : active
         let shown = all.filter { category == nil || $0.category == category }
         let today = Day.today()
         // The quiet feed (Recent + Watching) is a fixed layout that fills the window; a long feed scrolls.
@@ -42,8 +42,8 @@ struct InsightsView: View {
 
     private var subtitle: String {
         let name = model.app?.name ?? ""
-        guard let d = model.lastSync else { return name }
-        return "\(name) · Updated \(d.formatted(.relative(presentation: .named)))"
+        guard let d = model.lastSync else { return "\(name) · Fixed rules on your numbers, no AI" }
+        return "\(name) · Fixed rules on your numbers, no AI · Updated \(d.formatted(.relative(presentation: .named)))"
     }
 
     private func categoryMenu(_ all: [Insight]) -> some View {
@@ -56,6 +56,12 @@ struct InsightsView: View {
             }
             Divider()
             Toggle("Show dismissed", isOn: $showDismissed)
+            Menu("Turn Off Categories") {
+                ForEach(InsightCategory.allCases) { c in
+                    Toggle(c.title, isOn: Binding(get: { model.mutedCategories.contains(c) },
+                                                 set: { if $0 { model.mutedCategories.insert(c) } else { model.mutedCategories.remove(c) } }))
+                }
+            }
         } label: {
             HStack(spacing: 6) {
                 Text(category?.title ?? "All categories")
@@ -397,7 +403,7 @@ private struct NothingToFlag: View {
 
     var body: some View {
         let app = model.appId ?? ""
-        let resolved = model.store.insights(app, includeDismissed: true).filter(\.dismissed).prefix(5)
+        let resolved = model.insights(includeDismissed: true).filter(\.dismissed).prefix(5)
         let live = Self.watched.filter { Self.hasData(model.store, app, $0) }.count
         VStack(alignment: .leading, spacing: 24) {
             status(live)

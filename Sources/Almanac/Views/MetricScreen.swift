@@ -20,8 +20,7 @@ struct MetricDetailView: View {
         let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, days: days, territory: territory)
         let up = Change(metric, value: d.value, previous: d.previous).up
         let color = t.color(metric, up: up)
-        let place = territory.isEmpty ? "All territories" : Territories.name(territory)
-        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(metric.isAppStore ? "App Store" : [.sessions, .crashes].contains(metric) ? "Usage" : "Sales") · \(place)", inspector: true) {
+        Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(metric.isAppStore ? "App Store" : [.sessions, .crashes].contains(metric) ? "Usage" : "Sales")", inspector: true) {
             GlassSegments(options: [(7, "7 Days"), (28, "28 Days"), (90, "90 Days"), (365, "Year")], selection: $days)
             GlassGroup {
                 if metric.hasTerritories { territoryMenu(d) }
@@ -71,7 +70,9 @@ struct MetricDetailView: View {
             ForEach(codes, id: \.self) { c in Button(Territories.name(c)) { territory = c } }
         } label: {
             HStack(spacing: 6) {
+                // Fixed width: the bar must not move to a second row when a longer country is picked (#1).
                 Text(territory.isEmpty ? "All territories" : Territories.name(territory)).lineLimit(1)
+                    .frame(width: 112, alignment: .leading)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(t.label2)
             }
             .font(t.font(13, .semibold)).padding(.horizontal, 10).frame(height: 28).contentShape(Capsule())

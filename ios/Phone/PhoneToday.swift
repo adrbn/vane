@@ -7,6 +7,7 @@ enum PhoneRoute: Hashable {
     case territories(days: Int)
     case report
     case settings
+    case about
 }
 
 extension View {
@@ -17,6 +18,7 @@ extension View {
             case .territories(let days): PhoneTerritories(days: days)
             case .report: PhoneReport()
             case .settings: PhoneSettings()
+            case .about: PushedScreen(title: "About", subtitle: "") { AboutView() }
             }
         }
     }
@@ -31,7 +33,7 @@ struct TodayScreen: View {
     var body: some View {
         let _ = model.revision
         let app = model.appId ?? ""
-        let insights = model.store.insights(app)
+        let insights = model.insights()
         PhoneScreen(title: "Today", subtitle: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(Locale(identifier: "en_US")))) {
             NavigationLink(value: PhoneRoute.settings) { PhoneIconLabel(symbol: "gearshape") }.buttonStyle(.plain)
         } content: {
@@ -56,6 +58,8 @@ struct TodayScreen: View {
                     .font(t.font(13)).foregroundStyle(t.label2).phoneCard()
             }
             ForEach(insights) { PhoneInsightCard(insight: $0, tab: $tab) }
+            Text("Insights come from fixed rules run on your numbers. No AI writes them. Turn categories off in Settings.")
+                .font(t.font(12)).foregroundStyle(t.label3).fixedSize(horizontal: false, vertical: true).padding(.top, 4)
         }
         .phoneDestinations()
     }

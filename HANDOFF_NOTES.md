@@ -93,6 +93,8 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - A device build needs the App Group registered for both bundle ids (`com.adrbn.vane`, `com.adrbn.vane.widgets`): Xcode's automatic signing does it, or `xcodebuild -allowProvisioningUpdates`.
 - After adding Swift files, run `xcodegen generate` in `ios/`. Simulator: `xcodebuild … CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM=` so the App Group entitlement is applied.
 - Launch flags `--demo` and `--onboarding` work on the phone too.
+- One icon for both apps: `Resources/AppIcon.icon` (the iOS target points at it). iOS can't read its own Icon Composer icon back, so About shows `ios/Phone/Resources/AboutIcon.png`; re-render it when the icon changes: `ictool Resources/AppIcon.icon --export-image --output-file ios/Phone/Resources/AboutIcon.png --platform iOS --rendition Default --width 128 --height 128 --scale 2` (ictool lives in Icon Composer.app/Contents/Executables).
+- Insights: categories can be turned off (Settings on iPhone, the Insights menu on Mac), stored in `insights.muted`; the background agent skips them too.
 
 ## Launch flags (screenshots and testing)
 `open -n build/Vane.app --args …`
@@ -103,6 +105,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 | `--pane <name>` | Opens that screen |
 | `--report week\|month\|year` | Opens the report window for the current app |
 | `--settings` | Opens the Settings sheet |
+| `--about` | Opens Settings on the About tab |
 | `--onboarding` | Shows the onboarding (shows your saved key on step 2) |
 | `--chat` | Opens the inspector chat |
 | `--swipe-preview <-1…1>` | Freezes the swipe arrow (negative = forward) |

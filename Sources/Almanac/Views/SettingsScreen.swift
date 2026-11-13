@@ -12,7 +12,7 @@ struct MacSettingsView: View, SettingsBlocks {
     @State private var cli: String??
     @State private var tab: Tab = Keychain.credentials().isComplete ? .general : .account
 
-    enum Tab: String, CaseIterable { case general = "General", account = "App Store Connect", assistant = "Assistant", data = "Data" }
+    enum Tab: String, CaseIterable { case general = "General", account = "App Store Connect", assistant = "Assistant", data = "Data", about = "About" }
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)
@@ -34,6 +34,8 @@ struct MacSettingsView: View, SettingsBlocks {
         .font(t.font(13))
         .tint(t.accent)
         .task(id: provider) { cli = nil; cli = .some(await AISettings.assistant.location()) }
+        .onAppear { if model.settingsAbout { tab = .about; model.settingsAbout = false } }
+        .onChange(of: model.settingsAbout) { if model.settingsAbout { tab = .about; model.settingsAbout = false } }
     }
 
     // MARK: Sections
@@ -47,6 +49,7 @@ struct MacSettingsView: View, SettingsBlocks {
             case .account: ConnectForm()
             case .assistant: assistant(t)
             case .data: data(t)
+            case .about: AboutView().environment(\.theme, t).frame(maxWidth: 520).frame(maxWidth: .infinity)
             }
         }
         .padding(.bottom, 4)
