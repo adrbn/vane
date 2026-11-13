@@ -165,7 +165,7 @@ private struct RatingsCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             ThemedStars(rating: r.rating, size: 11)
-                            Text(r.title).font(t.font(15, .bold)).lineLimit(1)
+                            Text(r.title).font(t.font(15, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                         }
                         Text(r.body).font(t.font(13)).lineSpacing(3).lineLimit(4)
                         Text("\(r.reviewer) · \(AppStoreData.md(r.created)) · \(r.response == nil ? "Not replied yet" : "Replied")")

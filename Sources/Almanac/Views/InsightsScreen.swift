@@ -396,7 +396,7 @@ private struct NothingToFlag: View {
                         ForEach(Array(resolved.enumerated()), id: \.element.id) { i, r in
                             HStack(spacing: 12) {
                                 Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(t.pos)
-                                Text(r.title).font(t.font(13)).lineLimit(1)
+                                Text(r.title).font(t.font(13)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: 8)
                                 Text("Dismissed · flagged \(InsightCardView.when(r.day))").font(t.font(12)).foregroundStyle(t.label2)
                             }

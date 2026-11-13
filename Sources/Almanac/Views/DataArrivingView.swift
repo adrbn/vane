@@ -153,7 +153,7 @@ struct AnalyticsPending: View {
         if compact {
             HStack(spacing: 14) {
                 icon
-                VStack(alignment: .leading, spacing: 2) { title; sub.lineLimit(1) }
+                VStack(alignment: .leading, spacing: 2) { title; sub.lineLimit(2).fixedSize(horizontal: false, vertical: true) }
                 Spacer(minLength: 12)
                 check
             }

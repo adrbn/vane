@@ -356,17 +356,17 @@ struct ThemedReviewRow: View {
     var body: some View {
         let foreign = ReviewInfo.language(review.title + ". " + review.body).map { $0 != "en" } ?? false
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 ThemedStars(rating: review.rating)
-                Text(review.title).font(t.font(13, .semibold)).lineLimit(1)
+                Text(review.title).font(t.font(13, .semibold)).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Text(AppStoreData.md(review.created)).font(t.font(11)).foregroundStyle(t.label2)
             }
             Text(translation ?? review.body).font(t.font(13)).lineSpacing(3).textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .center, spacing: 8) {
-                Text(([review.reviewer, Territories.name(review.territory)] + (version.map { ["Version \($0)"] } ?? [])).joined(separator: " · "))
-                    .font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { ["Version \($0)"] } ?? [])).joined(separator: " · "))
+                    .font(t.font(11)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 if foreign {
                     SmallButton(label: translation == nil ? "Translate" : "Show Original") {
@@ -421,9 +421,9 @@ struct ThemedReplySheet: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Reply to \(review.reviewer)").font(t.font(20, .bold))
-                Text((["\(review.rating) star\(review.rating == 1 ? "" : "s")", "“\(review.title)”", Territories.name(review.territory)]
+                Text((["\(review.rating) star\(review.rating == 1 ? "" : "s")", "“\(review.title)”", "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"]
                       + (version.map { ["Version \($0)"] } ?? []) + [AppStoreData.md(review.created)]).joined(separator: " · "))
-                    .font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
+                    .font(t.font(12)).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(showOriginal || translation == nil ? review.body : translation!).font(t.font(13)).lineSpacing(3)

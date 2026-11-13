@@ -117,8 +117,8 @@ struct ListingView: View {
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 44) }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold)).lineLimit(1)
-                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
+                    Text(l.name.isEmpty ? "No name" : l.name).font(t.font(13, .semibold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(l.subtitle.isEmpty ? "No subtitle" : l.subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 4)
                 Text("Get").font(t.font(12, .bold)).foregroundStyle(t.accentText)

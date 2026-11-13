@@ -219,13 +219,13 @@ struct ThemedAppSwitcher: View {
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 34) }
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(model.app?.name ?? "No app").font(t.font(14, .bold)).lineLimit(1)
+                    Text(model.app?.name ?? "No app").font(t.font(14, .bold)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Text(subtitle).font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold)).foregroundStyle(t.label2)
             }
-            .padding(.horizontal, 8).frame(height: 52)
+            .padding(.horizontal, 8).padding(.vertical, 8).frame(minHeight: 52)
             .background(t.fill, in: RoundedRectangle(cornerRadius: t.inner(10, in: t.r - 4), style: .continuous))
             .contentShape(Rectangle())
         }
@@ -244,7 +244,7 @@ struct ThemedSyncFooter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if model.syncing {
-                Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(1)
+                Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             } else if let d = model.lastSync {
                 Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
                 Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)

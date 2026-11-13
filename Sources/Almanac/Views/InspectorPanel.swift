@@ -45,8 +45,8 @@ struct InspectorPanel: View {
                             VStack(spacing: 8) {
                                 ForEach(messages.isEmpty ? starters : Array(starters.dropFirst()), id: \.self) { q in
                                     Button { send(q) } label: {
-                                        Text(q).font(t.font(12, .semibold)).foregroundStyle(t.label).lineLimit(1)
-                                            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 12).frame(height: 30)
+                                        Text(q).font(t.font(12, .semibold)).foregroundStyle(t.label).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                                            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 12).padding(.vertical, 7).frame(minHeight: 30)
                                             .background(t.fill, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
                                             .contentShape(Rectangle())
                                     }
