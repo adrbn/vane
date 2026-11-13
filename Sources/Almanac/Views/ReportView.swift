@@ -48,7 +48,7 @@ struct ReportView: View {
         // Title line and controls share the traffic lights' center line (26 pt); the subtitle hangs below.
         return HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 0) {
-                Text("\(r.period.title) Report").font(t.titleFont).tracking(-0.2).lineLimit(1).frame(height: 26)
+                Text.tracked("\(r.period.title) Report", -0.2).font(t.titleFont).lineLimit(1).frame(height: 26)
                 Text("\(r.appName) · \(r.periodLabel)").font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
             }
             .padding(.top, 4)
@@ -219,7 +219,7 @@ private struct ReportBody: View {
         let vs = c.text == "No earlier data" ? "" : " vs last \(report.period.rawValue)"
         return VStack(alignment: .leading, spacing: 6) {
             Text(MetricCard.label(k.metric)).font(t.font(12, .semibold)).foregroundStyle(fill?.fg2 ?? t.label2).lineLimit(1)
-            Text(Num.value(k.metric, k.value)).font(t.font(30, t.numWeight)).tracking(-0.8).monospacedDigit()
+            Text.tracked(Num.value(k.metric, k.value), -0.8).font(t.font(30, t.numWeight)).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.6)
             Text(c.text + vs).font(t.font(11, .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
                 .foregroundStyle(fill?.fg ?? c.color(t))

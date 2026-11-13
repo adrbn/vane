@@ -74,7 +74,7 @@ private struct UsageCard: View {
                 Text(pending).font(t.font(13)).foregroundStyle(t.label2).padding(.top, 4)
                 Spacer(minLength: 0)
             } else {
-                Text(metric.format(value)).font(t.numFont).tracking(-0.9).monospacedDigit().lineLimit(1).padding(.top, 14)
+                Text.tracked(metric.format(value), -0.9).font(t.numFont).monospacedDigit().lineLimit(1).padding(.top, 14)
                 Text(pts.count < 2 ? "Tracked daily since \(AppStoreData.md(pts.first?.day ?? end))" : c.text == Change.noHistory.text ? c.text : "\(c.text) on the previous \(days) days")
                     .font(t.font(13, .semibold)).foregroundStyle(pts.count < 2 || c.text == Change.noHistory.text ? t.label2 : c.color(t)).monospacedDigit().padding(.top, 4)
                 if pts.count >= 2 {
@@ -120,7 +120,7 @@ private struct RatingsCard: View {
                     IconSquare(symbol: "star.fill", style: t.square(.ratingsTotal), size: 26)
                     Text("Ratings").font(t.font(14, .semibold)).foregroundStyle(t.label2)
                 }
-                Text(total.map { Num.int($0.value) } ?? "—").font(t.numFont).tracking(-0.9).monospacedDigit()
+                Text.tracked(total.map { Num.int($0.value) } ?? "—", -0.9).font(t.numFont).monospacedDigit()
                     .foregroundStyle(total == nil ? t.label3 : t.label).padding(.top, 14)
                 Text(total.map { "Ratings on the App Store, tracked since \(AppStoreData.md($0.day))" } ?? "Counted from the next refresh")
                     .font(t.font(13)).foregroundStyle(t.label2).padding(.top, 4)

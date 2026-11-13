@@ -25,7 +25,7 @@ struct DataArrivingView: View {
                 Image(systemName: "clock").font(.system(size: 22, weight: .semibold)).foregroundStyle(t.accentText)
                     .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Your first App Store report arrives in 24–48 hours").font(t.font(26, .bold)).tracking(-0.26)
+                    Text.tracked("Your first App Store report arrives in 24–48 hours", -0.26).font(t.font(26, .bold))
                     Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? "this app"), checks for it in the background and notifies you when it lands.")
                         .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 620, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 }
@@ -97,7 +97,7 @@ struct DataArrivingView: View {
         let c = full ? Change(m, value: v, previous: p) : Change.noHistory
         return VStack(alignment: .leading, spacing: 2) {
             Text(label).font(t.font(13)).foregroundStyle(t.label2)
-            Text(m == .proceeds ? m.format(v) : Num.int(v)).font(t.numFont).tracking(-0.6).monospacedDigit()
+            Text.tracked(m == .proceeds ? m.format(v) : Num.int(v), -0.6).font(t.numFont).monospacedDigit()
             (Text(c.text).foregroundStyle(c.color(t)).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : " vs \(m == .proceeds ? m.format(p) : Num.int(p))").foregroundStyle(t.label2))
                 .font(t.font(13)).monospacedDigit()
         }

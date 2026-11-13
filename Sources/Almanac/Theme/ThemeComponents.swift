@@ -51,7 +51,7 @@ struct Screen<Controls: View, Content: View>: View {
 extension Screen {
     private var heading: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title).font(t.titleFont).tracking(-0.2).lineLimit(1).frame(height: 26)
+            Text.tracked(title, -0.2).font(t.titleFont).lineLimit(1).frame(height: 26)
             Text(subtitle).font(t.font(12)).foregroundStyle(t.label2).lineLimit(1)
         }
     }

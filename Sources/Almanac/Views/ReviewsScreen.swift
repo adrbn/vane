@@ -112,7 +112,7 @@ struct ReviewsView: View {
         let avg = ReviewInfo.average(all)
         return VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .center, spacing: 12) {
-                Text(all.isEmpty ? "—" : String(format: "%.1f", avg)).font(t.font(48, .bold)).tracking(-1).monospacedDigit()
+                Text.tracked(all.isEmpty ? "—" : String(format: "%.1f", avg), -1).font(t.font(48, .bold)).monospacedDigit()
                     .foregroundStyle(all.isEmpty ? t.label3 : t.label)
                 VStack(alignment: .leading, spacing: 2) {
                     ThemedStars(rating: Int(avg.rounded()), size: 11)

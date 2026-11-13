@@ -165,7 +165,7 @@ struct InsightCardView: View {
     private var text: some View {
         VStack(alignment: .leading, spacing: 10) {
             meta
-            Text(insight.title).font(t.font(22, .bold)).tracking(-0.2).fixedSize(horizontal: false, vertical: true)
+            Text.tracked(insight.title, -0.2).font(t.font(22, .bold)).fixedSize(horizontal: false, vertical: true)
             Text(insight.body).font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             actions
@@ -270,7 +270,7 @@ private struct LeadEvidence: View {
             return v.day >= a && v.day <= b
         }
         VStack(alignment: .leading, spacing: 4) {
-            Text(chart.headline).font(t.font(40, .bold)).tracking(-0.8).monospacedDigit()
+            Text.tracked(chart.headline, -0.8).font(t.font(40, .bold)).monospacedDigit()
             if let l = chart.baselineLabel { Text(l).font(t.font(13)).foregroundStyle(t.label2).monospacedDigit() }
             MiniInsightChart(chart: chart, color: insight.needsAttention ? t.neg : t.accent, versions: versions, baselineLabel: false)
                 .frame(height: 96).padding(.top, 12)
@@ -415,7 +415,7 @@ private struct NothingToFlag: View {
             Image(systemName: "checkmark").font(.system(size: 20, weight: .bold)).foregroundStyle(t.accentText)
                 .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
-                Text("Nothing to flag").font(t.font(26, .bold)).tracking(-0.26)
+                Text.tracked("Nothing to flag", -0.26).font(t.font(26, .bold))
                 Text(live == Self.watched.count
                      ? "Vane compared \(live) metrics with their usual range. Everything is normal, so there is nothing to act on today. New insights appear here when a metric leaves its range or a review needs you."
                      : "Vane watches \(live) of \(Self.watched.count) metrics so far and none needs you. The others start once Apple's first analytics report arrives, usually 24–48 hours after you connect.")

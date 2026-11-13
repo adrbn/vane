@@ -105,7 +105,7 @@ struct SalesScreen: View {
     private func stat(_ label: String, _ value: String, _ caption: String, big: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(t.font(13, .semibold)).foregroundStyle(t.label2)
-            Text(value).font(big ? t.numFont : t.font(22, t.numWeight)).tracking(big ? -0.9 : -0.4).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text.tracked(value, big ? -0.9 : -0.4).font(big ? t.numFont : t.font(22, t.numWeight)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
             Text(caption).font(t.font(12)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
         }
     }

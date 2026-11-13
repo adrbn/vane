@@ -191,7 +191,7 @@ struct MetricCard: View {
                     Text(Self.label(metric)).font(t.font(14, .semibold)).foregroundStyle(fg2).lineLimit(1)
                 }
                 if let caption { Text(caption).font(t.font(13)).foregroundStyle(fg2).padding(.top, 6) }
-                Text(d.shown(metric)).font(t.numFont).tracking(-0.9).monospacedDigit()
+                Text.tracked(d.shown(metric), -0.9).font(t.numFont).monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.6).padding(.top, 14)
                 (Text(d.has(metric) ? c.text : "").foregroundStyle(fl?.fg ?? c.color(t)).fontWeight(.bold) + Text((d.has(metric) ? " " : "") + d.was(metric)).foregroundStyle(fg2))
                     .font(t.font(13)).monospacedDigit().lineLimit(1).padding(.top, 4)
@@ -248,7 +248,7 @@ private struct FunnelCard: View {
 
     private func stage(_ value: String, _ caption: Text, share: Double, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(value).font(t.font(36, t.numWeight)).tracking(-1).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text.tracked(value, -1).font(t.font(36, t.numWeight)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
             caption.font(t.font(13)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
             GeometryReader { g in
                 ZStack(alignment: .leading) {

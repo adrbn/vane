@@ -86,7 +86,7 @@ struct MetricDetailView: View {
             Text("\(d.rangeName) · \(d.rangeLabel)").font(t.font(13)).foregroundStyle(t.label2).monospacedDigit()
             HStack(alignment: .bottom, spacing: 40) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(MetricData.full(metric, d.value)).font(t.heroFont).tracking(t.heroTracking).monospacedDigit()
+                    Text.tracked(MetricData.full(metric, d.value), t.heroTracking).font(t.heroFont).monospacedDigit()
                         .lineLimit(1).minimumScaleFactor(0.5)
                     Group {
                         if d.hasPrevious {
