@@ -17143,6 +17143,28 @@
           }
         }
       }
+    },
+    "Fewer people who saw your app downloaded it. Check your screenshots, price and recent ratings.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moins de personnes ayant vu votre app l’ont téléchargée. Vérifiez vos captures, votre prix et vos notes récentes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos personas que vieron tu app la descargaron. Revisa tus capturas, el precio y las valoraciones recientes."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meno persone che hanno visto la tua app l’hanno scaricata. Controlla screenshot, prezzo e valutazioni recenti."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

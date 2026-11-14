@@ -225,10 +225,10 @@ struct TerritoriesView: View {
 /// Per-territory numbers for the period. Change only when history covers the previous period.
 struct TerritoryData {
     struct Row: Identifiable {
-        let code: String, downloads: Double, previous: Double?, impressions: Double?, pageViews: Double?, share: Double
+        let code: String, downloads: Double, previous: Double?, impressions: Double?, pageViews: Double?, convDownloads: Double, share: Double
         var id: String { code }
         var name: String { Territories.name(code) }
-        var conversion: Double? { impressions.flatMap { $0 > 0 ? downloads / $0 : nil } }
+        var conversion: Double? { impressions.flatMap { $0 > 0 ? convDownloads / $0 : nil } }
         var ratio: Double? { previous.flatMap { $0 > 0 ? downloads / $0 - 1 : nil } }
         var change: Change? { previous.flatMap { $0 > 0 ? Change(.firstDownloads, value: downloads, previous: $0, arrows: false) : nil } }
     }
@@ -249,10 +249,13 @@ struct TerritoryData {
         // Impressions and page views come from the analytics report; nil means not available yet.
         let hasAnalytics = store.lastDay(app, .impressions) != nil
         let imp = store.byTerritory(app, .impressions, from: from, to: to), pv = store.byTerritory(app, .pageViews, from: from, to: to)
+        // Conversion only over the days Apple's analytics cover; downloads go back further.
+        let aFrom = max(from, store.firstDay(app, .impressions) ?? from)
+        let convDl = aFrom == from ? fd : store.byTerritory(app, .firstDownloads, from: aFrom, to: to)
         let total = max(fd.values.reduce(0, +), 1)
         rows = Set(fd.keys).union(imp.keys).map { c in
             Row(code: c, downloads: fd[c] ?? 0, previous: hasPrev ? (prev[c] ?? 0) : nil,
-                impressions: hasAnalytics ? (imp[c] ?? 0) : nil, pageViews: hasAnalytics ? (pv[c] ?? 0) : nil,
+                impressions: hasAnalytics ? (imp[c] ?? 0) : nil, pageViews: hasAnalytics ? (pv[c] ?? 0) : nil, convDownloads: convDl[c] ?? 0,
                 share: (fd[c] ?? 0) / total)
         }
         appName = app
@@ -267,11 +270,11 @@ struct TerritoryData {
         return (r, c)
     }
 
-    var bestConversion: Row? { rows.filter { ($0.pageViews ?? 0) >= 100 }.max { $0.conversion! < $1.conversion! } }
+    var bestConversion: Row? { rows.filter { ($0.impressions ?? 0) >= 1000 }.max { $0.conversion! < $1.conversion! } }
 
     var averageConversion: Double? {
-        let pv = rows.compactMap(\.pageViews).reduce(0, +)
-        return pv > 0 ? rows.filter { $0.pageViews != nil }.map(\.downloads).reduce(0, +) / pv : nil
+        let imp = rows.compactMap(\.impressions).reduce(0, +)
+        return imp > 0 ? rows.filter { $0.impressions != nil }.map(\.convDownloads).reduce(0, +) / imp : nil
     }
 
     var chatContext: String {

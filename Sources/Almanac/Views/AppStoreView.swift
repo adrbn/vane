@@ -62,7 +62,7 @@ struct AppStoreData {
     func points(_ m: Metric) -> [Point] {
         let p = store.series(app, m, from: from, to: to)
         guard days > 90 else { return p }
-        var w = p.bucketed(.week)
+        var w = p.bucketed(.week, average: m.isGauge)
         if Day.weekStart(from) != from, !w.isEmpty { w.removeFirst() }
         if Day.add(6, to: Day.weekStart(to)) != to, !w.isEmpty { w.removeLast() }
         return w

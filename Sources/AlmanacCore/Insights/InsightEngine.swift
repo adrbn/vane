@@ -140,7 +140,7 @@ public struct InsightEngine {
         return Insight(id: id(kind, Day.weekStart(asOf)), appId: app, kind: kind, category: .conversion,
                        title: String(localized: "\(noun) fell \(pct(1 - recent / before))"),
                        body: m == .ttr ? String(localized: "Fewer people who saw your app tapped through to its page. Check your icon, name and first screenshots, and any Search Ads changes.")
-                                       : String(localized: "Fewer visitors to your product page downloaded. Check your screenshots, price and recent ratings."),
+                                       : String(localized: "Fewer people who saw your app downloaded it. Check your screenshots, price and recent ratings."),
                        day: asOf, needsAttention: true,
                        chart: InsightChart(label: m.title, points: weekly.map(ChartPoint.init), baselineLabel: String(localized: "Before: \(m.format(before))"), baseline: before,
                                            headline: m.format(recent)), action: .openMetric(m.rawValue))

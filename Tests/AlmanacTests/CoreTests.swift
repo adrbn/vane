@@ -172,4 +172,7 @@ private func demoStore() throws -> Store {
         .init("a", "2026-11-10", .pageViews, "", 5),
     ])
     #expect(abs(s.total("a", .pageCR, from: "2026-11-01", to: "2026-11-10") - 0.01) < 0.0001)
+    // A day without analytics is missing from the rate series, not a 0 % day.
+    #expect(s.series("a", .pageCR, from: "2026-11-01", to: "2026-11-10").map(\.day) == ["2026-11-10"])
+    #expect(s.series("a", .ttr, from: "2026-11-01", to: "2026-11-10").map(\.value) == [0.005])
 }

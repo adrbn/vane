@@ -64,11 +64,10 @@ public final class Store: @unchecked Sendable {
         case .downloads:
             return combine(raw(app, .firstDownloads, territory, from, to), raw(app, .redownloads, territory, from, to), +)
         case .ttr:
-            return combine(raw(app, .pageViews, territory, from, to), raw(app, .impressions, territory, from, to)) { $1 > 0 ? $0 / $1 : 0 }
+            return rate(raw(app, .pageViews, territory, from, to), over: raw(app, .impressions, territory, from, to))
         case .pageCR:
             // Apple's definition: downloads ÷ impressions. Not ÷ page views: "Get" from search skips the page, so that goes past 100 %.
-            let dl = series(app, .downloads, territory: territory, from: from, to: to)
-            return combine(dl, raw(app, .impressions, territory, from, to)) { $1 > 0 ? $0 / $1 : 0 }
+            return rate(series(app, .downloads, territory: territory, from: from, to: to), over: raw(app, .impressions, territory, from, to))
         case .newRatings:
             let t = raw(app, .ratingsTotal, "", Day.add(-1, to: from), to)
             return zip(t, t.dropFirst()).map { Point(day: $1.day, value: max(0, $1.value - $0.value)) }
@@ -112,6 +111,10 @@ public final class Store: @unchecked Sendable {
         (try? db.query("SELECT MAX(day) FROM daily WHERE app_id=? AND metric IN ('impressions','first_downloads','sales')", [app]))?.first?.opt(0)
     }
 
+    public func firstDay(_ app: String, _ metric: Metric) -> String? {
+        (try? db.query("SELECT MIN(day) FROM daily WHERE app_id=? AND metric=? AND territory=''", [app, metric.rawValue]))?.first?.opt(0)
+    }
+
     public func lastDay(_ app: String, _ metric: Metric) -> String? {
         (try? db.query("SELECT MAX(day) FROM daily WHERE app_id=? AND metric=? AND territory=''", [app, metric.rawValue]))?.first?.opt(0)
     }
@@ -120,6 +123,12 @@ public final class Store: @unchecked Sendable {
         ((try? db.query("SELECT day, value FROM daily WHERE app_id=? AND metric=? AND territory=? AND day BETWEEN ? AND ? ORDER BY day",
                         [app, m.rawValue, territory, from, to])) ?? [])
             .map { Point(day: $0.s(0), value: $0.d(1)) }
+    }
+
+    /// Daily ratio, only on days with a denominator: a day without Apple's analytics is missing, not 0 %.
+    private func rate(_ a: [Point], over b: [Point]) -> [Point] {
+        let am = Dictionary(a.map { ($0.day, $0.value) }, uniquingKeysWith: { x, _ in x })
+        return b.filter { $0.value > 0 }.map { Point(day: $0.day, value: (am[$0.day] ?? 0) / $0.value) }
     }
 
     private func combine(_ a: [Point], _ b: [Point], _ f: (Double, Double) -> Double) -> [Point] {
