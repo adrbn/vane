@@ -118,7 +118,34 @@ struct PhoneInsightCard: View {
     var insight: Insight
     @Binding var tab: PhoneTab
 
+    /// Where the card leads: the whole card opens it, like on the Mac.
+    private enum Target { case tab(PhoneTab), route(PhoneRoute) }
+
+    private var target: Target? {
+        switch insight.action {
+        case .fixKeywords: .tab(.listing)
+        case .openReport: .route(.report)
+        case .openMetric(let m):
+            switch m {
+            case "listing": .tab(.listing)
+            case "reviews": .tab(.reviews)
+            case "territories": .route(.territories(days: 28))
+            case "sales": .tab(.appStore)
+            default: Metric(rawValue: m).map { .route(.metric($0, days: 28)) }
+            }
+        case nil: nil
+        }
+    }
+
     var body: some View {
+        switch target {
+        case .route(let r): NavigationLink(value: r) { card }.buttonStyle(.plain)
+        case .tab(let x): Button { tab = x } label: { card }.buttonStyle(.plain)
+        case nil: card
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 IconSquare(symbol: insight.category.symbol, style: t.square(insight.category.section), size: 22)
@@ -144,6 +171,7 @@ struct PhoneInsightCard: View {
             action
         }
         .phoneCard()
+        .contentShape(Rectangle())
     }
 
     private var color: Color {

@@ -173,9 +173,10 @@ public struct Syncer: Sendable {
                     return Store.Sample(app, p[0], Metric(rawValue: p[1])!, p[2], v)
                 })
                 newlyImported.append(inst.id)
+                // Saved after each report, so an import cut short (iOS suspends apps) resumes instead of starting over.
+                store.setMeta("analytics_instances_\(app)", (Array(imported) + newlyImported).suffix(2000).joined(separator: ","))
             }
         }
-        store.setMeta("analytics_instances_\(app)", (Array(imported) + newlyImported).suffix(2000).joined(separator: ","))
     }
 
     /// Maps one analytics CSV row to metrics. Column names follow Apple's report docs;

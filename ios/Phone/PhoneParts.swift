@@ -27,6 +27,7 @@ private struct PhoneCardModifier: ViewModifier {
 
 /// Root tab screen: app picker row, 34 pt title, 14 pt subtitle, then scrolling content.
 struct PhoneScreen<Trailing: View, Content: View>: View {
+    @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
     var title: String
     var subtitle: String
@@ -49,6 +50,7 @@ struct PhoneScreen<Trailing: View, Content: View>: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
+        .refreshable { await model.refresh() }
         .foregroundStyle(t.label)
         .background(ThemeBackground().ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)

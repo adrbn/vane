@@ -9,6 +9,7 @@ struct PhoneRoot: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @State private var tab: PhoneTab = .today
+    @Environment(\.scenePhase) private var phase
 
     var body: some View {
         let t = AlmanacTheme.named(themeId)
@@ -28,6 +29,11 @@ struct PhoneRoot: View {
         }
         .environment(\.theme, t)
         .task(id: "\(model.revision) \(model.appId ?? "") \(themeId)") { WidgetFeed.write(model, theme: t) }
+        .onChange(of: phase, initial: true) { _, p in
+            // Sync on open, at most every 10 minutes.
+            guard p == .active, !model.isDemo, (model.lastSync ?? .distantPast) < .now.addingTimeInterval(-600) else { return }
+            Task { await model.refresh() }
+        }
         .preferredColorScheme(t.scheme)
         .fontDesign(t.design)
     }

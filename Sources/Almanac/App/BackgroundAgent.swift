@@ -22,7 +22,9 @@ enum BackgroundAgent {
             defer { done.signal() }
             let creds = Keychain.credentials()
             guard creds.isComplete, let store = try? Store(), store.meta("demo") != "1" else { return }
+            let before = AnalyticsArrival.apps(store)
             _ = await Syncer(client: ASCClient(credentials: creds), store: store).syncAll()
+            await AnalyticsArrival.notify(store, before: before)
             var fresh: [Insight] = []
             for app in store.apps() {
                 fresh += (try? store.merge(insights: InsightEngine(store: store, app: app.id).run())) ?? []

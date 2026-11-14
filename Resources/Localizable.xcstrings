@@ -4298,6 +4298,28 @@
         }
       }
     },
+    "Apple's analytics are here": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les analyses d'Apple sont arrivées"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya llegaron los análisis de Apple"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le analisi di Apple sono arrivate"
+          }
+        }
+      }
+    },
     "Apple’s sessions report has arrived and is in Usage. Its App Store engagement report, which holds impressions and page views, usually follows within a few days.": {
       "localizations": {
         "es": {
@@ -7922,6 +7944,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Impressioni, conversione, download, vendite e sessioni."
+          }
+        }
+      }
+    },
+    "Impressions, page views, conversion and sessions for %@.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impressions, vues de page, conversion et sessions pour %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impresiones, visitas a la página, conversión y sesiones de %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impressioni, visualizzazioni della pagina, conversione e sessioni per %@."
           }
         }
       }

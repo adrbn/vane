@@ -1,6 +1,9 @@
 import AlmanacCore
 import Foundation
 import Observation
+#if os(iOS)
+import UIKit
+#endif
 
 enum Pane: Hashable {
     case insights, listing, reviews, appStore, sales, usage, territories
@@ -135,11 +138,19 @@ final class AppModel {
             if isDemo { loadDemo() }
             return
         }
+        guard !syncing else { return }
         if isDemo { try? store.removeAll() }
         syncing = true; syncErrors = []
+        #if os(iOS)
+        // A few more minutes if the user leaves the app mid-sync.
+        let bg = UIApplication.shared.beginBackgroundTask(withName: "sync")
+        defer { UIApplication.shared.endBackgroundTask(bg) }
+        #endif
+        let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
         let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
+        await AnalyticsArrival.notify(store, before: before)
         runEngine()
         reload()
         syncing = false; syncStatus = ""
