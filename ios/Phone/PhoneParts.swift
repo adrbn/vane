@@ -51,10 +51,8 @@ struct PhoneScreen<Trailing: View, Content: View>: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
-        .refreshable {
-            // A sync already running (started on open): wait for it instead of returning at once.
-            if model.syncing { while model.syncing { try? await Task.sleep(for: .milliseconds(300)) } } else { await model.refresh() }
-        }
+        // Starts the sync and lets go: the small line under the title shows its progress, not the big spinner.
+        .refreshable { if !model.syncing { Task { await model.refresh() } } }
         .foregroundStyle(t.label)
         .background(ThemeBackground().ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
