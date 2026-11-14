@@ -148,7 +148,7 @@ final class AppModel {
         #endif
         let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
-        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step } }
+        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
         runEngine()

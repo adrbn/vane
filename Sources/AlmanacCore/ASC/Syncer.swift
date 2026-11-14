@@ -20,18 +20,18 @@ public struct Syncer: Sendable {
 
         var apps: [(AppRecord, String)] = []  // (app, sku)
         await attempt(String(localized: "Apps")) { apps = try await syncApps() }
+        // Quick steps first: a first sales and analytics import takes minutes, and iOS may suspend the app before it ends.
+        for (app, _) in apps {
+            await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
+            await attempt(String(localized: "Reviews · \(app.name)")) { try await syncReviews(app: app.id) }
+            await attempt(String(localized: "Listing · \(app.name)")) { try await syncListing(app: app.id) }
+        }
         let fx = await ExchangeRates.load()
         if !client.credentials.vendorNumber.isEmpty {
             await attempt(String(localized: "Sales")) { try await syncSales(apps: apps, fx: fx) }
             await attempt(String(localized: "Subscriptions")) { try await syncSubscriptions(apps: apps.map(\.0)) }
         } else {
             errors.append(StepError(step: String(localized: "Sales"), message: String(localized: "Add your vendor number in Settings to import sales.")))
-        }
-        // Quick steps first: a first analytics import takes minutes, and iOS may suspend the app before it ends.
-        for (app, _) in apps {
-            await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
-            await attempt(String(localized: "Reviews · \(app.name)")) { try await syncReviews(app: app.id) }
-            await attempt(String(localized: "Listing · \(app.name)")) { try await syncListing(app: app.id) }
         }
         for (app, _) in apps {
             await attempt(String(localized: "Analytics · \(app.name)")) { try await syncAnalytics(app: app.id) }
@@ -60,7 +60,10 @@ public struct Syncer: Sendable {
         let yesterday = Day.add(-1, to: Day.today())
         let done = Set((store.meta("sales_days") ?? "").split(separator: ",").map(String.init))
         var imported = done
+        // Saved every 10 days, so an import cut short (iOS suspends apps) resumes instead of starting over.
+        func save() { store.setMeta("sales_days", imported.sorted().suffix(400).joined(separator: ",")) }
         for offset in 0..<salesDays {
+            if offset % 10 == 9 { save() }
             let day = Day.add(-offset, to: yesterday)
             // Re-fetch the last 3 days: Apple sometimes publishes late.
             if done.contains(day) && offset > 2 { continue }
@@ -84,7 +87,7 @@ public struct Syncer: Sendable {
             try store.write(samples)
             imported.insert(day)
         }
-        store.setMeta("sales_days", imported.sorted().suffix(400).joined(separator: ","))
+        save()
     }
 
     /// Apple's product type codes: 1x = first download (free or paid), 3x = redownload.
