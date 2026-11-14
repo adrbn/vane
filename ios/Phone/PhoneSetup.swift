@@ -243,6 +243,11 @@ struct PhoneSettings: View {
                 }
             }
             .phoneCard(padding: 14)
+            if !model.syncErrors.isEmpty {
+                Text(model.syncErrors.joined(separator: "\n")).font(t.font(12)).foregroundStyle(t.warn)
+                    .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading).phoneCard(padding: 14)
+            }
             PhoneSectionTitle(title: String(localized: "Your API key"))
             PhoneKeyForm()
             PhoneSectionTitle(title: String(localized: "Look"))

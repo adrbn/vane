@@ -44,13 +44,17 @@ struct PhoneScreen<Trailing: View, Content: View>: View {
                     Text(subtitle).font(t.font(14)).foregroundStyle(t.label2)
                 }
                 .padding(.bottom, 4)
+                PhoneSyncLine()
                 content
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
-        .refreshable { await model.refresh() }
+        .refreshable {
+            // A sync already running (started on open): wait for it instead of returning at once.
+            if model.syncing { while model.syncing { try? await Task.sleep(for: .milliseconds(300)) } } else { await model.refresh() }
+        }
         .foregroundStyle(t.label)
         .background(ThemeBackground().ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -249,5 +253,26 @@ struct PhoneSegments<V: Hashable>: View {
         .padding(3)
         .background(t.glass, in: Capsule())
         .overlay(Capsule().strokeBorder(t.glassBorder, lineWidth: 1))
+    }
+}
+
+/// While a refresh runs: the step it's on. After one that failed somewhere: how many problems (details in Settings).
+struct PhoneSyncLine: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    var body: some View {
+        if model.syncing {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(model.syncStatus).lineLimit(1)
+            }
+            .font(t.font(12)).foregroundStyle(t.label2)
+        } else if !model.syncErrors.isEmpty {
+            NavigationLink(value: PhoneRoute.settings) {
+                Label(String(localized: "\(model.syncErrors.count) problems with the last refresh"), systemImage: "exclamationmark.triangle.fill")
+                    .font(t.font(12, .semibold)).foregroundStyle(t.warn)
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
