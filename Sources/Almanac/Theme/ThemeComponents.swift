@@ -234,7 +234,7 @@ struct SmallButton: View {
             HStack(spacing: 6) {
                 if busy { Spinner() }
                 else if let symbol { Image(systemName: symbol).font(.system(size: 11, weight: .bold)) }
-                Text(label).lineLimit(1)
+                Text(label).lineLimit(1).fixedSize()
             }
             .font(t.font(13, .semibold))
             .foregroundStyle(prominent ? t.onAccent : t.label)

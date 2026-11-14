@@ -35,7 +35,7 @@ Decisions taken while implementing the handoff (`design_handoff_almanac_macos`),
 - Chat answers: the prompt asks for no tables or headings; the panel renders bullets, numbered items and headings, and turns any table into plain rows. Metrics with no data are sent as "not available yet", not 0. The Insights context includes the Watching numbers, and the prompt forbids claiming Almanac lacks a number it shows or sending the user to App Store Connect for it.
 
 ## Onboarding
-- First launch without a key shows three steps over the blurred demo dashboard: welcome and theme picker; a guided key (where to create it, the Sales and Reports role, the one-time .p8 download, the vendor number, with links to App Store Connect) and the connect form; then what arrives when (sales now, analytics in 1–2 days, insights) with the refresh and notification toggles.
+- First launch without a key takes the whole window: the steps in a 580 pt column on the left, and on the right the real app (demo data) drawn at 1240×800 and scaled down whole as a thumbnail (`OnboardingPreview`), so the tiles keep their proportions. Three steps: welcome; a guided key (where to create it, the Sales and Reports role, the one-time .p8 download, the vendor number, with links to App Store Connect) and the connect form; then what arrives when (sales now, analytics in 1–2 days, insights) with the refresh and notification toggles.
 - "Look Around with Demo Data" or "Skip for Now" end it; `onboarded` in UserDefaults keeps it from coming back. Never shown with `--demo` unless `--onboarding` is passed.
 - The .p8 can be dropped anywhere on the connect form (Settings too).
 

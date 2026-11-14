@@ -11,34 +11,21 @@ struct RootView: View {
         let t = AlmanacTheme.named(themeId)
         ZStack {
             ThemeBackground()
-            HStack(spacing: 0) {
-                if t.usesRail { IconRail() } else { ThemedSidebar() }
-                VStack(spacing: 0) {
-                    detail
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                        .id("\(model.appId ?? "")-\(model.revision)")
+            if model.onboardingOpen {
+                // Full window: the steps on the left, the real app (demo data) on the right as a live preview.
+                HStack(spacing: 0) {
+                    OnboardingView().frame(width: 580)
+                    OnboardingPreview { shell(t) }
                 }
-                // A screen wider than its slot must never push the sidebar or the chat off the window.
-                .frame(minWidth: 0)
-                // Clipped with the screen, so the arrow slides out from behind the sidebar instead of over it.
-                .overlay(alignment: model.swipeProgress < 0 ? .trailing : .leading) { SwipeArrow(progress: model.swipeProgress) }
-                .clipped()
-                if model.chatOpen {
-                    InspectorPanel()
-                        .frame(width: 304)
-                        .background(t.side, in: RoundedRectangle(cornerRadius: t.r - 4, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: t.r - 4, style: .continuous).strokeBorder(t.sideBorder, lineWidth: 1))
-                        .padding(8)
-                        .transition(.move(edge: .trailing).combined(with: .opacity))
-                }
+                .transition(.opacity)
+            } else {
+                shell(t)
+                    .blur(radius: model.settingsOpen ? 32 : 0)
+                    .transition(.opacity)
             }
         }
-        .blur(radius: model.settingsOpen || model.onboardingOpen ? 32 : 0)
         .overlay {
-            if model.onboardingOpen {
-                CenteredSheet(width: 640, onDismiss: {}) { OnboardingView() }
-                    .transition(.opacity)
-            } else if model.settingsOpen {
+            if model.settingsOpen {
                 CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
                     .transition(.opacity)
             }
@@ -52,12 +39,37 @@ struct RootView: View {
         .preferredColorScheme(t.scheme)
         .animation(.default, value: model.chatOpen)
         .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
-        .animation(.easeOut(duration: 0.18), value: model.onboardingOpen)
+        .animation(.easeInOut(duration: 0.35), value: model.onboardingOpen)
         .task { openLaunchReport(); SwipeNavigation.install(model) }
         .onChange(of: model.chatOpen) { _, open in ChatRoom.fit(open: open) }
     }
 
     @Environment(\.openWindow) private var openWindow
+
+    /// Sidebar (or rail), the current screen, and the chat panel.
+    private func shell(_ t: AlmanacTheme) -> some View {
+        HStack(spacing: 0) {
+            if t.usesRail { IconRail() } else { ThemedSidebar() }
+            VStack(spacing: 0) {
+                detail
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .id("\(model.appId ?? "")-\(model.revision)")
+            }
+            // A screen wider than its slot must never push the sidebar or the chat off the window.
+            .frame(minWidth: 0)
+            // Clipped with the screen, so the arrow slides out from behind the sidebar instead of over it.
+            .overlay(alignment: model.swipeProgress < 0 ? .trailing : .leading) { SwipeArrow(progress: model.swipeProgress) }
+            .clipped()
+            if model.chatOpen {
+                InspectorPanel()
+                    .frame(width: 304)
+                    .background(t.side, in: RoundedRectangle(cornerRadius: t.r - 4, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: t.r - 4, style: .continuous).strokeBorder(t.sideBorder, lineWidth: 1))
+                    .padding(8)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+    }
 
     /// `--report week|month|year` opens that report for the current app (screenshots).
     private func openLaunchReport() {

@@ -10401,19 +10401,19 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En el Mac: Vane → Ajustes → App Store Connect → Mostrar código de configuración"
+            "value": "En el Mac: Vane → Ajustes → App Store Connect → Mostrar código QR"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sur le Mac : Vane → Réglages → App Store Connect → Afficher le code de configuration"
+            "value": "Sur le Mac : Vane → Réglages → App Store Connect → Afficher le code QR"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sul Mac: Vane → Impostazioni → App Store Connect → Mostra codice di configurazione"
+            "value": "Sul Mac: Vane → Impostazioni → App Store Connect → Mostra codice QR"
           }
         }
       }
@@ -13202,19 +13202,19 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostrar código de configuración…"
+            "value": "Mostrar código QR…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Afficher le code de configuration…"
+            "value": "Afficher le code QR…"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostra codice di configurazione…"
+            "value": "Mostra codice QR…"
           }
         }
       }
