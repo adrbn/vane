@@ -66,8 +66,9 @@ public final class Store: @unchecked Sendable {
         case .ttr:
             return combine(raw(app, .pageViews, territory, from, to), raw(app, .impressions, territory, from, to)) { $1 > 0 ? $0 / $1 : 0 }
         case .pageCR:
+            // Apple's definition: downloads ÷ impressions. Not ÷ page views: "Get" from search skips the page, so that goes past 100 %.
             let dl = series(app, .downloads, territory: territory, from: from, to: to)
-            return combine(dl, raw(app, .pageViews, territory, from, to)) { $1 > 0 ? $0 / $1 : 0 }
+            return combine(dl, raw(app, .impressions, territory, from, to)) { $1 > 0 ? $0 / $1 : 0 }
         case .newRatings:
             let t = raw(app, .ratingsTotal, "", Day.add(-1, to: from), to)
             return zip(t, t.dropFirst()).map { Point(day: $1.day, value: max(0, $1.value - $0.value)) }
@@ -83,8 +84,11 @@ public final class Store: @unchecked Sendable {
             let i = total(app, .impressions, territory: territory, from: from, to: to)
             return i > 0 ? total(app, .pageViews, territory: territory, from: from, to: to) / i : 0
         case .pageCR:
-            let v = total(app, .pageViews, territory: territory, from: from, to: to)
-            return v > 0 ? total(app, .downloads, territory: territory, from: from, to: to) / v : 0
+            // Only days Apple's analytics cover: downloads come from sales reports, which go back much further.
+            let imp = raw(app, .impressions, territory, from, to).filter { $0.value > 0 }
+            let days = Set(imp.map(\.day)), i = imp.total
+            let dl = series(app, .downloads, territory: territory, from: from, to: to).filter { days.contains($0.day) }.total
+            return i > 0 ? dl / i : 0
         case .activeSubs, .ratingsTotal:
             return series(app, metric, from: from, to: to).last?.value ?? 0
         default:

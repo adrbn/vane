@@ -40,7 +40,7 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
         case .ratingsTotal: String(localized: "Total ratings")
         case .newRatings: String(localized: "New ratings")
         case .ttr: String(localized: "Tap-through rate")
-        case .pageCR: String(localized: "Page conversion rate")
+        case .pageCR: String(localized: "Conversion rate")
         }
     }
 

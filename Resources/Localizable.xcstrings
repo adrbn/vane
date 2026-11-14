@@ -7902,26 +7902,26 @@
       "localizations": {
         "en": {
           "stringUnit": {
-            "state": "new",
-            "value": "Impressions were %1$@%2$@, product page views %3$@. Page conversion finished at %4$@ and tap-through at %5$@."
+            "state": "translated",
+            "value": "Impressions were %1$@%2$@, product page views %3$@. Conversion finished at %4$@ and tap-through at %5$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las impresiones fueron %@%@, las visualizaciones de la página de producto %@. La conversión de la página cerró en %@ y el toque en %@."
+            "value": "Las impresiones fueron %@%@, las visualizaciones de la página de producto %@. La conversión cerró en %@ y el toque en %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impressions : %@%@, vues de la page produit : %@. Taux de conversion de la page : %@, taux de clics : %@."
+            "value": "Impressions : %@%@, vues de la page produit : %@. Taux de conversion : %@, taux de clics : %@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le impressioni sono state %@%@, le visualizzazioni della pagina prodotto %@. La conversione della pagina ha chiuso a %@ e il tasso di tocco a %@."
+            "value": "Le impressioni sono state %@%@, le visualizzazioni della pagina prodotto %@. La conversione ha chiuso a %@ e il tasso di tocco a %@."
           }
         }
       }
@@ -17118,6 +17118,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” già conta dal nome o dal sottotitolo. Lo spazio è meglio usato per parole nuove."
+          }
+        }
+      }
+    },
+    "Viewers who downloaded": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vus puis téléchargés"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vistos y descargados"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visti e scaricati"
           }
         }
       }

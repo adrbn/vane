@@ -19,7 +19,7 @@ public struct InsightEngine {
         let rules: [() -> [Insight]] = [
             { opt(bestDownloadDay()) }, { downloadMilestones() }, { opt(featured()) },
             { opt(rateDrop(.ttr, kind: "ttr-drop", noun: String(localized: "Tap-through rate"))) },
-            { opt(rateDrop(.pageCR, kind: "cr-drop", noun: String(localized: "Page conversion"))) },
+            { opt(rateDrop(.pageCR, kind: "cr-drop", noun: String(localized: "Conversion"))) },
             { opt(growthStreak()) }, { opt(salesSwing()) }, { opt(ratingsSlowed()) }, { opt(crashesUp()) },
             { territorySurges() }, { listingIssues() }, { opt(lowRatedReviews()) }, { opt(weekendPattern()) },
             { reportInsights() },

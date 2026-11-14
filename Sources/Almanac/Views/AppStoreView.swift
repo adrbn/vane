@@ -109,7 +109,7 @@ private struct Bento: View {
                 }
                 .frame(minHeight: 436, maxHeight: .infinity)
                 HStack(alignment: .top, spacing: 12) {
-                    MetricCard(d: d, metric: .pageCR, caption: String(localized: "Page visitors who downloaded")).frame(width: col)
+                    MetricCard(d: d, metric: .pageCR, caption: String(localized: "Viewers who downloaded")).frame(width: col)
                     if d.pending { AnalyticsPending(compact: false).frame(maxHeight: .infinity) } else { FunnelCard(d: d) }
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -226,16 +226,16 @@ private struct FunnelCard: View {
     let d: AppStoreData
 
     var body: some View {
-        let imp = d.value(.impressions), pv = d.value(.pageViews), dl = d.value(.firstDownloads)
+        let imp = d.value(.impressions), pv = d.value(.pageViews), dl = d.value(.downloads)
         let ttr = d.change(.ttr), conv = d.change(.pageCR)
         VStack(alignment: .leading, spacing: 0) {
             Text("From seen to downloaded").font(t.font(17, .bold))
-            Text("Of every 1,000 people who saw \(model.app?.name ?? "your app"), \(per1000(pv, imp)) opened its page and \(per1000(dl, imp)) downloaded it.")
+            Text("Of every 1,000 people who saw \(model.app?.name ?? "your app"), \(per1000(pv, imp)) opened its page and \(Num.int(d.value(.pageCR) * 1000)) downloaded it.")
                 .font(t.font(13)).foregroundStyle(t.label2).monospacedDigit().padding(.top, 4)
             HStack(alignment: .top, spacing: 24) {
                 stage(Num.k(imp), Text("saw it in the App Store"), share: 1, color: color(.impressions))
                 stage(Num.k(pv), Text("opened the page · ") + Text(Num.pct(d.value(.ttr))).foregroundStyle(ttr.color(t)).fontWeight(.bold), share: imp > 0 ? pv / imp : 0, color: color(.pageViews))
-                stage(Num.int(dl), Text("downloaded · ") + Text(Num.pct(d.value(.pageCR))).foregroundStyle(conv.color(t)).fontWeight(.bold), share: imp > 0 ? dl / imp : 0, color: color(.firstDownloads))
+                stage(Num.int(dl), Text("downloaded · ") + Text(Num.pct(d.value(.pageCR))).foregroundStyle(conv.color(t)).fontWeight(.bold), share: d.value(.pageCR), color: color(.firstDownloads))
             }
             .padding(.top, 20)
         }

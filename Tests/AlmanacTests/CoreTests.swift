@@ -26,7 +26,8 @@ private func demoStore() throws -> Store {
     let parts = s.total(app, .firstDownloads, from: "2026-10-01", to: "2026-10-31") + s.total(app, .redownloads, from: "2026-10-01", to: "2026-10-31")
     #expect(abs(dl - parts) < 0.001)
     let cr = s.total(app, .pageCR, from: "2026-10-01", to: "2026-10-31")
-    #expect(cr > 0.15 && cr < 0.3)
+    let imp = s.total(app, .impressions, from: "2026-10-01", to: "2026-10-31")
+    #expect(abs(cr - dl / imp) < 0.0001)
     // Territory rows add up to roughly the worldwide total.
     let terr = s.byTerritory(app, .impressions, from: "2026-10-01", to: "2026-10-31").values.reduce(0, +)
     let total = s.total(app, .impressions, from: "2026-10-01", to: "2026-10-31")
@@ -158,4 +159,17 @@ private func demoStore() throws -> Store {
     #expect(Assistant.explain(warn + "\nFailed to authenticate: OAuth session expired") == "Claude Code is signed out. Run claude /login in Terminal, then try again.")
     #expect(Assistant.explain(warn + "\nModel not found") == "Model not found")
     #expect(Assistant.explain(warn) == "The AI command failed without saying why.")
+}
+
+@Test func conversionIgnoresDaysWithoutAnalytics() throws {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent("almanac-test-\(UUID().uuidString).sqlite").path
+    let s = try Store(path: path)
+    // A year of sales-report downloads, analytics only on the last day.
+    try s.write([
+        .init("a", "2026-11-01", .firstDownloads, "", 500),
+        .init("a", "2026-11-10", .firstDownloads, "", 10),
+        .init("a", "2026-11-10", .impressions, "", 1000),
+        .init("a", "2026-11-10", .pageViews, "", 5),
+    ])
+    #expect(abs(s.total("a", .pageCR, from: "2026-11-01", to: "2026-11-10") - 0.01) < 0.0001)
 }

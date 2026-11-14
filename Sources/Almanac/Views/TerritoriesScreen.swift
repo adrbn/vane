@@ -228,7 +228,7 @@ struct TerritoryData {
         let code: String, downloads: Double, previous: Double?, impressions: Double?, pageViews: Double?, share: Double
         var id: String { code }
         var name: String { Territories.name(code) }
-        var conversion: Double? { pageViews.flatMap { $0 > 0 ? downloads / $0 : nil } }
+        var conversion: Double? { impressions.flatMap { $0 > 0 ? downloads / $0 : nil } }
         var ratio: Double? { previous.flatMap { $0 > 0 ? downloads / $0 - 1 : nil } }
         var change: Change? { previous.flatMap { $0 > 0 ? Change(.firstDownloads, value: downloads, previous: $0, arrows: false) : nil } }
     }
