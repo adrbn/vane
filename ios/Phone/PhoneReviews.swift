@@ -14,7 +14,7 @@ struct PhoneReviews: View {
         let all = model.store.reviews(app)
         let versions = model.store.versions(app)
         let shown = needsReply ? all.filter { $0.response == nil } : all
-        PhoneScreen(title: "Reviews", subtitle: [String(localized: "\(all.count) reviews"), String(localized: "\(all.filter { $0.response == nil }.count) without a reply")].joined(separator: " · ")) {
+        PhoneScreen(title: String(localized: "Reviews"), subtitle: [String(localized: "\(all.count) reviews"), String(localized: "\(all.filter { $0.response == nil }.count) without a reply")].joined(separator: " · ")) {
             summary(all)
             PhoneSegments(options: [(false, String(localized: "All")), (true, String(localized: "Needs reply"))], selection: $needsReply)
             if shown.isEmpty {

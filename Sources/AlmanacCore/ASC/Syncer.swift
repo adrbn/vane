@@ -27,11 +27,14 @@ public struct Syncer: Sendable {
         } else {
             errors.append(StepError(step: String(localized: "Sales"), message: String(localized: "Add your vendor number in Settings to import sales.")))
         }
+        // Quick steps first: a first analytics import takes minutes, and iOS may suspend the app before it ends.
         for (app, _) in apps {
-            await attempt(String(localized: "Analytics · \(app.name)")) { try await syncAnalytics(app: app.id) }
+            await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
             await attempt(String(localized: "Reviews · \(app.name)")) { try await syncReviews(app: app.id) }
             await attempt(String(localized: "Listing · \(app.name)")) { try await syncListing(app: app.id) }
-            await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
+        }
+        for (app, _) in apps {
+            await attempt(String(localized: "Analytics · \(app.name)")) { try await syncAnalytics(app: app.id) }
         }
         store.setMeta("last_sync", ISO8601DateFormatter().string(from: Date()))
         return errors
