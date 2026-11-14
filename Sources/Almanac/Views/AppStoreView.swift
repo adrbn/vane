@@ -226,7 +226,8 @@ private struct FunnelCard: View {
     let d: AppStoreData
 
     var body: some View {
-        let imp = d.value(.impressions), pv = d.value(.pageViews), dl = d.value(.downloads)
+        // Downloads on the days the impressions cover, so the three numbers describe the same people.
+        let imp = d.value(.impressions), pv = d.value(.pageViews), dl = imp * d.value(.pageCR)
         let ttr = d.change(.ttr), conv = d.change(.pageCR)
         VStack(alignment: .leading, spacing: 0) {
             Text("From seen to downloaded").font(t.font(17, .bold))
