@@ -12,33 +12,43 @@ struct WelcomeFlow: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            // One scale: 8 / 16 / 24 / 32 spacing, 24 pt sides, text 34 / 17 / 15 / 13. Pitch on top, choices pinned to the bottom.
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    VaneIcon(size: 72).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)).padding(.top, 32)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Vane").font(t.font(40, .heavy)).tracking(-1)
-                        Text("Your App Store Connect numbers, read for you.").font(t.font(17)).foregroundStyle(t.label2)
+                VStack(alignment: .leading, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        VaneIcon(size: 64).clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Vane").font(t.font(34, .heavy)).tracking(-0.5)
+                            Text("Your App Store Connect numbers, read for you.")
+                                .font(t.font(17)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 24) {
                         point("lightbulb.fill", .insights, "Insights", "Milestones, drops and keyword issues, spotted for you.")
                         point("chart.xyaxis.line", .appstore, "Every metric", "Downloads, conversion, sales and sessions.")
                         point("text.bubble.fill", .reviews, "Reviews and listing", "Answer reviews and fix your metadata.")
                     }
-                    .phoneCard()
-                    .padding(.top, 8)
-                    Spacer(minLength: 12)
-                    PhoneButton(label: String(localized: "Scan the Code on Your Mac")) { path.append(.scan) }
-                    Text("Already using Vane on a Mac? It shows the code in Settings.")
-                        .font(t.font(12)).foregroundStyle(t.label2).frame(maxWidth: .infinity)
-                        .multilineTextAlignment(.center)
-                    PhoneButton(label: String(localized: "Enter an API Key"), prominent: false) { path.append(.key) }
-                    Button("Try the Demo") { finish() }
-                        .font(t.font(15, .semibold)).foregroundStyle(t.accentText)
-                        .frame(maxWidth: .infinity).frame(height: 44)
                 }
-                .padding(.horizontal, 20).padding(.bottom, 24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24).padding(.top, 48).padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 8) {
+                    PhoneButton(label: String(localized: "Scan the Code on Your Mac")) { path.append(.scan) }
+                    PhoneButton(label: String(localized: "Enter an API Key"), prominent: false) { path.append(.key) }
+                    Button { finish() } label: {
+                        Text("Try the Demo").font(t.font(17, .semibold)).foregroundStyle(t.accentText)
+                            .frame(maxWidth: .infinity).frame(height: 54).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    Text("Vane on the Mac shows the code in Settings → App Store Connect.")
+                        .font(t.font(13)).foregroundStyle(t.label2).multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 8)
+                .background(ThemeBackground().ignoresSafeArea())
+            }
             .foregroundStyle(t.label)
             .background(ThemeBackground().ignoresSafeArea())
             .navigationDestination(for: WelcomeStep.self) { s in
@@ -51,11 +61,11 @@ struct WelcomeFlow: View {
     }
 
     private func point(_ symbol: String, _ section: AlmanacTheme.Section, _ title: LocalizedStringKey, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 12) {
-            IconSquare(symbol: symbol, style: t.square(section), size: 32)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(t.font(15, .semibold))
-                Text(text).font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .top, spacing: 16) {
+            IconSquare(symbol: symbol, style: t.square(section), size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(t.font(17, .semibold))
+                Text(text).font(t.font(15)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
             }
         }
     }

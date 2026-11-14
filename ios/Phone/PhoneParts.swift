@@ -216,7 +216,8 @@ struct PhoneButton: View {
             Text(label).font(t.font(17, .semibold))
                 .foregroundStyle(prominent ? t.onAccent : t.label)
                 .frame(maxWidth: .infinity).frame(height: 54)
-                .background(prominent ? t.accent : t.fill, in: Capsule())
+                .background(prominent ? t.accent : t.card, in: Capsule())
+                .overlay { if !prominent { Capsule().strokeBorder(t.sep2, lineWidth: 1) } }
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)

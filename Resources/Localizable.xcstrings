@@ -3962,6 +3962,7 @@
       }
     },
     "Already using Vane on a Mac? It shows the code in Settings.": {
+      "extractionState": "stale",
       "localizations": {
         "es": {
           "stringUnit": {
@@ -15178,6 +15179,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vane su iPhone"
+          }
+        }
+      }
+    },
+    "Vane on the Mac shows the code in Settings → App Store Connect.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vane en el Mac muestra el código en Ajustes → App Store Connect."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vane sur le Mac affiche le code dans Réglages → App Store Connect."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vane sul Mac mostra il codice in Impostazioni → App Store Connect."
           }
         }
       }
