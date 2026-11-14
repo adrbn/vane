@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
-VERSION="0.1.1"
+VERSION="0.1.2"
 
 swift build -c "$CONFIG" --product Almanac
 BIN="$(swift build -c "$CONFIG" --show-bin-path)/Almanac"
