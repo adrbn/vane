@@ -41,7 +41,20 @@ public struct Assistant: Sendable {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
     }
 
-    public func ask(_ question: String, context: String, history: [(role: String, text: String)] = []) async throws -> String {
+    /// The read-only MCP server shipped next to the app's executable (Contents/MacOS/vane-mcp), nil outside the Mac app.
+    static var mcpServer: String? {
+        Bundle.main.executableURL.map { $0.deletingLastPathComponent().appendingPathComponent("vane-mcp").path }
+            .flatMap { FileManager.default.isExecutableFile(atPath: $0) ? $0 : nil }
+    }
+
+    static let toolsPrompt = """
+    You also have read-only SQL access to the developer's whole Vane database through the vane tools (schema, then query).
+    When the data block doesn't hold what the question needs (another period, a country's daily series, download sources, reviews, releases), look it up instead of saying it's missing. Keep queries few and aggregated.
+    Never mention tables, SQL, queries or tools in your answer: speak about the data itself.
+    """
+
+    /// `database`: give the assistant read-only SQL access to that Vane database (Claude only; slower, so chats only).
+    public func ask(_ question: String, context: String, history: [(role: String, text: String)] = [], database: String? = nil) async throws -> String {
         guard await isInstalled() else { throw AssistantError.notInstalled(provider.rawValue) }
         var prompt = "<data>\n\(context)\n</data>\n\n"
         for h in history.suffix(10) { prompt += "\(h.role == "user" ? "Developer" : "You"): \(h.text)\n\n" }
@@ -49,7 +62,14 @@ public struct Assistant: Sendable {
         let cmd: String
         switch provider {
         case .claude:
-            cmd = "claude -p --tools '' --model \(Self.quote(model)) --output-format text --system-prompt \(Self.quote(Self.systemPrompt))"
+            if let database, let server = Self.mcpServer,
+               let json = try? JSONSerialization.data(withJSONObject: ["mcpServers": ["vane": ["command": server, "args": [database]]]]) {
+                cmd = "claude -p --tools '' --strict-mcp-config --mcp-config \(Self.quote(String(decoding: json, as: UTF8.self)))"
+                    + " --allowedTools mcp__vane__schema mcp__vane__query --model \(Self.quote(model)) --output-format text"
+                    + " --system-prompt \(Self.quote(Self.systemPrompt + "\n" + Self.toolsPrompt))"
+            } else {
+                cmd = "claude -p --tools '' --model \(Self.quote(model)) --output-format text --system-prompt \(Self.quote(Self.systemPrompt))"
+            }
         case .codex:
             prompt = Self.systemPrompt + "\n\n" + prompt
             cmd = "codex exec --skip-git-repo-check -"

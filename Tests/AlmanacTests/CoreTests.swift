@@ -123,6 +123,20 @@ private func demoStore() throws -> Store {
     #expect(acc["2026-11-01|first_downloads|IT"] == 4)
 }
 
+@Test func downloadSourcesSumByKey() throws {
+    var acc: [String: Double] = [:]
+    let row = ["Date": "2026-11-12", "Territory": "DE", "Download Type": "First-time download", "Source Type": "Web referrer", "Source Info": "reddit.com", "Counts": "3"]
+    Syncer.accumulateSource(row, into: &acc)
+    Syncer.accumulateSource(row, into: &acc)   // same key on another device or version row
+    Syncer.accumulateSource(row.merging(["Counts": "0"]) { $1 }, into: &acc)
+    #expect(acc == ["2026-11-12|DE|First-time download|Web referrer|reddit.com": 6])
+    let store = try Store(path: ":memory:")
+    #expect(!store.hasSources("a", report: "detailed"))
+    try store.writeSources("a", report: "detailed", acc)
+    #expect(store.hasSources("a", report: "detailed"))
+    #expect(try store.db.query("SELECT source_info, value FROM sources").first?.s(0) == "reddit.com")
+}
+
 @Test func territoryCodes() {
     #expect(Territories.alpha2("ITA") == "IT")
     #expect(Territories.alpha2("US") == "US")

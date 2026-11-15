@@ -4,6 +4,7 @@ import Foundation
 /// Territory "" is the worldwide total.
 public final class Store: @unchecked Sendable {
     public let db: DB
+    public let path: String
 
     public static var defaultPath: String {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -14,6 +15,7 @@ public final class Store: @unchecked Sendable {
 
     public init(path: String = Store.defaultPath) throws {
         db = try DB(path: path)
+        self.path = path
         try db.exec("""
         CREATE TABLE IF NOT EXISTS apps(id TEXT PRIMARY KEY, name TEXT, bundle_id TEXT, hue REAL);
         CREATE TABLE IF NOT EXISTS daily(app_id TEXT, day TEXT, metric TEXT, territory TEXT, value REAL,
@@ -26,6 +28,8 @@ public final class Store: @unchecked Sendable {
         CREATE TABLE IF NOT EXISTS insights(id TEXT PRIMARY KEY, app_id TEXT, day TEXT, json TEXT, dismissed INTEGER DEFAULT 0,
             notified INTEGER DEFAULT 0);
         CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS sources(app_id TEXT, report TEXT, day TEXT, territory TEXT, download_type TEXT, source_type TEXT,
+            source_info TEXT, value REAL, PRIMARY KEY(app_id, report, day, territory, download_type, source_type, source_info));
         """)
     }
 
@@ -52,6 +56,20 @@ public final class Store: @unchecked Sendable {
         public init(_ app: String, _ day: String, _ metric: Metric, _ territory: String = "", _ value: Double) {
             self.app = app; self.day = day; self.metric = metric; self.territory = territory; self.value = value
         }
+    }
+
+    /// Downloads split by where they came from (App Store search, browse, web or app referrer).
+    /// report "standard": complete, per territory, no names. "detailed": names the referring site or app, but Apple drops small rows.
+    /// Rows are "day|territory|download type|source type|source info" -> count.
+    public func writeSources(_ app: String, report: String, _ rows: [String: Double]) throws {
+        try db.insertMany("INSERT OR REPLACE INTO sources VALUES(?,?,?,?,?,?,?,?)", rows.map { k, v in
+            let p = k.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            return [app, report, p[0], p[1], p[2], p[3], p[4], v]
+        })
+    }
+
+    public func hasSources(_ app: String, report: String) -> Bool {
+        ((try? db.query("SELECT 1 FROM sources WHERE app_id=? AND report=? LIMIT 1", [app, report])) ?? []).isEmpty == false
     }
 
     public func write(_ samples: [Sample]) throws {

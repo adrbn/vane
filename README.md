@@ -117,7 +117,7 @@ For Claude Desktop, add `"vane": { "command": "/Applications/Vane.app/Contents/M
 
 - Your key is kept in the macOS Keychain. Your reports live in a local database on your Mac.
 - Vane talks to three places: `api.appstoreconnect.apple.com` for your reports, `itunes.apple.com` for app icons, and the European Central Bank for daily exchange rates. No account, no server, no analytics.
-- The assistant is off until you use it. It runs your own command-line tool, which sends your question and the numbers on screen to that tool's provider.
+- The assistant is off until you use it. It runs your own command-line tool, which sends your question, the numbers on screen and any figures it looks up in your Vane data (read-only) to that tool's provider.
 
 ## Build from source
 

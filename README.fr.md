@@ -119,7 +119,7 @@ Pour Claude Desktop, ajoutez `"vane": { "command": "/Applications/Vane.app/Conte
 
 - Votre clé est gardée dans le trousseau macOS. Vos rapports vivent dans une base de données locale sur votre Mac.
 - Vane contacte trois endroits : `api.appstoreconnect.apple.com` pour vos rapports, `itunes.apple.com` pour les icônes des apps, et la Banque centrale européenne pour les taux de change du jour. Pas de compte, pas de serveur, pas d'analytics.
-- L'assistant reste éteint tant que vous ne vous en servez pas. Il lance votre propre outil en ligne de commande, qui envoie votre question et les chiffres affichés au fournisseur de cet outil.
+- L'assistant reste éteint tant que vous ne vous en servez pas. Il lance votre propre outil en ligne de commande, qui envoie votre question, les chiffres affichés et ceux qu'il consulte dans vos données Vane (en lecture seule) au fournisseur de cet outil.
 
 ## Compiler depuis les sources
 

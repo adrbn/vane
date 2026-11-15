@@ -23,6 +23,11 @@ Vane stores App Store Connect data in SQLite. Tables:
 - versions(app_id, day, version, title): releases.
 - reviews(id, app_id, rating 1-5, title, body, reviewer, territory, created, response).
 - listing(app_id, locale, name, subtitle, keywords, promo, description, …): the App Store page per language.
+- sources(app_id, report, day, territory, download_type, source_type, source_info, value): downloads by where they came from.
+  source_type: App Store search, App Store browse, App referrer, Web referrer, Unavailable…
+  report 'standard' is complete and per territory, with no names. report 'detailed' names the referring app (bundle id) or website in source_info,
+  but Apple leaves out small rows for privacy, so it covers fewer downloads. Never add the two reports together.
+  Starts when Apple's analytics reports start, often later than daily downloads.
 - insights(id, app_id, day, json, dismissed, notified): what Vane flagged; json holds title, body, chart.
 - meta(key, value): sync bookkeeping.
 """

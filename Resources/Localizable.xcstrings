@@ -29944,60 +29944,60 @@
         }
       }
     },
-    "Raw reports and your private key never leave this Mac. The assistant runs your own command-line tool and only sees the numbers on the screen you ask about.": {
+    "Your private key never leaves this Mac. The assistant runs your own command-line tool. It sees the screen you ask about and can look up more of your Vane data, read-only, to answer.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los informes sin procesar y tu clave privada nunca salen de este Mac. El asistente ejecuta tu propia herramienta de línea de comandos y solo ve las cifras de la pantalla sobre la que preguntas."
+            "value": "Tu clave privada nunca sale de este Mac. El asistente usa tu propia herramienta de línea de comandos. Ve la pantalla sobre la que preguntas y puede consultar más datos de Vane, solo en lectura, para responder."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les rapports bruts et votre clé privée ne quittent jamais ce Mac. L'assistant utilise votre propre outil en ligne de commande et ne voit que les chiffres de l'écran concerné."
+            "value": "Votre clé privée ne quitte jamais ce Mac. L'assistant utilise votre propre outil en ligne de commande. Il voit l'écran sur lequel vous posez la question et peut consulter d'autres données de Vane, en lecture seule, pour répondre."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I report grezzi e la tua chiave privata non lasciano mai questo Mac. L’assistente esegue il tuo strumento a riga di comando e vede solo i numeri della schermata di cui chiedi."
+            "value": "La tua chiave privata non lascia mai questo Mac. L'assistente usa il tuo strumento a riga di comando. Vede la schermata su cui fai la domanda e può consultare altri dati di Vane, in sola lettura, per rispondere."
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "Els informes en brut i la teva clau privada mai surten d'aquest Mac. L'assistent executa la teva pròpia eina de línia d'ordres i només veu les xifres de la pantalla sobre la qual preguntes."
+            "value": "La teva clau privada mai surt d'aquest Mac. L'assistent fa servir la teva pròpia eina de línia d'ordres. Veu la pantalla per la qual preguntes i pot consultar més dades de Vane, només en lectura, per respondre."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rohberichte und Ihr privater Schlüssel verlassen diesen Mac nie. Der Assistent führt Ihr eigenes Befehlszeilenwerkzeug aus und sieht nur die Zahlen auf dem Bildschirm, zu dem Sie fragen."
+            "value": "Ihr privater Schlüssel verlässt diesen Mac nie. Der Assistent nutzt Ihr eigenes Kommandozeilen-Tool. Er sieht den Bildschirm, zu dem Sie fragen, und kann für die Antwort weitere Vane-Daten nachschlagen, nur lesend."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ham raporlar ve özel anahtarınız bu Mac'ten asla çıkmaz. Asistan kendi komut satırı aracınızı çalıştırır ve yalnızca sorduğunuz ekrandaki rakamları görür."
+            "value": "Özel anahtarınız bu Mac'ten asla çıkmaz. Asistan kendi komut satırı aracınızı kullanır. Sorduğunuz ekranı görür ve yanıt vermek için Vane verilerinize salt okunur olarak daha fazla bakabilir."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Исходные отчёты и ваш закрытый ключ никогда не покидают этот Mac. Ассистент запускает вашу собственную утилиту командной строки и видит только данные на экране, о котором вы спрашиваете."
+            "value": "Ваш закрытый ключ никогда не покидает этот Mac. Ассистент использует ваш собственный инструмент командной строки. Он видит экран, о котором вы спрашиваете, и может посмотреть другие данные Vane, только для чтения, чтобы ответить."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ruwe rapporten en je privésleutel verlaten deze Mac nooit. De assistent draait je eigen opdrachtregeltool en ziet alleen de cijfers op het scherm waarover je vraagt."
+            "value": "Je privésleutel verlaat deze Mac nooit. De assistent gebruikt je eigen opdrachtregeltool. Hij ziet het scherm waarover je vraagt en kan meer Vane-gegevens opzoeken, alleen-lezen, om te antwoorden."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os relatórios brutos e sua chave privada nunca saem deste Mac. O assistente executa a sua própria ferramenta de linha de comando e só vê os números da tela sobre a qual você pergunta."
+            "value": "Sua chave privada nunca sai deste Mac. O assistente usa sua própria ferramenta de linha de comando. Ele vê a tela sobre a qual você pergunta e pode consultar mais dados do Vane, somente leitura, para responder."
           }
         }
       }

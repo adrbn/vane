@@ -94,7 +94,7 @@ struct MacSettingsView: View, SettingsBlocks {
         case .some(.none): String(localized: "\(p.title) isn't in your shell's PATH")
         case .some(.some(let path)): String(localized: "\(p.title) at \(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))")
         }
-        return group(t, "", nil, footer: String(localized: "Raw reports and your private key never leave this Mac. The assistant runs your own command-line tool and only sees the numbers on the screen you ask about.")) {
+        return group(t, "", nil, footer: String(localized: "Your private key never leaves this Mac. The assistant runs your own command-line tool. It sees the screen you ask about and can look up more of your Vane data, read-only, to answer.")) {
             row(t, String(localized: "Provider"), found, warn: cli == .some(nil)) {
                 GlassSegments(options: Assistant.Provider.allCases.map { ($0.rawValue, $0 == .claude ? "Claude" : "Codex CLI") }, selection: $provider)
             }

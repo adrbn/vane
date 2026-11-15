@@ -139,6 +139,7 @@ public struct Syncer: Sendable {
     private static let reports: [(category: String, name: String)] = [
         ("APP_STORE_ENGAGEMENT", "App Store Discovery and Engagement Standard"),
         ("COMMERCE", "App Downloads Standard"),
+        ("COMMERCE", "App Downloads Detailed"),   // only for download sources: it names the referring site or app
         ("APP_USAGE", "App Sessions Standard"),
         ("APP_USAGE", "App Crashes"),
     ]
@@ -162,20 +163,32 @@ public struct Syncer: Sendable {
             let reports = try await client.all("v1/analyticsReportRequests/\(requestId)/reports", query: ["filter[category]": spec.category]).data
             guard let report = reports.first(where: { $0.attr("name") == spec.name }) else { continue }
             let instances = try await client.all("v1/analyticsReports/\(report.id)/instances", query: ["filter[granularity]": "DAILY", "limit": "200"], maxPages: 3).data
-            for inst in instances where !imported.contains(inst.id) {
+            let sourceReport: String? = switch spec.name {
+            case "App Downloads Standard": "standard"
+            case "App Downloads Detailed": "detailed"
+            default: nil
+            }
+            // Sources came after the other metrics: re-read already imported reports once to fill them (metrics are rewritten as-is).
+            let backfill = sourceReport.map { !store.hasSources(app, report: $0) } ?? false
+            for inst in instances where backfill || !imported.contains(inst.id) {
                 let segments = try await client.all("v1/analyticsReportInstances/\(inst.id)/segments").data
                 var acc: [String: Double] = [:] // "day|metric|territory"
+                var sources: [String: Double] = [:]
                 for seg in segments {
                     guard let url = URL(string: seg.attr("url")) else { continue }
                     let (raw, _) = try await URLSession.shared.data(from: url) // presigned, no auth header
                     let rows = parseDelimited(String(decoding: try raw.gunzipped(), as: UTF8.self), separator: "\t")
-                    for r in rows { Self.accumulate(r, report: spec.name, into: &acc) }
+                    for r in rows {
+                        Self.accumulate(r, report: spec.name, into: &acc)
+                        if sourceReport != nil { Self.accumulateSource(r, into: &sources) }
+                    }
                 }
+                if let sourceReport { try store.writeSources(app, report: sourceReport, sources) }
                 try store.write(acc.map { k, v in
                     let p = k.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
                     return Store.Sample(app, p[0], Metric(rawValue: p[1])!, p[2], v)
                 })
-                newlyImported.append(inst.id)
+                if !imported.contains(inst.id) { newlyImported.append(inst.id) }
                 // Saved after each report, so an import cut short (iOS suspends apps) resumes instead of starting over.
                 store.setMeta("analytics_instances_\(app)", (Array(imported) + newlyImported).suffix(2000).joined(separator: ","))
             }
@@ -214,6 +227,15 @@ public struct Syncer: Sendable {
             add(.crashes, Double(r["Crashes"] ?? "") ?? count, territorial: false)
         default: break
         }
+    }
+
+    /// One App Downloads row -> "day|territory|download type|source type|source info" (referring site or app, Detailed report only).
+    static func accumulateSource(_ r: [String: String], into acc: inout [String: Double]) {
+        guard let day = r["Date"], !day.isEmpty else { return }
+        let count = Double(r["Counts"] ?? r["Count"] ?? "") ?? 0
+        guard count > 0 else { return }
+        let key = [day, r["Territory"] ?? "", r["Download Type"] ?? "", r["Source Type"] ?? "", r["Source Info"] ?? ""].joined(separator: "|")
+        acc[key, default: 0] += count
     }
 
     // MARK: reviews
