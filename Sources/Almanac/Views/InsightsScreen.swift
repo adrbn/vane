@@ -384,7 +384,7 @@ extension InsightsView {
                 : model.store.series(app, m, from: from, to: to).map(\.value).reduce(0, +) / 28
             return "- \(MetricCard.label(m)): \(m.isRate ? Num.pct(v) : Num.k(v) + " a day") over the last 28 days"
         }
-        return LegacyInsightsView.context(shown, app: model.app?.name ?? "") + "\nShown in Vane (Watching):\n" + lines.joined(separator: "\n")
+        return LegacyInsightsView.context(shown, app: model.app?.name ?? "") + LegacyInsightsView.marketContext(model.store, app: app) + "\nShown in Vane (Watching):\n" + lines.joined(separator: "\n")
     }
 }
 

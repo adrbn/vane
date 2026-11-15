@@ -28,7 +28,7 @@ struct LegacyInsightsView: View {
             .padding(20)
         }
         .sheet(item: $fixing) { KeywordFixSheet(insight: $0) }
-        .onAppear { model.chatContext = Self.context(shown, app: model.app?.name ?? "") }
+        .onAppear { model.chatContext = Self.context(shown, app: model.app?.name ?? "") + Self.marketContext(model.store, app: model.appId ?? "") }
     }
 
     private func header(counts: [InsightCategory: Int]) -> some View {
@@ -52,7 +52,27 @@ struct LegacyInsightsView: View {
     }
 
     static func context(_ insights: [Insight], app: String) -> String {
-        "Screen: Insights for \(app)\n" + insights.prefix(30).map { "- [\($0.category.title), \($0.day)] \($0.title): \($0.body)" }.joined(separator: "\n")
+        "Screen: Insights for \(app)\n" + insights.prefix(30).map { i in
+            var line = "- [\(i.category.title), \(i.day)] \(i.title): \(i.body)"
+            if let c = i.chart, !c.points.isEmpty {
+                // ponytail: rates are the only charted values in 0..<1; counts are whole numbers
+                let rate = c.points.allSatisfy { $0.value < 1 }
+                let f: (Double) -> String = { rate ? Num.pct($0) : Num.k($0) }
+                line += "\n  \(c.label): " + c.points.map { "\($0.day) \(f($0.value))" }.joined(separator: ", ")
+                if let b = c.baseline { line += " (usual \(f(b)))" }
+            }
+            return line
+        }.joined(separator: "\n")
+    }
+
+    /// Market facts the insight cards don't spell out: where downloads come from and which languages the listing has.
+    static func marketContext(_ store: Store, app: String) -> String {
+        let to = store.lastDay(app) ?? Day.today(), from = Day.add(-27, to: to)
+        let top = store.byTerritory(app, .downloads, from: from, to: to).sorted { $0.value > $1.value }.prefix(10)
+            .map { "\(Territories.name($0.key)) (\($0.key)) \(Int($0.value))" }
+        let locales = store.listing(app).map(\.locale).sorted()
+        return "\nDownloads by country, last 28 days: " + (top.isEmpty ? "no data" : top.joined(separator: ", "))
+            + "\nApp Store listing languages: " + (locales.isEmpty ? "unknown (listing not synced)" : locales.joined(separator: ", "))
     }
 }
 
