@@ -103,6 +103,16 @@ Sales history arrives right away. Apple's analytics follow in one to two days.
 - macOS 26 or later on Apple silicon.
 - An App Store Connect API key that can read Sales and Reports. Editing your listing and replying to reviews need a key whose role allows it.
 
+## Use your data from Claude (MCP)
+
+Vane ships a read-only [MCP](https://modelcontextprotocol.io) server, so Claude Code, Claude Desktop or any MCP client can query everything Vane has synced: daily metrics per country, releases, reviews, listings and insights. It opens the database read-only and never sees your key.
+
+```bash
+claude mcp add -s user vane /Applications/Vane.app/Contents/MacOS/vane-mcp
+```
+
+For Claude Desktop, add `"vane": { "command": "/Applications/Vane.app/Contents/MacOS/vane-mcp" }` under `mcpServers` in `claude_desktop_config.json`. Then ask things like "which countries convert best over the last 3 months?".
+
 ## Privacy
 
 - Your key is kept in the macOS Keychain. Your reports live in a local database on your Mac.

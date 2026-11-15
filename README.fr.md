@@ -105,6 +105,16 @@ L'historique des ventes arrive tout de suite. Les analytics d'Apple suivent sous
 - macOS 26 ou plus récent, sur Apple silicon.
 - Une clé d'API App Store Connect qui peut lire les ventes et les rapports. Modifier votre fiche et répondre aux avis demandent une clé dont le rôle le permet.
 
+## Vos données dans Claude (MCP)
+
+Vane inclut un serveur [MCP](https://modelcontextprotocol.io) en lecture seule : Claude Code, Claude Desktop ou tout client MCP peut interroger tout ce que Vane a synchronisé, métriques quotidiennes par pays, versions, avis, fiches et insights. Il ouvre la base en lecture seule et ne voit jamais votre clé.
+
+```bash
+claude mcp add -s user vane /Applications/Vane.app/Contents/MacOS/vane-mcp
+```
+
+Pour Claude Desktop, ajoutez `"vane": { "command": "/Applications/Vane.app/Contents/MacOS/vane-mcp" }` sous `mcpServers` dans `claude_desktop_config.json`. Demandez ensuite par exemple « quels pays convertissent le mieux sur 3 mois ? ».
+
 ## Confidentialité
 
 - Votre clé est gardée dans le trousseau macOS. Vos rapports vivent dans une base de données locale sur votre Mac.

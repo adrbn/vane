@@ -8,6 +8,7 @@ let package = Package(
     targets: [
         .target(name: "AlmanacCore", path: "Sources/AlmanacCore"),
         .executableTarget(name: "Almanac", dependencies: ["AlmanacCore"], path: "Sources/Almanac"),
+        .executableTarget(name: "vane-mcp", path: "Sources/VaneMCP"),
         .testTarget(name: "AlmanacTests", dependencies: ["AlmanacCore"], path: "Tests/AlmanacTests"),
     ],
     swiftLanguageModes: [.v5]

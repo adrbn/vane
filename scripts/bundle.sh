@@ -7,12 +7,14 @@ CONFIG="${1:-release}"
 VERSION="0.1.8"
 
 swift build -c "$CONFIG" --product Almanac
+swift build -c "$CONFIG" --product vane-mcp
 BIN="$(swift build -c "$CONFIG" --show-bin-path)/Almanac"
 
 APP="build/Vane.app"
 rm -rf "$APP" build/Almanac.app   # old name
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents"
 cp "$BIN" "$APP/Contents/MacOS/Almanac"
+cp "$(dirname "$BIN")/vane-mcp" "$APP/Contents/MacOS/vane-mcp"
 cp Resources/countries.json "$APP/Contents/Resources/"
 # The icon is an Icon Composer document: actool (Xcode 26) renders it into Assets.car (Liquid Glass layers)
 # plus an AppIcon.icns fallback.
@@ -62,8 +64,10 @@ IDENTITY="$(security find-identity -v -p codesigning | grep -m1 'Developer ID Ap
 if [ -n "$IDENTITY" ]; then
   # Release builds get a secure timestamp, which notarization requires.
   TS="--timestamp=none"; [ "$CONFIG" = release ] && TS="--timestamp"
+  codesign --force --options runtime "$TS" --sign "$IDENTITY" "$APP/Contents/MacOS/vane-mcp"
   codesign --force --options runtime "$TS" --sign "$IDENTITY" "$APP"
 else
+  codesign --force --sign - "$APP/Contents/MacOS/vane-mcp"
   codesign --force --sign - "$APP"
 fi
 codesign --verify --strict "$APP" && echo "Built $APP (${IDENTITY:-ad-hoc})"
