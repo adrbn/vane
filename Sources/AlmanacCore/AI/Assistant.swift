@@ -20,7 +20,7 @@ public struct Assistant: Sendable {
     Don't repeat the numbers back as a list; use them inside sentences. A value marked "not available yet" is missing, not zero.
     Start with the answer itself. Never say Vane lacks a number that is in the data, and don't send the user to App Store Connect for something the data already shows.
     For App Store Optimization advice, follow Apple's own guidance: name (30 chars) and subtitle (30) and keyword field (100, comma separated, no spaces) are indexed; never repeat a word across them; plurals and the app's category are matched automatically.
-    Answer in the language with code \(Locale.preferredLanguages.first ?? "en").
+    Reply in the language of the developer's last message, whatever the app's language. If that message gives no clue (a bare number, a name), use the language with code \(Locale.preferredLanguages.first ?? "en").
     """
 
     public enum AssistantError: Error, LocalizedError {
