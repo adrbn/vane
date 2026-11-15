@@ -3,6 +3,7 @@ import SwiftUI
 
 struct AlmanacApp: App {
     @State private var model = AppModel()
+    init() { _ = Updater.controller }   // start the scheduled checks at launch, not on first menu open
 
     var body: some Scene {
         WindowGroup("Vane") {
@@ -15,6 +16,7 @@ struct AlmanacApp: App {
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Vane") { model.settingsAbout = true; model.settingsOpen = true }
+                Updater.menuItem
             }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") { model.settingsOpen = true }.keyboardShortcut(",")

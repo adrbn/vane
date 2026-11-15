@@ -16,7 +16,7 @@ targets:
       - path: ../Resources/countries.json
       - path: ../Resources/Localizable.xcstrings
       - path: ../Sources/Almanac
-        excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift]
+        excludes: [main.swift, App/AlmanacApp.swift, App/BackgroundAgent.swift, App/Updater.swift]
     dependencies:
       - package: AlmanacCore
       - target: VaneWidgets

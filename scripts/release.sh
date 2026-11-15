@@ -36,4 +36,16 @@ codesign --force --timestamp --sign "$SIGN_ID" "$DMG"
 notarize "$DMG"
 xcrun stapler staple "$DMG"
 contains accepted "$(spctl --assess --type open --context context:primary-signature -vv "$DMG" 2>&1 || true)" || die "Gatekeeper rejects the DMG."
+
+# Sparkle: the stapled app zipped, plus an appcast signed with .secrets/sparkle_ed_private_key (never committed;
+# lose it and installed copies can no longer update). Upload both next to the DMG: SUFeedURL reads
+# releases/latest/download/appcast.xml.
+KEY=.secrets/sparkle_ed_private_key
+[ -f "$KEY" ] || die "Missing $KEY."
+ZIP="$OUT/Vane.zip"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+URL="${UPDATE_URL:-https://github.com/adrbn/vane/releases/download/v$VERSION/Vane.zip}"
+scripts/appcast.sh "$ZIP" "$URL" "$KEY" > "$OUT/appcast.xml"
+
 printf '\n✓ %s  %s\n' "$DMG" "$(shasum -a 256 "$DMG" | cut -d' ' -f1)"
+printf '  gh release create v%s %s %s %s\n' "$VERSION" "$DMG" "$ZIP" "$OUT/appcast.xml"

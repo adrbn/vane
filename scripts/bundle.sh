@@ -4,7 +4,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
-VERSION="0.1.8"
+VERSION="${VERSION:-0.1.8}"
+# Sparkle compares CFBundleVersion: the commit count only goes up on main.
+BUILD="${BUILD:-$(git rev-list --count HEAD)}"
+FEED="${FEED:-https://github.com/adrbn/vane/releases/latest/download/appcast.xml}"
 
 swift build -c "$CONFIG" --product Almanac
 swift build -c "$CONFIG" --product vane-mcp
@@ -12,8 +15,10 @@ BIN="$(swift build -c "$CONFIG" --show-bin-path)/Almanac"
 
 APP="build/Vane.app"
 rm -rf "$APP" build/Almanac.app   # old name
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents" "$APP/Contents/Frameworks"
 cp "$BIN" "$APP/Contents/MacOS/Almanac"
+ditto "$(dirname "$BIN")/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
+install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Almanac"
 cp "$(dirname "$BIN")/vane-mcp" "$APP/Contents/MacOS/vane-mcp"
 cp Resources/countries.json "$APP/Contents/Resources/"
 # The icon is an Icon Composer document: actool (Xcode 26) renders it into Assets.car (Liquid Glass layers)
@@ -41,7 +46,11 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundleIconName</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleVersion</key><string>$BUILD</string>
+  <key>SUFeedURL</key><string>$FEED</string>
+  <key>SUPublicEDKey</key><string>C22tesvxKTWSmuKyusPIgfsCXRrlnn8BKHUgFCSzTPc=</string>
+  <key>SUEnableAutomaticChecks</key><true/>
+  <key>SUScheduledCheckInterval</key><integer>86400</integer>
   <key>LSMinimumSystemVersion</key><string>26.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.developer-tools</string>
   <key>NSHighResolutionCapable</key><true/>
@@ -64,10 +73,16 @@ IDENTITY="$(security find-identity -v -p codesigning | grep -m1 'Developer ID Ap
 if [ -n "$IDENTITY" ]; then
   # Release builds get a secure timestamp, which notarization requires.
   TS="--timestamp=none"; [ "$CONFIG" = release ] && TS="--timestamp"
-  codesign --force --options runtime "$TS" --sign "$IDENTITY" "$APP/Contents/MacOS/vane-mcp"
-  codesign --force --options runtime "$TS" --sign "$IDENTITY" "$APP"
+  SIGN=(codesign --force --options runtime "$TS" --sign "$IDENTITY")
 else
-  codesign --force --sign - "$APP/Contents/MacOS/vane-mcp"
-  codesign --force --sign - "$APP"
+  SIGN=(codesign --force --sign -)
 fi
-codesign --verify --strict "$APP" && echo "Built $APP (${IDENTITY:-ad-hoc})"
+# Inside out: Sparkle's helpers keep their ad-hoc signature otherwise, and then notarization fails and Sparkle
+# refuses to launch its installer (it must carry the app's identity).
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+for helper in "$SPARKLE"/XPCServices/*.xpc "$SPARKLE/Updater.app" "$SPARKLE/Autoupdate"; do
+  "${SIGN[@]}" --preserve-metadata=entitlements "$helper"
+done
+"${SIGN[@]}" "$SPARKLE" "$APP/Contents/MacOS/vane-mcp"
+"${SIGN[@]}" "$APP"
+codesign --verify --deep --strict "$APP" && echo "Built $APP (${IDENTITY:-ad-hoc})"
