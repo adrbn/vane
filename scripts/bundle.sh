@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
-VERSION="${VERSION:-0.1.8}"
+VERSION="${VERSION:-0.1.9}"
 # Sparkle compares CFBundleVersion: the commit count only goes up on main.
 BUILD="${BUILD:-$(git rev-list --count HEAD)}"
 FEED="${FEED:-https://github.com/adrbn/vane/releases/latest/download/appcast.xml}"
