@@ -34,11 +34,10 @@ struct MacSettingsView: View, SettingsBlocks {
                     .keyboardShortcut(.cancelAction)
             }
             GlassSegments(options: Tab.allCases.map { ($0, $0.title) }, selection: $tab.animation(.easeOut(duration: 0.2)))
-            // Sized to the tab's content so short tabs don't leave an empty sheet; scrolls only when the window is too short.
-            ViewThatFits(in: .vertical) {
-                page(t)
-                ScrollView { page(t) }.scrollIndicators(.never)
-            }
+            // One height for every tab, content pinned to the top, so switching tabs never moves the sheet's edges.
+            ScrollView { page(t).frame(maxWidth: .infinity, alignment: .leading) }
+                .scrollIndicators(.never)
+                .frame(maxHeight: 520)
         }
         .foregroundStyle(t.label)
         .font(t.font(13))
