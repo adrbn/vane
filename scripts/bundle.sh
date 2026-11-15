@@ -17,8 +17,8 @@ cp Resources/countries.json "$APP/Contents/Resources/"
 # The icon is an Icon Composer document: actool (Xcode 26) renders it into Assets.car (Liquid Glass layers)
 # plus an AppIcon.icns fallback.
 rm -rf build/icon && mkdir -p build/icon
-xcrun actool Resources/AppIcon.icon --compile build/icon --platform macosx --minimum-deployment-target 26.0 \
-  --app-icon AppIcon --output-partial-info-plist build/icon/partial.plist >/dev/null
+xcrun actool "$PWD/Resources/AppIcon.icon" --compile "$PWD/build/icon" --platform macosx --minimum-deployment-target 26.0 \
+  --app-icon AppIcon --output-partial-info-plist "$PWD/build/icon/partial.plist" >/dev/null
 cp build/icon/Assets.car build/icon/AppIcon.icns "$APP/Contents/Resources/"
 # Translations: the string catalog compiles into one .lproj per language (scripts/strings.sh refreshes it).
 rm -rf build/strings && mkdir -p build/strings
