@@ -88,16 +88,15 @@ struct InsightsView: View {
                 grid(shown)
                 // A quiet feed still shows what is being watched, as when there is nothing to flag.
                 group(String(localized: "Watching"), String(localized: "Last 28 days against each metric's usual range")).padding(.top, 8)
-                // Two rows of three that share the rest of the window height: taller sparklines, no hole below.
+                // Two rows of three at a fixed height: a 4-point sparkline stretched to fill a full-screen window reads as a few huge straight lines.
                 VStack(spacing: 16) {
                     ForEach([0, 3], id: \.self) { start in
                         HStack(spacing: 16) {
                             ForEach(NothingToFlag.watched[start..<start + 3], id: \.self) { WatchCard(metric: $0, app: model.appId ?? "") }
                         }
-                        .frame(maxHeight: .infinity)
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .frame(maxHeight: .infinity)
             } else {
                 if !new.isEmpty {
                     group(String(localized: "New"), String(localized: "\(new.count) since yesterday"))
@@ -494,7 +493,7 @@ private struct WatchCard: View {
                         .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 56, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading).frame(height: 64)
             if has {
                 Text(band.map { String(localized: "Usual \(fmt($0.0))–\(fmt($0.1))") } ?? String(localized: "Usual range after 13 weeks of data"))
                     .font(t.font(11)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)

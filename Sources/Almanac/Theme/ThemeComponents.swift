@@ -149,11 +149,10 @@ struct RefreshButton: View {
     var body: some View {
         GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : String(localized: "Refresh Now (⌘R)")) { Task { await model.refresh() } }
             .overlay {
-                TimelineView(.animation(paused: !model.syncing)) { tl in
-                    Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)
-                        .rotationEffect(.degrees(model.syncing ? tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1) * 360 : 0))
-                }
-                .allowsHitTesting(false)
+                // The system rotate effect turns the arrow around its arc's center; rotationEffect turns the glyph's box, which wobbles.
+                Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)
+                    .symbolEffect(.rotate.byLayer, options: .repeat(.continuous), isActive: model.syncing)
+                    .allowsHitTesting(false)
             }
             .disabled(model.syncing)
             .accessibilityLabel("Refresh")

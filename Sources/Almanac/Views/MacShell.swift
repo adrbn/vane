@@ -268,6 +268,7 @@ struct ThemedAppSwitcher: View {
 struct ThemedSyncFooter: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
+    @State private var showErrors = false
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if model.syncing {
@@ -277,8 +278,11 @@ struct ThemedSyncFooter: View {
                 Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)
             }
             if !model.syncErrors.isEmpty {
-                Text("\(model.syncErrors.count) problems with the last refresh")
-                    .foregroundStyle(t.warn).help(model.syncErrors.joined(separator: "\n"))
+                Button { showErrors = true } label: {
+                    Text("\(model.syncErrors.count) problems with the last refresh").foregroundStyle(t.warn).multilineTextAlignment(.leading)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showErrors, arrowEdge: .trailing) { SyncErrorList(errors: model.syncErrors) }
             }
         }
         .font(t.font(11))
@@ -442,3 +446,17 @@ private struct SwipeArrow: View {
     }
 }
 #endif
+
+/// What went wrong in the last refresh, one step per line, selectable so it can be copied into a bug report.
+private struct SyncErrorList: View {
+    @Environment(AppModel.self) private var model
+    var errors: [String]
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Problems with the last refresh").font(.headline)
+            ForEach(errors, id: \.self) { Text($0).font(.callout).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) }
+            Button("Refresh Now") { Task { await model.refresh() } }.disabled(model.syncing)
+        }
+        .padding(16).frame(width: 360, alignment: .leading)
+    }
+}
