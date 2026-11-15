@@ -525,18 +525,10 @@ private struct BandSpark: View {
             if let band {
                 ctx.fill(Path(CGRect(x: 0, y: y(band.1), width: size.width, height: y(band.0) - y(band.1))), with: .color(t.fill))
             }
-            let pts = values.enumerated().map { CGPoint(x: size.width * CGFloat($0.offset) / CGFloat(values.count - 1), y: y($0.element)) }
-            // Few points (weekly analytics): a smooth curve, not a few long straight segments.
-            let sparse = pts.count < 10
             var p = Path()
-            p.move(to: pts[0])
-            for i in 1..<pts.count {
-                if sparse {
-                    let a = pts[i - 1], b = pts[i], dx = (b.x - a.x) / 2
-                    p.addCurve(to: b, control1: CGPoint(x: a.x + dx, y: a.y), control2: CGPoint(x: b.x - dx, y: b.y))
-                } else {
-                    p.addLine(to: pts[i])
-                }
+            for (i, v) in values.enumerated() {
+                let pt = CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1), y: y(v))
+                i == 0 ? p.move(to: pt) : p.addLine(to: pt)
             }
             ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
         }
