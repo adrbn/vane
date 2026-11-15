@@ -5,6 +5,8 @@ import Security
 /// The App Store Connect key lives in the login Keychain, never in a file or UserDefaults.
 enum Keychain {
     private static let service = "dev.almanac.asc"
+    /// Demo windows never touch the real key: no Keychain prompt, and nothing real on screen.
+    private static let off = CommandLine.arguments.contains("--demo")
 
     static func credentials() -> ASCCredentials {
         ASCCredentials(issuerId: read("issuer") ?? "", keyId: read("keyId") ?? "", privateKeyPEM: read("p8") ?? "",
@@ -22,6 +24,7 @@ enum Keychain {
     }
 
     private static func read(_ account: String) -> String? {
+        guard !off else { return nil }
         var q = query(account)
         q[kSecReturnData as String] = true
         var out: AnyObject?
@@ -30,6 +33,7 @@ enum Keychain {
     }
 
     private static func write(_ account: String, _ value: String) {
+        guard !off else { return }
         delete(account)
         guard !value.isEmpty else { return }
         var q = query(account)
@@ -38,5 +42,5 @@ enum Keychain {
         SecItemAdd(q as CFDictionary, nil)
     }
 
-    private static func delete(_ account: String) { SecItemDelete(query(account) as CFDictionary) }
+    private static func delete(_ account: String) { if !off { SecItemDelete(query(account) as CFDictionary) } }
 }

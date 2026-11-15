@@ -26,7 +26,7 @@ struct RootView: View {
         }
         .overlay {
             if model.settingsOpen {
-                CenteredSheet(width: 640, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
+                CenteredSheet(width: 640, pinnedTop: true, onDismiss: { model.settingsOpen = false }) { MacSettingsView() }
                     .transition(.opacity)
             }
         }
