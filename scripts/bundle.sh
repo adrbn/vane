@@ -31,7 +31,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <plist version="1.0"><dict>
   <key>CFBundleIdentifier</key><string>dev.almanac.app</string>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
-  <key>CFBundleLocalizations</key><array><string>en</string><string>fr</string><string>es</string><string>it</string></array>
+  <key>CFBundleLocalizations</key><array><string>en</string><string>ca</string><string>de</string><string>es</string><string>fr</string><string>it</string><string>nl</string><string>pt</string><string>ru</string><string>tr</string></array>
   <key>CFBundleName</key><string>Vane</string>
   <key>CFBundleDisplayName</key><string>Vane</string>
   <key>CFBundleExecutable</key><string>Almanac</string>

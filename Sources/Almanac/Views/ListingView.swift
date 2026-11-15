@@ -23,7 +23,7 @@ struct LegacyListingView: View {
                         .labelsHidden().fixedSize()
                         Spacer()
                         Button("Review with AI") {
-                            model.ask("Review my App Store listing for \(Locale(identifier: "en").localizedString(forIdentifier: l.locale) ?? l.locale). What would you change in name, subtitle and keywords to rank for more searches? Be specific.")
+                            model.ask(String(localized: "Review my App Store listing for \(Locale.current.localizedString(forIdentifier: l.locale) ?? l.locale). What would you change in name, subtitle and keywords to rank for more searches? Be specific."))
                         }
                     }
                     field(String(localized: "Name"), l.name, limit: 30)

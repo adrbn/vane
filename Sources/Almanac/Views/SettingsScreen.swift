@@ -55,6 +55,9 @@ struct MacSettingsView: View, SettingsBlocks {
             switch tab {
             case .general:
                 group(t, String(localized: "Appearance")) { ThemePicker() }
+                group(t, String(localized: "Language")) {
+                    row(t, String(localized: "Interface language"), String(localized: "Vane restarts in the new language.")) { LanguagePicker() }
+                }
                 RefreshSettings()
             case .account: ConnectForm()
             case .assistant: assistant(t)

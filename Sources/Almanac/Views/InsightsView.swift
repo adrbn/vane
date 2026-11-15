@@ -93,7 +93,7 @@ struct InsightCard: View {
 
     @ViewBuilder private var footer: some View {
         HStack {
-            Button { model.ask("Explain this insight and what I should do about it: \(insight.title). \(insight.body)") } label: {
+            Button { model.ask(String(localized: "Explain this insight and what I should do about it: \(insight.title). \(insight.body)")) } label: {
                 Label("Ask", systemImage: "bubble.left")
             }
             .buttonStyle(.borderless).font(.caption).foregroundStyle(.secondary)

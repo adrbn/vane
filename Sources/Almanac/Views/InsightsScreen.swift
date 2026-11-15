@@ -223,7 +223,7 @@ struct InsightCardView: View {
         HStack(spacing: 8) {
             SmallButton(label: String(localized: "Ask"), symbol: "sparkles") {
                 asked = insight.id
-                model.ask("What should I make of “\(insight.title)”, and what should I do about it?")
+                model.ask(String(localized: "What should I make of “\(insight.title)”, and what should I do about it?"))
             }
             switch insight.action {
             case .fixKeywords: SmallButton(label: String(localized: "Fix…"), prominent: true) { fixing = insight }

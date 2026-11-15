@@ -1,9 +1,10 @@
 import Foundation
 
-// The UI is English with en_US numbers and dates whatever the Mac's region ("Nov 11", "1,000"), including strings built in AlmanacCore.
-// Set before anything reads Locale.current, which is cached on first use.
-UserDefaults.standard.set("en_US", forKey: "AppleLocale")
-UserDefaults.standard.set(["en-US"], forKey: "AppleLanguages")
+// The UI follows the language picked in Settings (English with en_US numbers and dates by default, whatever the Mac's region),
+// including strings built in AlmanacCore. Set before anything reads Locale.current, which is cached on first use.
+let language = AppLanguage.current
+UserDefaults.standard.set(language.locale, forKey: "AppleLocale")
+UserDefaults.standard.set([language.id], forKey: "AppleLanguages")
 
 if CommandLine.arguments.contains("--sync") {
     BackgroundAgent.runHeadless()

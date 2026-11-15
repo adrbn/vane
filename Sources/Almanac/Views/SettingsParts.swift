@@ -46,6 +46,51 @@ extension SettingsBlocks {
     }
 }
 
+#if os(macOS)
+/// The interface language, applied at launch (main.swift); English with US formats unless the user picks another.
+struct AppLanguage: Identifiable, Hashable {
+    let id: String, locale: String, name: String
+    static let key = "appLanguage"
+    static let all = [
+        AppLanguage(id: "en", locale: "en_US", name: "English"),
+        AppLanguage(id: "ca", locale: "ca_ES", name: "Català"),
+        AppLanguage(id: "de", locale: "de_DE", name: "Deutsch"),
+        AppLanguage(id: "es", locale: "es_ES", name: "Español"),
+        AppLanguage(id: "fr", locale: "fr_FR", name: "Français"),
+        AppLanguage(id: "it", locale: "it_IT", name: "Italiano"),
+        AppLanguage(id: "nl", locale: "nl_NL", name: "Nederlands"),
+        AppLanguage(id: "pt", locale: "pt_BR", name: "Português"),
+        AppLanguage(id: "tr", locale: "tr_TR", name: "Türkçe"),
+        AppLanguage(id: "ru", locale: "ru_RU", name: "Русский"),
+    ]
+    static var current: AppLanguage {
+        let id = UserDefaults.standard.string(forKey: key) ?? "en"
+        return all.first { $0.id == id } ?? all[0]
+    }
+}
+
+/// Picking a language restarts Vane in it: Locale.current and the string tables are fixed for a process's lifetime.
+struct LanguagePicker: View {
+    @Environment(\.theme) private var t
+    @State private var selection = AppLanguage.current.id
+    var body: some View {
+        Picker("Language", selection: $selection) {
+            ForEach(AppLanguage.all) { Text($0.name).tag($0.id) }
+        }
+        .labelsHidden().fixedSize()
+        .onChange(of: selection) {
+            UserDefaults.standard.set(selection, forKey: AppLanguage.key)
+            let config = NSWorkspace.OpenConfiguration()
+            config.createsNewApplicationInstance = true
+            config.arguments = Array(CommandLine.arguments.dropFirst())  // a demo window stays a demo window
+            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { _, _ in
+                DispatchQueue.main.async { NSApp.terminate(nil) }
+            }
+        }
+    }
+}
+#endif
+
 /// The four theme miniatures; picking one switches the whole app.
 struct ThemePicker: View {
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
