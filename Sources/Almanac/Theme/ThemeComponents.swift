@@ -151,7 +151,7 @@ struct RefreshButton: View {
             .overlay {
                 // The system rotate effect turns the arrow around its arc's center; rotationEffect turns the glyph's box, which wobbles.
                 Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)
-                    .symbolEffect(.rotate.byLayer, options: .repeat(.continuous), isActive: model.syncing)
+                    .symbolEffect(.rotate.byLayer, options: .repeat(.continuous).speed(2), isActive: model.syncing)
                     .allowsHitTesting(false)
             }
             .disabled(model.syncing)
