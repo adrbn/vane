@@ -69,10 +69,14 @@ struct ChatPanel: View {
         case "error":
             Label(m.text, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout)
         default:
-            Text((try? AttributedString(markdown: m.text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(m.text))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contextMenu { Button("Copy") { copy(m.text) } }
+            let (text, links) = AssistantLink.extract(from: m.text)
+            VStack(alignment: .leading, spacing: 8) {
+                Text((try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(text))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contextMenu { Button("Copy") { copy(text) } }
+                AssistantLinkButtons(links: links)
+            }
         }
     }
 

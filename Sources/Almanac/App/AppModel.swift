@@ -13,10 +13,18 @@ enum Pane: Hashable {
     static var fromLaunchArgument: Pane? {
         let args = CommandLine.arguments
         guard let i = args.firstIndex(of: "--pane"), i + 1 < args.count else { return nil }
-        let v = args[i + 1]
-        if v.hasPrefix("metric:") { return Metric(rawValue: String(v.dropFirst(7))).map(Pane.metric) }
-        return ["insights": .insights, "listing": .listing, "reviews": .reviews, "appStore": .appStore,
-                "sales": .sales, "usage": .usage, "territories": .territories][v]
+        return Pane(name: args[i + 1])
+    }
+
+    /// `sales`, `metric:downloads`… shared by launch flags and the assistant's buttons.
+    init?(name v: String) {
+        if v.hasPrefix("metric:") {
+            guard let m = Metric(rawValue: String(v.dropFirst(7))) else { return nil }
+            self = .metric(m); return
+        }
+        guard let p = (["insights": .insights, "listing": .listing, "reviews": .reviews, "appStore": .appStore,
+                        "sales": .sales, "usage": .usage, "territories": .territories] as [String: Pane])[v] else { return nil }
+        self = p
     }
 }
 
@@ -82,6 +90,7 @@ final class AppModel {
         || (!CommandLine.arguments.contains("--demo") && !Keychain.credentials().isComplete && !UserDefaults.standard.bool(forKey: "onboarded"))
     var chatContext = ""
     var chatSeed: String?               // question pre-filled by "Ask about this" buttons
+    var pendingLink: AssistantLink?     // filters for the screen an assistant button opened; that screen applies and clears it
     var syncing = false
     var syncStatus = ""
     var syncErrors: [String] = []
@@ -163,6 +172,18 @@ final class AppModel {
 
     func togglePin(_ m: Metric) {
         if let i = pinned.firstIndex(of: m) { pinned.remove(at: i) } else { pinned.append(m) }
+    }
+
+    /// An assistant button: navigate (and set the period or the screen's filters) or pin a chart. Nothing else.
+    func follow(_ link: AssistantLink) {
+        switch link.action {
+        case .pin(let m): if !pinned.contains(m) { pinned.append(m) }
+        case .open(let name):
+            guard let pane = Pane(name: name) else { return }
+            if let days = link.period { UserDefaults.standard.set(days, forKey: "period") }
+            pendingLink = name == "listing" || name == "reviews" ? link : nil   // the only screens with filters to apply
+            selection = pane
+        }
     }
 
     func ask(_ question: String) {

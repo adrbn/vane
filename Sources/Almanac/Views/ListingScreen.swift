@@ -42,6 +42,11 @@ struct ListingView: View {
                     editor(live: l)
                 }
                 .onAppear { if locale != l.locale { locale = l.locale } }
+                .onChange(of: model.pendingLink, initial: true) {
+                    guard let link = model.pendingLink else { return }
+                    model.pendingLink = nil
+                    if let want = link.locale, live.contains(where: { $0.locale == want }) { locale = want }
+                }
             } else {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No listing yet").font(t.font(15, .bold))

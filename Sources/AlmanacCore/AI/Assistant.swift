@@ -66,9 +66,10 @@ public struct Assistant: Sendable {
                let json = try? JSONSerialization.data(withJSONObject: ["mcpServers": ["vane": ["command": server, "args": [database]]]]) {
                 cmd = "claude -p --tools '' --strict-mcp-config --mcp-config \(Self.quote(String(decoding: json, as: UTF8.self)))"
                     + " --allowedTools mcp__vane__schema mcp__vane__query --model \(Self.quote(model)) --output-format text"
-                    + " --system-prompt \(Self.quote(Self.systemPrompt + "\n" + Self.toolsPrompt))"
+                    + " --system-prompt \(Self.quote(Self.systemPrompt + "\n" + Self.toolsPrompt + "\n" + AssistantLink.prompt))"
             } else {
-                cmd = "claude -p --tools '' --model \(Self.quote(model)) --output-format text --system-prompt \(Self.quote(Self.systemPrompt))"
+                let links = database == nil ? "" : "\n" + AssistantLink.prompt   // chats only: they show the buttons
+                cmd = "claude -p --tools '' --model \(Self.quote(model)) --output-format text --system-prompt \(Self.quote(Self.systemPrompt + links))"
             }
         case .codex:
             prompt = Self.systemPrompt + "\n\n" + prompt

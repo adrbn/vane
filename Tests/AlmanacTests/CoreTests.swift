@@ -190,3 +190,24 @@ private func demoStore() throws -> Store {
     #expect(s.series("a", .pageCR, from: "2026-11-01", to: "2026-11-10").map(\.day) == ["2026-11-10"])
     #expect(s.series("a", .ttr, from: "2026-11-01", to: "2026-11-10").map(\.value) == [0.005])
 }
+
+@Test func assistantLinksKeepOnlyKnownDestinations() {
+    let text = """
+    Germany is mostly App Store search.
+    [[open:listing?locale=de-DE|German listing]]
+    [[open:reviews?filter=unanswered&rating=1&country=DE|Avis 1★]]
+    [[open:metric:page_cr?period=90]]
+    [[open:settings|Delete everything]]
+    [[pin:ttr|Pin]] [[open:listing?locale=../../etc]]
+    """
+    let (clean, links) = AssistantLink.extract(from: text)
+    #expect(clean == "Germany is mostly App Store search.")
+    #expect(links.count == 3)
+    #expect(links[0] == AssistantLink(action: .open(pane: "listing"), label: "German listing", locale: "de-DE"))
+    #expect(links[1].unanswered && links[1].rating == 1 && links[1].country == "DE")
+    #expect(links[2].action == .open(pane: "metric:page_cr") && links[2].period == 90)
+    // unknown pane dropped, bad locale ignored but link kept as plain "listing" (4th, cut by the limit of 3)
+    #expect(AssistantLink.extract(from: "[[open:settings]]").links.isEmpty)
+    #expect(AssistantLink.extract(from: "[[open:listing?locale=../../etc]]").links.first?.locale == nil)
+    #expect(AssistantLink.extract(from: "[[pin:nope]]").links.isEmpty)
+}

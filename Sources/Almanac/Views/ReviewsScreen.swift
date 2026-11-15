@@ -55,6 +55,12 @@ struct ReviewsView: View {
             model.chatContext = "Screen: Reviews for \(model.app?.name ?? "")\n"
                 + all.prefix(60).map { "[\($0.rating)★ \($0.created) \($0.territory)\($0.response == nil ? "" : ", replied")] \($0.title): \($0.body)" }.joined(separator: "\n")
         }
+        .onChange(of: model.pendingLink, initial: true) {
+            // An assistant button: start from a clean filter set, then apply only what the button asks for.
+            guard let link = model.pendingLink else { return }
+            model.pendingLink = nil
+            needsReply = link.unanswered; rating = link.rating ?? 0; territory = link.country; version = nil; search = ""
+        }
     }
 
     // MARK: Toolbar

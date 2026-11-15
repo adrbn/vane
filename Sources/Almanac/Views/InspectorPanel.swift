@@ -111,12 +111,16 @@ struct InspectorPanel: View {
                 }
             }
         default:
-            ChatMarkdown(text: m.text)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contextMenu {
-                    Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(m.text, forType: .string) }
-                }
+            let (text, links) = AssistantLink.extract(from: m.text)
+            VStack(alignment: .leading, spacing: 10) {
+                ChatMarkdown(text: text)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contextMenu {
+                        Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string) }
+                    }
+                AssistantLinkButtons(links: links)
+            }
         }
     }
 
@@ -201,3 +205,4 @@ private struct ChatMarkdown: View {
     }
 }
 #endif
+
