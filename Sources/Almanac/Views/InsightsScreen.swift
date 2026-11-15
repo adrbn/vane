@@ -494,7 +494,7 @@ private struct WatchCard: View {
                         .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 56, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 24, maxHeight: .infinity)
             if has {
                 Text(band.map { String(localized: "Usual \(fmt($0.0))–\(fmt($0.1))") } ?? String(localized: "Usual range after 13 weeks of data"))
                     .font(t.font(11)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
