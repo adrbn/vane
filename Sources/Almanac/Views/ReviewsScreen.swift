@@ -215,8 +215,14 @@ struct ReviewsView: View {
                     }
                     if versions.isEmpty { Text("No releases recorded yet").font(t.font(13)).foregroundStyle(t.label3) }
                 }
+                .padding(.bottom, 24)   // the last row scrolls clear of the fade
             }
             .scrollIndicators(.never)
+            // The list runs past the card: fade it out instead of cutting a row in half.
+            .mask(VStack(spacing: 0) {
+                Color.black
+                LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 28)
+            })
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .themedCard(padding: 20)
@@ -238,7 +244,7 @@ struct ReviewsView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(Array(shown.enumerated()), id: \.element.id) { i, r in
-                            ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying)
+                            ThemedReviewRow(review: r, version: ReviewInfo.version(r, versions), replying: $replying, highlight: search)
                                 .overlay(alignment: .top) { if i > 0 { t.sep.frame(height: 1) } }
                         }
                         // A short list leaves room: use it for the context of those reviews, from real data.
@@ -270,6 +276,16 @@ private struct ReviewContext: View {
     let reviews: [Review]
     let versions: [VersionMark]
 
+    /// Releases a few days apart would print over each other: label the newest of each cluster, keep every rule.
+    static func labeled(_ vs: [VersionMark], span: Int) -> Set<String> {
+        let gap = max(1, span / 14)   // ponytail: ~a label's width on a wide chart; measure text if narrow windows still clash
+        var keep = Set<String>(), last: String?
+        for v in vs.sorted(by: { $0.day > $1.day }) where last.map({ Day.between(v.day, $0) >= gap }) ?? true {
+            keep.insert(v.day + v.version); last = v.day
+        }
+        return keep
+    }
+
     var body: some View {
         let app = model.appId ?? ""
         let daily = model.store.series(app, .downloads)
@@ -296,10 +312,14 @@ private struct ReviewContext: View {
                     BarMark(x: .value("Week", Day.date(w.day), unit: .weekOfYear), y: .value("Downloads", w.value))
                         .foregroundStyle(t.accent.opacity(0.35)).cornerRadius(3)
                 }
-                ForEach(versions.filter { $0.day >= (weeks.first?.day ?? "0") }) { v in
+                let shownVersions = versions.filter { $0.day >= (weeks.first?.day ?? "0") }
+                let labeled = Self.labeled(shownVersions, span: Day.between(weeks.first?.day ?? Day.today(), Day.today()))
+                ForEach(shownVersions) { v in
                     RuleMark(x: .value("Release", Day.date(v.day)))
                         .foregroundStyle(t.label3).lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                        .annotation(position: .top, alignment: .leading) { Text(v.version).font(t.font(10)).foregroundStyle(t.label2) }
+                        .annotation(position: .top, alignment: .leading) {
+                            if labeled.contains(v.day + v.version) { Text(v.version).font(t.font(10)).foregroundStyle(t.label2) }
+                        }
                 }
                 ForEach(reviews) { r in
                     let w = Day.weekStart(r.created)
@@ -356,22 +376,35 @@ struct ThemedReviewRow: View {
     var review: Review
     var version: String?
     @Binding var replying: Review?
+    var highlight = ""
     @State private var translation: String?
     @State private var config: TranslationSession.Configuration?
+
+    /// Marks every match of the search, case-insensitive like the filter.
+    private func marked(_ s: String) -> AttributedString {
+        var a = AttributedString(s)
+        guard !highlight.isEmpty else { return a }
+        var from = s.startIndex
+        while let r = s.range(of: highlight, options: .caseInsensitive, range: from..<s.endIndex, locale: .current) {
+            if let ar = Range(r, in: a) { a[ar].backgroundColor = t.accent.opacity(0.22) }
+            from = r.upperBound
+        }
+        return a
+    }
 
     var body: some View {
         let foreign = ReviewInfo.language(review.title + ". " + review.body).map { $0 != "en" } ?? false
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 ThemedStars(rating: review.rating)
-                Text(review.title).font(t.font(13, .semibold)).fixedSize(horizontal: false, vertical: true)
+                Text(marked(review.title)).font(t.font(13, .semibold)).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Text(AppStoreData.md(review.created)).font(t.font(11)).foregroundStyle(t.label2)
             }
-            Text(translation ?? review.body).font(t.font(13)).lineSpacing(3).textSelection(.enabled)
+            Text(translation.map { AttributedString($0) } ?? marked(review.body)).font(t.font(13)).lineSpacing(3).textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .center, spacing: 8) {
-                Text(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { [String(localized: "Version \($0)")] } ?? [])).joined(separator: " · "))
+                Text(marked(([review.reviewer, "\(Territories.flag(review.territory)) \(Territories.name(review.territory))"] + (version.map { [String(localized: "Version \($0)")] } ?? [])).joined(separator: " · ")))
                     .font(t.font(11)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 if foreign {
