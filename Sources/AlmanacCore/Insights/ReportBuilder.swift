@@ -90,7 +90,9 @@ public struct ReportBuilder {
         }
         let k = [kpi(.downloads), kpi(.pageCR), kpi(.newRatings), kpi(.sales), kpi(.activeSubs)]
         let (dl, cr, ratings, sales, subs) = (k[0], k[1], k[2], k[3], k[4])
-        let analytics = store.lastDay(app, .impressions) != nil
+        // Apple's analytics start later than sales: a period before the first report has no impressions, not zero.
+        let analyticsStart = store.series(app, .impressions).first?.day
+        let analytics = analyticsStart.map { $0 <= end } ?? false
         let headline = analytics
             ? [kpi(.firstDownloads), kpi(.impressions), kpi(.ttr), cr, kpi(.proceeds)]
             : [dl, kpi(.proceeds), ratings, subs].enumerated().filter { $0.offset == 0 || $0.element.value > 0 || $0.element.previous > 0 }.map(\.element)
@@ -121,8 +123,11 @@ public struct ReportBuilder {
         let first = store.total(app, .firstDownloads, from: start, to: end), redl = store.total(app, .redownloads, from: start, to: end)
         let ttr = store.total(app, .ttr, from: start, to: end)
         var sections = [Report.Section(heading: String(localized: "Downloads & visibility"), paragraphs: !analytics ? [
-            String(localized: "Downloads were \(dl.metric.format(dl.value)), \(change(dl)). Impressions, product page views and first-time downloads arrive with Apple's first analytics report."),
+            analyticsStart.map { String(localized: "First-time downloads: \(Metric.firstDownloads.format(first)). Redownloads: \(Metric.redownloads.format(redl)). Apple's analytics for this app start on \(Day.date($0).formatted(.dateTime.month(.abbreviated).day())), so this \(unit) has no impressions or product page views.") }
+                ?? String(localized: "Downloads were \(dl.metric.format(dl.value)), \(change(dl)). Impressions, product page views and first-time downloads arrive with Apple's first analytics report."),
         ] : [
+            // A period that starts before Apple's analytics: say from when the funnel counts.
+            (analyticsStart.map { $0 > start ? String(localized: "Apple's analytics start on \(Day.date($0).formatted(.dateTime.month(.abbreviated).day())), so these figures count from then. ") : "" } ?? "") +
             String(localized: "Impressions were \(Metric.impressions.format(imp))\(impPrev > 0 ? String(format: " (%@%.1f%%)", imp >= impPrev ? "+" : "−", abs(imp / impPrev - 1) * 100) : ""), product page views \(Metric.pageViews.format(views)). Page conversion finished at \(cr.metric.format(cr.value)) and tap-through at \(Metric.ttr.format(ttr))."),
             String(localized: "First-time downloads: \(Metric.firstDownloads.format(first)). Redownloads: \(Metric.redownloads.format(redl))."),
         ])]

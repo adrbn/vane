@@ -111,7 +111,9 @@ struct ReportView: View {
     private func complete(_ r: ReportRef) -> ReportRef {
         guard let last = model.store.lastDay(r.appId) else { return r }
         var r = r
-        for _ in 0..<3 where end(r) > last { r = shifted(r, -1) }
+        // Step back to the last complete period, unless that one predates the data: a young app's year is this year so far.
+        let first = dataSpan?.lowerBound ?? last
+        for _ in 0..<3 where end(r) > last && end(shifted(r, -1)) >= first { r = shifted(r, -1) }
         return r
     }
 

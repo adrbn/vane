@@ -302,3 +302,18 @@ final class StubASC: URLProtocol, @unchecked Sendable {
     #expect(DailySummary.newDay(s) == last)           // a day later: announce it, once
     #expect(DailySummary.newDay(s) == nil)
 }
+
+@Test func reportBeforeAnalyticsShowsNoImpressionsInsteadOfZero() throws {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent("almanac-test-\(UUID().uuidString).sqlite").path
+    let s = try Store(path: path)
+    try s.write([
+        .init("a", "2026-10-10", .firstDownloads, "", 50),
+        .init("a", "2026-11-10", .firstDownloads, "", 10),
+        .init("a", "2026-11-10", .impressions, "", 1000),
+    ])
+    let october = ReportBuilder(store: s, app: "a").build(.month, start: "2026-10-01")
+    #expect(!october.hasAnalytics)
+    #expect(!october.headline.contains { $0.metric == .impressions })
+    #expect(october.sections[0].paragraphs[0].contains("analytics for this app start on"))
+    #expect(ReportBuilder(store: s, app: "a").build(.month, start: "2026-11-01").hasAnalytics)
+}

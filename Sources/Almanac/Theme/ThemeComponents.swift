@@ -267,7 +267,8 @@ struct Change {
     var flat: Bool
 
     init(_ metric: Metric, value: Double, previous: Double, arrows: Bool = true) {
-        if metric.isRate {
+        // A rate of exactly 0 means no analytics for that period (Apple's reports start later), not 0 %.
+        if metric.isRate, previous > 0 {
             let pts = (value - previous) * 100
             up = pts >= 0; flat = abs(pts) < 0.05
             let sign = arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−")
