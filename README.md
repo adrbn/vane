@@ -74,11 +74,14 @@ Same app, same numbers. Pick one in Settings; each keeps its own light or dark s
 - Daily charts up to 90 days, complete weeks for a year. Partial periods are never drawn as a drop.
 - Sales by month or week with release markers, Usage (sessions, crashes, ratings, subscriptions), CSV export.
 - Territories: world map and table of first-time downloads by country.
+- All apps, or a group you make: every screen totals them.
+- Events: add a campaign, a sale or a post and it shows on the charts next to releases.
 
 **Insights**
 - Drops and milestones measured against your usual range (10th to 90th percentile of the previous 63 days).
 - Keyword checks: words already in your name or subtitle, a missing subtitle, with a one-click fix.
-- Background refresh, with an optional notification when there's something new.
+- Download milestones draw your cumulative downloads crossing the line, and how long the next one takes at your current pace.
+- Background refresh, with an optional notification when there's something new, a daily numbers notification, and muting per type of insight.
 
 **Listing and reviews**
 - Edit name, subtitle, keywords, promotional text and description per language. Upload sends only what changed.
@@ -87,7 +90,8 @@ Same app, same numbers. Pick one in Settings; each keeps its own light or dark s
 
 **Reports and assistant**
 - Weekly, monthly and yearly reports written from your numbers. Share as text or export a PDF.
-- Optional chat about your numbers through the Claude Code or Codex command line already on your Mac.
+- Optional chat about your numbers through the Claude Code or Codex command line already on your Mac. It can look up any synced figure (read-only), knows your events, and answers in your language.
+- Interface in 10 languages, picked in Settings.
 
 ## Get it
 
@@ -98,10 +102,13 @@ Same app, same numbers. Pick one in Settings; each keeps its own light or dark s
 
 Sales history arrives right away. Apple's analytics follow in one to two days.
 
+Vane checks for updates once a day and installs them when you agree (Vane → Check for Updates…).
+
 ## Requirements
 
 - macOS 26 or later on Apple silicon.
 - An App Store Connect API key that can read Sales and Reports. Editing your listing and replying to reviews need a key whose role allows it.
+- Apple lets only an Admin key switch on the analytics reports, once per app. If yours can't, Vane offers to use an Admin key once (sent, then forgotten) or copies a ready-made message for your admin.
 
 ## Use your data from Claude (MCP)
 
@@ -116,7 +123,7 @@ For Claude Desktop, add `"vane": { "command": "/Applications/Vane.app/Contents/M
 ## Privacy
 
 - Your key is kept in the macOS Keychain. Your reports live in a local database on your Mac.
-- Vane talks to three places: `api.appstoreconnect.apple.com` for your reports, `itunes.apple.com` for app icons, and the European Central Bank for daily exchange rates. No account, no server, no analytics.
+- Vane talks to four places: `api.appstoreconnect.apple.com` for your reports, `itunes.apple.com` for app icons, the European Central Bank for daily exchange rates, and GitHub to check for updates. No account, no server, no analytics.
 - The assistant is off until you use it. It runs your own command-line tool, which sends your question, the numbers on screen and any figures it looks up in your Vane data (read-only) to that tool's provider.
 
 ## Build from source

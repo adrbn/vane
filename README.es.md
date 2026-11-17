@@ -76,11 +76,14 @@ La misma app, las mismas cifras. Elige uno en los ajustes; cada tema mantiene su
 - Gráficos diarios hasta 90 días, semanas completas en un año. Un periodo incompleto nunca se dibuja como una caída.
 - Ventas por mes o por semana con las versiones marcadas, Usage (sesiones, cierres inesperados, valoraciones, suscripciones), exportación CSV.
 - Territories: mapa del mundo y tabla de primeras descargas por país.
+- Todas las apps, o un grupo que tú creas: cada pantalla suma sus cifras.
+- Eventos: añade una campaña, una oferta o una publicación y aparece en los gráficos junto a las versiones.
 
 **Insights**
 - Caídas e hitos medidos frente a tu rango habitual (del percentil 10 al 90 de los 63 días anteriores).
 - Revisión de palabras clave: palabras que ya están en el nombre o el subtítulo, subtítulo ausente, con una corrección en un clic.
-- Actualización en segundo plano, con una notificación opcional cuando hay algo nuevo.
+- Los hitos de descargas dibujan tu acumulado cruzando la línea, y cuánto tardará el siguiente a tu ritmo actual.
+- Actualización en segundo plano, con una notificación opcional cuando hay algo nuevo, una notificación diaria de cifras y silencio por tipo de insight.
 
 **Ficha y reseñas**
 - Edita el nombre, el subtítulo, las palabras clave, el texto promocional y la descripción de cada idioma. El envío solo manda lo que ha cambiado.
@@ -89,7 +92,8 @@ La misma app, las mismas cifras. Elige uno en los ajustes; cada tema mantiene su
 
 **Informes y asistente**
 - Informes semanales, mensuales y anuales redactados a partir de tus cifras. Compártelos como texto o expórtalos en PDF.
-- Chat opcional sobre tus cifras a través de Claude Code o Codex en la línea de comandos, si ya los tienes en tu Mac.
+- Chat opcional sobre tus cifras a través de Claude Code o Codex en la línea de comandos, si ya los tienes en tu Mac. Puede consultar cualquier cifra sincronizada (solo lectura), conoce tus eventos y responde en tu idioma.
+- Interfaz en 10 idiomas, a elegir en Ajustes.
 
 ## Conseguirla
 
@@ -100,16 +104,19 @@ La misma app, las mismas cifras. Elige uno en los ajustes; cada tema mantiene su
 
 El historial de ventas llega enseguida. Las analíticas de Apple siguen en uno o dos días.
 
+Vane busca actualizaciones una vez al día y las instala cuando aceptas (Vane → Buscar actualizaciones…).
+
 ## Requisitos
 
 - macOS 26 o posterior en Apple silicon.
 - Una clave de API de App Store Connect que pueda leer ventas e informes. Editar la ficha y responder a reseñas requieren una clave cuyo rol lo permita.
+- Apple solo deja que una clave Admin active los informes de analíticas, una vez por app. Si la tuya no puede, Vane ofrece usar una clave Admin una sola vez (se envía y se olvida) o copia un mensaje listo para tu admin.
 
 ## Privacidad
 
 - Tu clave se guarda en el llavero de macOS. Tus informes viven en una base de datos local en tu Mac.
-- Vane se conecta a tres sitios: `api.appstoreconnect.apple.com` para tus informes, `itunes.apple.com` para los iconos de las apps y el Banco Central Europeo para los tipos de cambio del día. Sin cuenta, sin servidor, sin analíticas.
-- El asistente está apagado hasta que lo usas. Ejecuta tu propia herramienta de línea de comandos, que envía tu pregunta y las cifras en pantalla al proveedor de esa herramienta.
+- Vane se conecta a cuatro sitios: `api.appstoreconnect.apple.com` para tus informes, `itunes.apple.com` para los iconos de las apps, el Banco Central Europeo para los tipos de cambio del día y GitHub para las actualizaciones. Sin cuenta, sin servidor, sin analíticas.
+- El asistente está apagado hasta que lo usas. Ejecuta tu propia herramienta de línea de comandos, que envía tu pregunta, las cifras en pantalla y las que consulta en tus datos de Vane (solo lectura) al proveedor de esa herramienta.
 
 ## Compilar desde el código fuente
 

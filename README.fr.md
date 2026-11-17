@@ -76,11 +76,14 @@ Même app, mêmes chiffres. Vous choisissez dans les réglages ; chaque thème g
 - Graphiques quotidiens jusqu'à 90 jours, semaines complètes sur un an. Une période incomplète n'est jamais dessinée comme une chute.
 - Ventes par mois ou par semaine avec les mises à jour repérées, Usage (sessions, plantages, notes, abonnements), export CSV.
 - Territories : carte du monde et tableau des premiers téléchargements par pays.
+- Toutes les apps, ou un groupe que vous créez : chaque écran en fait le total.
+- Événements : ajoutez une campagne, une promo ou un post, il apparaît sur les graphiques à côté des mises à jour.
 
 **Insights**
 - Chutes et paliers mesurés par rapport à votre fourchette habituelle (du 10ᵉ au 90ᵉ centile des 63 jours précédents).
 - Vérification des mots-clés : mots déjà présents dans le nom ou le sous-titre, sous-titre manquant, avec une correction en un clic.
-- Actualisation en arrière-plan, avec une notification facultative quand il y a du nouveau.
+- Les paliers de téléchargements tracent votre cumul qui franchit la ligne, et le temps qu'il faut pour le suivant à votre rythme actuel.
+- Actualisation en arrière-plan, avec une notification facultative quand il y a du nouveau, une notification quotidienne des chiffres, et la mise en sourdine par type d'insight.
 
 **Fiche et avis**
 - Modifiez le nom, le sous-titre, les mots-clés, le texte promotionnel et la description pour chaque langue. L'envoi ne transmet que ce qui a changé.
@@ -89,7 +92,8 @@ Même app, mêmes chiffres. Vous choisissez dans les réglages ; chaque thème g
 
 **Rapports et assistant**
 - Rapports hebdomadaires, mensuels et annuels rédigés à partir de vos chiffres. Partage en texte ou export PDF.
-- Discussion facultative sur vos chiffres via Claude Code ou Codex en ligne de commande, déjà installés sur votre Mac.
+- Discussion facultative sur vos chiffres via Claude Code ou Codex en ligne de commande, déjà installés sur votre Mac. Il peut consulter n'importe quel chiffre synchronisé (en lecture seule), connaît vos événements et répond dans votre langue.
+- Interface en 10 langues, au choix dans les Réglages.
 
 ## L'obtenir
 
@@ -100,10 +104,13 @@ Même app, mêmes chiffres. Vous choisissez dans les réglages ; chaque thème g
 
 L'historique des ventes arrive tout de suite. Les analytics d'Apple suivent sous un à deux jours.
 
+Vane vérifie les mises à jour une fois par jour et les installe avec votre accord (Vane → Rechercher les mises à jour…).
+
 ## Configuration requise
 
 - macOS 26 ou plus récent, sur Apple silicon.
 - Une clé d'API App Store Connect qui peut lire les ventes et les rapports. Modifier votre fiche et répondre aux avis demandent une clé dont le rôle le permet.
+- Apple ne laisse qu'une clé Admin activer les rapports d'analytics, une fois par app. Si la vôtre ne le peut pas, Vane propose d'utiliser une clé Admin une seule fois (envoyée, puis oubliée) ou copie un message tout prêt pour votre admin.
 
 ## Vos données dans Claude (MCP)
 
@@ -118,7 +125,7 @@ Pour Claude Desktop, ajoutez `"vane": { "command": "/Applications/Vane.app/Conte
 ## Confidentialité
 
 - Votre clé est gardée dans le trousseau macOS. Vos rapports vivent dans une base de données locale sur votre Mac.
-- Vane contacte trois endroits : `api.appstoreconnect.apple.com` pour vos rapports, `itunes.apple.com` pour les icônes des apps, et la Banque centrale européenne pour les taux de change du jour. Pas de compte, pas de serveur, pas d'analytics.
+- Vane contacte quatre endroits : `api.appstoreconnect.apple.com` pour vos rapports, `itunes.apple.com` pour les icônes des apps, la Banque centrale européenne pour les taux de change du jour, et GitHub pour les mises à jour. Pas de compte, pas de serveur, pas d'analytics.
 - L'assistant reste éteint tant que vous ne vous en servez pas. Il lance votre propre outil en ligne de commande, qui envoie votre question, les chiffres affichés et ceux qu'il consulte dans vos données Vane (en lecture seule) au fournisseur de cet outil.
 
 ## Compiler depuis les sources
