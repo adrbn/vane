@@ -392,7 +392,18 @@ import AppKit
 }
 
 struct WindowChrome: NSViewRepresentable {
-    final class Coordinator { var observers: [NSObjectProtocol] = [] }
+    final class Coordinator { let fullScreen = FullScreenDelegate() }
+
+    /// Full screen keeps the toolbar on screen by default, an opaque band over the header (and removing the toolbar leaves an
+    /// opaque title bar instead). Like Safari, hide it with the menu bar: it slides back on hover. SwiftUI owns the window delegate, so this sits in front of it and forwards the rest.
+    final class FullScreenDelegate: NSObject, NSWindowDelegate {
+        weak var inner: NSWindowDelegate?
+        override func responds(to sel: Selector!) -> Bool { super.responds(to: sel) || (inner?.responds(to: sel) ?? false) }
+        override func forwardingTarget(for sel: Selector!) -> Any? { inner }
+        func window(_ window: NSWindow, willUseFullScreenPresentationOptions proposed: NSApplication.PresentationOptions = []) -> NSApplication.PresentationOptions {
+            proposed.union([.fullScreen, .autoHideMenuBar, .autoHideDock, .autoHideToolbar])
+        }
+    }
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
@@ -402,18 +413,17 @@ struct WindowChrome: NSViewRepresentable {
             Self.install(w)
             w.titleVisibility = .hidden
             w.titlebarAppearsTransparent = true
-            let nc = NotificationCenter.default
-            context.coordinator.observers = [
-                nc.addObserver(forName: NSWindow.willEnterFullScreenNotification, object: w, queue: .main) { _ in w.toolbar = nil },
-                nc.addObserver(forName: NSWindow.didExitFullScreenNotification, object: w, queue: .main) { _ in Self.install(w) },
-            ]
+            context.coordinator.fullScreen.inner = w.delegate
+            w.delegate = context.coordinator.fullScreen
+            // `--fullscreen` (screenshots): the report window with `--report`, else the main one.
+            let args = CommandLine.arguments
+            if args.contains("--fullscreen"), w.title == (args.contains("--report") ? "Report" : "Vane") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { NSApp.activate(); w.toggleFullScreen(nil) }
+            }
         }
         return v
     }
     func updateNSView(_ nsView: NSView, context: Context) {}
-    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
-        coordinator.observers.forEach(NotificationCenter.default.removeObserver)
-    }
 
     private static func install(_ w: NSWindow) {
         let tb = NSToolbar(identifier: "almanac.main")
