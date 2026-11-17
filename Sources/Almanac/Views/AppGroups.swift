@@ -31,6 +31,15 @@ struct GroupsSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("App Groups").font(t.font(20, .bold))
             Text("A group adds up the numbers of its apps, like one app. Pick it in the app menu.").font(t.font(13)).foregroundStyle(t.label2)
+            if groups.isEmpty {
+                VStack(spacing: 12) {
+                    Text("No groups yet").font(t.font(15, .bold))
+                    Text("Put a paid and a lite version together, or all the apps of one brand.").font(t.font(13)).foregroundStyle(t.label2)
+                    SmallButton(label: String(localized: "New Group"), symbol: "plus", prominent: true) { addGroup() }
+                }
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: 300)
+            } else {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
                     List(selection: $selected) {
@@ -38,9 +47,7 @@ struct GroupsSheet: View {
                     }
                     .frame(width: 180, height: 260)
                     HStack {
-                        SmallButton(label: String(localized: "New Group"), symbol: "plus") {
-                            groups.append(.init(name: String(localized: "Group \(groups.count + 1)"), ids: [])); selected = groups.count - 1
-                        }
+                        SmallButton(label: String(localized: "New Group"), symbol: "plus") { addGroup() }
                         if let i = selected, i < groups.count {
                             SmallButton(label: String(localized: "Delete")) { groups.remove(at: i); selected = nil }
                         }
@@ -63,8 +70,9 @@ struct GroupsSheet: View {
                         .frame(height: 226)
                     }
                 } else {
-                    Text("Select or create a group.").foregroundStyle(t.label3).frame(maxWidth: .infinity, minHeight: 260)
+                    Text("Select a group.").foregroundStyle(t.label3).frame(maxWidth: .infinity, minHeight: 260)
                 }
+            }
             }
             HStack {
                 Spacer()
@@ -74,6 +82,10 @@ struct GroupsSheet: View {
         }
         .padding(24).frame(width: 560)
         .onAppear { groups = model.store.groups() }
+    }
+
+    private func addGroup() {
+        groups.append(.init(name: String(localized: "Group \(groups.count + 1)"), ids: [])); selected = groups.count - 1
     }
 
     private func save() {
