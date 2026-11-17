@@ -43,7 +43,11 @@ struct Screen<Controls: View, Content: View>: View {
                     content.padding(.leading, 8)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            // minHeight 0: content taller than the window stays the window's height (cut at the bottom) instead of
+            // growing the screen, which recentres it and slides the header and the sidebar out of place.
+            .frame(minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity)
+            .clipped()
         }
     }
 }
