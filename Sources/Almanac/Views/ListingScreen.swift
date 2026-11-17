@@ -47,6 +47,12 @@ struct ListingView: View {
                     model.pendingLink = nil
                     if let want = link.locale, live.contains(where: { $0.locale == want }) { locale = want }
                 }
+            } else if model.isAggregate {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Pick one app to edit its listing").font(t.font(15, .bold))
+                    Text("Each app has its own App Store page. Numbers, reviews and insights can be seen together; the listing can't.").font(t.font(13)).foregroundStyle(t.label2)
+                }
+                .themedCard(padding: 24)
             } else {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No listing yet").font(t.font(15, .bold))

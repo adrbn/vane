@@ -21,6 +21,7 @@ Vane stores App Store Connect data in SQLite. Tables:
   conversion rate = SUM(first_downloads + redownloads)/SUM(impressions) over days that have impressions (Apple's definition).
   Analytics metrics lag 2 to 3 days behind sales metrics; compare periods that both cover.
 - versions(app_id, day, version, title): releases.
+- events(id, app_id, day, title): campaigns, promos, press the user noted. app_id '' applies to every app. Use them to explain jumps.
 - reviews(id, app_id, rating 1-5, title, body, reviewer, territory, created, response).
 - listing(app_id, locale, name, subtitle, keywords, promo, description, …): the App Store page per language.
 - sources(app_id, report, day, territory, download_type, source_type, source_info, value): downloads by where they came from.

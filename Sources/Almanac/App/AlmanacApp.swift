@@ -23,6 +23,7 @@ struct AlmanacApp: App {
             }
             CommandGroup(after: .newItem) {
                 Button("Refresh") { Task { await model.refresh() } }.keyboardShortcut("r")
+                Button("Events…") { model.eventsOpen = true }.keyboardShortcut("e")
             }
             CommandGroup(after: .sidebar) {
                 Button(model.chatOpen ? "Hide Chat" : "Show Chat") { model.chatOpen.toggle() }.keyboardShortcut("j")

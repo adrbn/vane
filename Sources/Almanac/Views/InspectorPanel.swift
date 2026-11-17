@@ -10,6 +10,7 @@ struct InspectorPanel: View {
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
     @State private var busy = false
+    @State private var missing = false
 
     private let starters = [String(localized: "Explain this to me"), String(localized: "What changed recently, and why?"), String(localized: "What should I do next?")]
 
@@ -31,7 +32,10 @@ struct InspectorPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if messages.isEmpty {
+                        if missing {
+                            Label(ChatHelp.missing, systemImage: "exclamationmark.triangle").font(t.font(13)).foregroundStyle(t.label2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else if messages.isEmpty {
                             Text("Ask about the chart, table or report you're looking at. The answer comes from your own \(AISettings.provider.title) account; your data goes straight from this Mac to it.")
                                 .font(t.font(13)).foregroundStyle(t.label2).fixedSize(horizontal: false, vertical: true)
                         }
@@ -60,6 +64,7 @@ struct InspectorPanel: View {
                 .scrollIndicators(.never)
                 .onChange(of: messages) { withAnimation { proxy.scrollTo(messages.last?.id, anchor: .bottom) } }
             }
+            .task { missing = await !AISettings.assistant.isInstalled() }
 
             HStack(alignment: .bottom, spacing: 8) {
                 TextField("Ask about \(model.section.title)…", text: $input, axis: .vertical)

@@ -21,3 +21,22 @@ enum AnalyticsArrival {
         try? await center.add(UNNotificationRequest(identifier: "analytics-\(names.joined())", content: c, trigger: nil))
     }
 }
+
+/// When a new day of sales lands: that day's downloads and proceeds, in the notification itself.
+enum DailyNumbers {
+    static let key = "notified_sales_day"
+
+    static func notify(_ store: Store) async {
+        guard let day = DailySummary.lastDay(store) else { return }
+        let previous = store.meta(key)
+        store.setMeta(key, day)
+        // First sync: remember the day without announcing a year of history.
+        guard let previous, day > previous, let s = DailySummary.make(store, day: day),
+              UserDefaults.standard.object(forKey: "notifyDaily") as? Bool ?? true else { return }
+        let center = UNUserNotificationCenter.current()
+        guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return }
+        let c = UNMutableNotificationContent()
+        c.title = s.title; c.body = s.body
+        try? await center.add(UNNotificationRequest(identifier: "daily-\(day)", content: c, trigger: nil))
+    }
+}

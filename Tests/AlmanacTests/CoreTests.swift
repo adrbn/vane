@@ -211,3 +211,48 @@ private func demoStore() throws -> Store {
     #expect(AssistantLink.extract(from: "[[open:listing?locale=../../etc]]").links.first?.locale == nil)
     #expect(AssistantLink.extract(from: "[[pin:nope]]").links.isEmpty)
 }
+
+@Test func dailySummaryAddsUpApps() throws {
+    let s = try demoStore()
+    let day = try #require(DailySummary.lastDay(s))
+    #expect(day == "2026-11-11")
+    let sum = try #require(DailySummary.make(s, day: day))
+    let dl = s.apps().reduce(0) { $0 + s.total($1.id, .downloads, from: day, to: day) }
+    #expect(sum.title.contains(Metric.downloads.format(dl)))
+    #expect(sum.body.split(separator: "\n").count == 3)
+}
+
+@Test func fixedListingIssueDisappears() throws {
+    let s = try demoStore()
+    let app = "6448120003" // Cadence: no subtitle in its listing
+    InsightEngine.refresh(store: s, app: app)
+    #expect(s.insights(app).contains { $0.kind == "no-subtitle" })
+    for var l in s.listing(app) where l.subtitle.isEmpty { l.subtitle = "Practice every day"; try s.upsert(listing: l) }
+    InsightEngine.refresh(store: s, app: app)
+    #expect(!s.insights(app).contains { $0.kind == "no-subtitle" })
+    #expect(s.insights(app).contains { $0.kind == "crashes" }) // event insights stay
+}
+
+@Test func eventsShowAsMarksAndInReports() throws {
+    let s = try demoStore()
+    try s.save(event: AppEvent(appId: "", day: "2026-11-04", title: "Spring sale"))
+    try s.save(event: AppEvent(appId: "6448120002", day: "2026-11-05", title: "Tidewise only"))
+    let kiln = s.marks("6448120001").filter(\.isEvent).map(\.version)
+    #expect(kiln == ["Spring sale"])
+    #expect(s.marks("6448120002").filter(\.isEvent).count == 2)
+    let r = ReportBuilder(store: s, app: "6448120001").build(.week, start: "2026-11-02")
+    #expect(r.sections.contains { $0.paragraphs.contains { $0.contains("Spring sale") } })
+}
+
+@Test func allAppsAndGroupsAddUp() throws {
+    let s = try demoStore()
+    let ids = s.apps().map(\.id)
+    let each = { (m: Metric) in ids.reduce(0) { $0 + s.total($1, m, from: "2026-10-01", to: "2026-10-31") } }
+    #expect(abs(s.total(Store.allApps, .downloads, from: "2026-10-01", to: "2026-10-31") - each(.downloads)) < 0.001)
+    #expect(abs(s.total(Store.allApps, .sales, from: "2026-10-01", to: "2026-10-31") - each(.sales)) < 0.001)
+    s.setGroups([.init(name: "Pair", ids: Array(ids.prefix(2)))])
+    let pair = ids.prefix(2).reduce(0) { $0 + s.total($1, .downloads, from: "2026-10-01", to: "2026-10-31") }
+    #expect(abs(s.total("group:Pair", .downloads, from: "2026-10-01", to: "2026-10-31") - pair) < 0.001)
+    #expect(s.reviews("group:Pair").count == s.reviews(ids[0]).count + s.reviews(ids[1]).count)
+    #expect(s.listing(Store.allApps).isEmpty)
+}

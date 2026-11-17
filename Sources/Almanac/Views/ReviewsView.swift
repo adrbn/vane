@@ -135,7 +135,7 @@ struct ReplySheet: View {
     private func suggest() async {
         busy = true; defer { busy = false }
         do {
-            text = try await Assistant(provider: AISettings.provider).ask(
+            text = try await AISettings.assistant.ask(
                 "Write a short, warm, specific reply to this review, in the reviewer's language. No greeting like 'Dear user', no sign-off, no promises you can't keep. Return only the reply text.",
                 context: "App: \(model.app?.name ?? "")\nRating: \(review.rating)/5\nTitle: \(review.title)\nReview: \(review.body)")
         } catch { self.error = error.localizedDescription }
@@ -152,8 +152,20 @@ struct ReplySheet: View {
     }
 }
 
+/// Why chat can't answer yet: it runs the user's own AI command-line tool, never a Vane server.
+enum ChatHelp {
+    static var missing: String {
+        #if os(macOS)
+        String(localized: "Chat runs your own \(AISettings.provider.title), and Vane can't find it on this Mac. Install it, sign in once in Terminal, then reopen this panel. You can switch to Codex in Settings › Assistant.")
+        #else
+        String(localized: "Chat runs in the Mac app, with your own Claude Code or Codex. Your numbers are all here; ask from your Mac.")
+        #endif
+    }
+}
+
 enum AISettings {
     static var provider: Assistant.Provider { Assistant.Provider(rawValue: UserDefaults.standard.string(forKey: "aiProvider") ?? "") ?? .claude }
     static var model: String { UserDefaults.standard.string(forKey: "aiModel") ?? "sonnet" }
-    static var assistant: Assistant { Assistant(provider: provider, model: model) }
+    static var configDir: String? { UserDefaults.standard.string(forKey: "aiConfigDir").flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } }
+    static var assistant: Assistant { Assistant(provider: provider, model: model, configDir: configDir) }
 }

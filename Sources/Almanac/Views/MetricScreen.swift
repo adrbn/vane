@@ -317,7 +317,7 @@ struct MetricData {
             if Day.add(6, to: Day.weekStart(end)) != end, !r.isEmpty { r.removeLast() }
         }
         rows = r
-        versions = store.versions(app).filter { $0.day >= start && $0.day <= end }
+        versions = store.marks(app).filter { $0.day >= start && $0.day <= end }
     }
 
     /// Where a metric's period ends: the same day the tile that opens it ends on.
@@ -401,7 +401,7 @@ struct MetricData {
         var s = "Screen: \(metric.title) for \(name), \(territory.isEmpty ? "all territories" : Territories.name(territory)), \(rangeName.lowercased()) (\(from) to \(to)), by \(g.rawValue.lowercased())\n"
         s += "Total \(Self.full(metric, value)), previous period \(Self.full(metric, previous)), same period last year \(Self.full(metric, lastYearValue))\n"
         s += rows.map { "\($0.day): \(Self.full(metric, $0.value))" + ($0.lastYear.map { " (last year \(Self.full(metric, $0)))" } ?? "") }.joined(separator: "\n")
-        if !versions.isEmpty { s += "\nReleases: " + versions.map { "\($0.version) on \($0.day)" }.joined(separator: "; ") }
+        if !versions.isEmpty { s += "\nReleases and events: " + versions.map(\.context).joined(separator: "; ") }
         return s
     }
 }

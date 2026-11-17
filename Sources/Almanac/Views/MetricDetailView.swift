@@ -21,7 +21,7 @@ struct LegacyMetricDetailView: View {
             ? model.store.series(app, metric, territory: territory, from: Day.add(-365, to: from), to: Day.add(-365, to: to))
                 .bucketed(granularity, average: metric.isGauge).map { Point(day: Day.add(365, to: $0.day), value: $0.value) }
             : []
-        let versions = model.store.versions(app).filter { $0.day >= from && $0.day <= to }
+        let versions = model.store.marks(app).filter { $0.day >= from && $0.day <= to }
         let tint = model.app?.tint ?? .accentColor
 
         VStack(spacing: 0) {
@@ -142,7 +142,7 @@ struct LegacyMetricDetailView: View {
     private func context(data: [Point], versions: [VersionMark]) -> String {
         var s = "Screen: \(metric.title) chart for \(model.app?.name ?? ""), \(territory.isEmpty ? "worldwide" : Territories.name(territory)), by \(granularity.rawValue.lowercased())\n"
         s += data.map { "\($0.day): \(metric.format($0.value))" }.joined(separator: "\n")
-        if !versions.isEmpty { s += "\nReleases: " + versions.map { "\($0.version) on \($0.day) \($0.title)" }.joined(separator: "; ") }
+        if !versions.isEmpty { s += "\nReleases and events: " + versions.map { "\($0.context) \($0.title)" }.joined(separator: "; ") }
         return s
     }
 }

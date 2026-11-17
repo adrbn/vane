@@ -28,12 +28,50 @@ public final class Store: @unchecked Sendable {
         CREATE TABLE IF NOT EXISTS insights(id TEXT PRIMARY KEY, app_id TEXT, day TEXT, json TEXT, dismissed INTEGER DEFAULT 0,
             notified INTEGER DEFAULT 0);
         CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY, app_id TEXT, day TEXT, title TEXT);
         CREATE TABLE IF NOT EXISTS sources(app_id TEXT, report TEXT, day TEXT, territory TEXT, download_type TEXT, source_type TEXT,
             source_info TEXT, value REAL, PRIMARY KEY(app_id, report, day, territory, download_type, source_type, source_info));
         """)
     }
 
     // MARK: apps
+
+    /// "*" is every app, "group:<name>" a saved group, anything else one app. As a JSON array for `json_each(?)`.
+    public static let allApps = "*"
+    public func appIds(_ app: String) -> [String] {
+        if app == Self.allApps { return apps().map(\.id) }
+        if app.hasPrefix("group:") { return groups().first { "group:" + $0.name == app }?.ids ?? [] }
+        return [app]
+    }
+
+    /// "All apps", a group's name, or the app's name.
+    public func displayName(_ app: String) -> String? {
+        if app == Self.allApps { return String(localized: "All apps") }
+        if app.hasPrefix("group:") { return String(app.dropFirst(6)) }
+        return apps().first { $0.id == app }?.name
+    }
+
+    public static func isAggregate(_ app: String) -> Bool { app == allApps || app.hasPrefix("group:") }
+
+    func scope(_ app: String) -> String {
+        String(decoding: (try? JSONSerialization.data(withJSONObject: appIds(app))) ?? Data("[]".utf8), as: UTF8.self)
+    }
+
+    public struct AppGroup: Codable, Hashable, Sendable, Identifiable {
+        public var name: String
+        public var ids: [String]
+        public var id: String { "group:" + name }
+        public init(name: String, ids: [String]) { self.name = name; self.ids = ids }
+    }
+
+    /// Named sets of apps ("Pro + Lite"), shown together like one app.
+    public func groups() -> [AppGroup] {
+        (meta("app_groups").flatMap { try? JSONDecoder().decode([AppGroup].self, from: Data($0.utf8)) } ?? []).sorted { $0.name < $1.name }
+    }
+
+    public func setGroups(_ g: [AppGroup]) {
+        setMeta("app_groups", String(decoding: (try? JSONEncoder().encode(g)) ?? Data("[]".utf8), as: UTF8.self))
+    }
 
     public func upsert(app: AppRecord) throws {
         try db.query("INSERT INTO apps VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, bundle_id=excluded.bundle_id",
@@ -46,7 +84,7 @@ public final class Store: @unchecked Sendable {
     }
 
     public func removeAll() throws {
-        try db.exec("DELETE FROM apps; DELETE FROM daily; DELETE FROM versions; DELETE FROM reviews; DELETE FROM listing; DELETE FROM insights; DELETE FROM meta;")
+        try db.exec("DELETE FROM apps; DELETE FROM daily; DELETE FROM versions; DELETE FROM reviews; DELETE FROM listing; DELETE FROM insights; DELETE FROM meta; DELETE FROM events;")
     }
 
     // MARK: daily series
@@ -118,28 +156,28 @@ public final class Store: @unchecked Sendable {
         let metrics: [Metric] = metric == .downloads ? [.firstDownloads, .redownloads] : [metric]
         var out: [String: Double] = [:]
         for m in metrics {
-            let rows = (try? db.query("SELECT territory, SUM(value) FROM daily WHERE app_id=? AND metric=? AND territory<>'' AND day BETWEEN ? AND ? GROUP BY territory",
-                                      [app, m.rawValue, from, to])) ?? []
+            let rows = (try? db.query("SELECT territory, SUM(value) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric=? AND territory<>'' AND day BETWEEN ? AND ? GROUP BY territory",
+                                      [scope(app), m.rawValue, from, to])) ?? []
             for r in rows { out[r.s(0), default: 0] += r.d(1) }
         }
         return out
     }
 
     public func lastDay(_ app: String) -> String? {
-        (try? db.query("SELECT MAX(day) FROM daily WHERE app_id=? AND metric IN ('impressions','first_downloads','sales')", [app]))?.first?.opt(0)
+        (try? db.query("SELECT MAX(day) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric IN ('impressions','first_downloads','sales')", [scope(app)]))?.first?.opt(0)
     }
 
     public func firstDay(_ app: String, _ metric: Metric) -> String? {
-        (try? db.query("SELECT MIN(day) FROM daily WHERE app_id=? AND metric=? AND territory=''", [app, metric.rawValue]))?.first?.opt(0)
+        (try? db.query("SELECT MIN(day) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric=? AND territory=''", [scope(app), metric.rawValue]))?.first?.opt(0)
     }
 
     public func lastDay(_ app: String, _ metric: Metric) -> String? {
-        (try? db.query("SELECT MAX(day) FROM daily WHERE app_id=? AND metric=? AND territory=''", [app, metric.rawValue]))?.first?.opt(0)
+        (try? db.query("SELECT MAX(day) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric=? AND territory=''", [scope(app), metric.rawValue]))?.first?.opt(0)
     }
 
     private func raw(_ app: String, _ m: Metric, _ territory: String, _ from: String, _ to: String) -> [Point] {
-        ((try? db.query("SELECT day, value FROM daily WHERE app_id=? AND metric=? AND territory=? AND day BETWEEN ? AND ? ORDER BY day",
-                        [app, m.rawValue, territory, from, to])) ?? [])
+        ((try? db.query("SELECT day, SUM(value) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric=? AND territory=? AND day BETWEEN ? AND ? GROUP BY day ORDER BY day",
+                        [scope(app), m.rawValue, territory, from, to])) ?? [])
             .map { Point(day: $0.s(0), value: $0.d(1)) }
     }
 
@@ -167,6 +205,22 @@ public final class Store: @unchecked Sendable {
             .map { VersionMark(day: $0.s(0), version: $0.s(1), title: $0.s(2)) }
     }
 
+    // MARK: events
+
+    public func save(event e: AppEvent) throws { try db.query("INSERT OR REPLACE INTO events VALUES(?,?,?,?)", [e.id, e.appId, e.day, e.title]) }
+    public func delete(event id: String) throws { try db.query("DELETE FROM events WHERE id=?", [id]) }
+
+    /// This app's events plus the ones for every app.
+    public func events(_ app: String) -> [AppEvent] {
+        ((try? db.query("SELECT id,app_id,day,title FROM events WHERE app_id IN (SELECT value FROM json_each(?)) OR app_id='' ORDER BY day", [scope(app)])) ?? [])
+            .map { AppEvent(id: $0.s(0), appId: $0.s(1), day: $0.s(2), title: $0.s(3)) }
+    }
+
+    /// Releases and events, for chart rules and chat context.
+    public func marks(_ app: String) -> [VersionMark] {
+        (versions(app) + events(app).map { VersionMark(day: $0.day, version: $0.title, title: "", isEvent: true) }).sorted { $0.day < $1.day }
+    }
+
     // MARK: reviews
 
     public func upsert(review r: Review) throws {
@@ -175,7 +229,7 @@ public final class Store: @unchecked Sendable {
     }
 
     public func reviews(_ app: String) -> [Review] {
-        ((try? db.query("SELECT id,app_id,rating,title,body,reviewer,territory,created,response FROM reviews WHERE app_id=? ORDER BY created DESC", [app])) ?? [])
+        ((try? db.query("SELECT id,app_id,rating,title,body,reviewer,territory,created,response FROM reviews WHERE app_id IN (SELECT value FROM json_each(?)) ORDER BY created DESC", [scope(app)])) ?? [])
             .map { Review(id: $0.s(0), appId: $0.s(1), rating: $0.i(2), title: $0.s(3), body: $0.s(4), reviewer: $0.s(5), territory: $0.s(6), created: $0.s(7), response: $0.opt(8)) }
     }
 
@@ -220,11 +274,19 @@ public final class Store: @unchecked Sendable {
 
     public func insights(_ app: String, includeDismissed: Bool = false) -> [Insight] {
         let dec = JSONDecoder()
-        let sql = "SELECT json, dismissed FROM insights WHERE app_id=?" + (includeDismissed ? "" : " AND dismissed=0") + " ORDER BY day DESC"
-        return ((try? db.query(sql, [app])) ?? []).compactMap { r in
+        let sql = "SELECT json, dismissed FROM insights WHERE app_id IN (SELECT value FROM json_each(?))" + (includeDismissed ? "" : " AND dismissed=0") + " ORDER BY day DESC"
+        return ((try? db.query(sql, [scope(app)])) ?? []).compactMap { r in
             guard var i = try? dec.decode(Insight.self, from: Data(r.s(0).utf8)) else { return nil }
             i.dismissed = r.i(1) == 1
             return i
+        }
+    }
+
+    /// Removes insights of `kinds` the engine no longer produces (e.g. a keyword issue that was fixed).
+    public func prune(_ app: String, kinds: Set<String>, keeping ids: Set<String>) throws {
+        for r in try db.query("SELECT id, json FROM insights WHERE app_id=?", [app]) where !ids.contains(r.s(0)) {
+            guard let i = try? JSONDecoder().decode(Insight.self, from: Data(r.s(1).utf8)), kinds.contains(i.kind) else { continue }
+            try db.query("DELETE FROM insights WHERE id=?", [r.s(0)])
         }
     }
 

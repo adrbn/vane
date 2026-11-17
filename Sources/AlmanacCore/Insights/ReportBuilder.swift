@@ -94,7 +94,7 @@ public struct ReportBuilder {
         let headline = analytics
             ? [kpi(.firstDownloads), kpi(.impressions), kpi(.ttr), cr, kpi(.proceeds)]
             : [dl, kpi(.proceeds), ratings, subs].enumerated().filter { $0.offset == 0 || $0.element.value > 0 || $0.element.previous > 0 }.map(\.element)
-        let name = store.apps().first { $0.id == app }?.name ?? String(localized: "Your app")
+        let name = store.displayName(app) ?? String(localized: "Your app")
 
         func change(_ x: Report.KPI) -> String {
             guard let c = x.change else { return String(localized: "with no earlier figure to compare") }
@@ -148,6 +148,12 @@ public struct ReportBuilder {
             sections.append(.init(heading: String(localized: "Releases"), paragraphs: releases.map {
                 let date = Day.date($0.day).formatted(.dateTime.month(.abbreviated).day().locale(Locale.current))
                 return $0.title.isEmpty ? String(localized: "Version \($0.version) shipped on \(date).") : String(localized: "Version \($0.version) shipped on \(date) — \($0.title).")
+            }))
+        }
+        let events = store.events(app).filter { $0.day >= start && $0.day <= end }
+        if !events.isEmpty {
+            sections.append(.init(heading: String(localized: "Events"), paragraphs: events.map {
+                String(localized: "\(Day.date($0.day).formatted(.dateTime.month(.abbreviated).day().locale(Locale.current))): \($0.title).")
             }))
         }
         return Report(appName: name, period: period, start: start, end: end, periodLabel: Self.label(period, start, end),

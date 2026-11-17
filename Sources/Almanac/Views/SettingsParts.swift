@@ -216,6 +216,7 @@ struct ConnectForm: View, SettingsBlocks {
 struct RefreshSettings: View, SettingsBlocks {
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @AppStorage("notifyInsights") private var notify = true
+    @AppStorage("notifyDaily") private var notifyDaily = true
     @State private var agentOn = BackgroundAgent.isEnabled
     @State private var error: String?
     var title = String(localized: "Refresh")
@@ -231,6 +232,9 @@ struct RefreshSettings: View, SettingsBlocks {
             }
             row(t, String(localized: "Notify me about new insights"), String(localized: "Milestones and anything that needs attention, found by a background refresh.")) {
                 Toggle("", isOn: $notify).labelsHidden().toggleStyle(.switch).disabled(!agentOn)
+            }
+            row(t, String(localized: "Notify me when a new day arrives"), String(localized: "That day's downloads and proceeds, as soon as Apple publishes them.")) {
+                Toggle("", isOn: $notifyDaily).labelsHidden().toggleStyle(.switch).disabled(!agentOn)
             }
         }
     }

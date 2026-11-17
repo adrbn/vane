@@ -63,10 +63,26 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
 
 public struct VersionMark: Identifiable, Hashable, Sendable {
     public var day: String
-    public var version: String
+    public var version: String      // for an event: its short name, drawn like a version number
     public var title: String
+    public var isEvent = false      // a campaign, promo or press mention the user added
     public var id: String { day + version }
-    public init(day: String, version: String, title: String) { self.day = day; self.version = version; self.title = title }
+    public init(day: String, version: String, title: String, isEvent: Bool = false) {
+        self.day = day; self.version = version; self.title = title; self.isEvent = isEvent
+    }
+    /// For chat context: "1.2.0 on 2026-10-15" or "event “Spring sale” on 2026-10-15".
+    public var context: String { isEvent ? "event “\(version)” on \(day)" : "\(version) on \(day)" }
+}
+
+/// Something the user wants next to the numbers: a campaign, a promo, a press mention. `appId` "" means every app.
+public struct AppEvent: Identifiable, Hashable, Sendable {
+    public var id: String
+    public var appId: String
+    public var day: String
+    public var title: String
+    public init(id: String = UUID().uuidString, appId: String, day: String, title: String) {
+        self.id = id; self.appId = appId; self.day = day; self.title = title
+    }
 }
 
 public struct Review: Identifiable, Hashable, Sendable {
@@ -154,6 +170,34 @@ public struct Insight: Identifiable, Hashable, Sendable, Codable {
     public init(id: String, appId: String, kind: String, category: InsightCategory, title: String, body: String, day: String, needsAttention: Bool = false, chart: InsightChart? = nil, action: InsightAction? = nil) {
         self.id = id; self.appId = appId; self.kind = kind; self.category = category; self.title = title
         self.body = body; self.day = day; self.needsAttention = needsAttention; self.chart = chart; self.action = action
+    }
+}
+
+extension Insight {
+    /// Kinds that describe the current state (the listing as it is now): gone as soon as it's fixed.
+    public static let liveKinds: Set<String> = ["kw-repeat", "kw-short", "no-subtitle"]
+
+    /// What a whole kind is called, for "Stop showing…" and its undo list.
+    public static func kindTitle(_ kind: String) -> String {
+        switch kind {
+        case "best-day": String(localized: "Best download days")
+        case "milestone": String(localized: "Download milestones")
+        case "streak": String(localized: "Growth streaks")
+        case "featured": String(localized: "Possible features")
+        case "kw-repeat": String(localized: "Repeated keywords")
+        case "kw-short": String(localized: "Unused keyword characters")
+        case "no-subtitle": String(localized: "Missing subtitles")
+        case "ttr-drop": String(localized: "Tap-through drops")
+        case "cr-drop": String(localized: "Conversion drops")
+        case "sales-swing": String(localized: "Weekly sales swings")
+        case "weekend": String(localized: "Weekend sales pattern")
+        case "ratings-slowed": String(localized: "Ratings slowing down")
+        case "low-reviews": String(localized: "Unhappy reviews")
+        case "crashes": String(localized: "Crash increases")
+        case "surge": String(localized: "Country surges")
+        case "report-week": String(localized: "Weekly reports")
+        default: kind
+        }
     }
 }
 

@@ -11,7 +11,11 @@ public struct Assistant: Sendable {
 
     public var provider: Provider
     public var model: String
-    public init(provider: Provider = .claude, model: String = "sonnet") { self.provider = provider; self.model = model }
+    /// Claude Code's config folder for a second account (CLAUDE_CONFIG_DIR), nil = the default ~/.claude.
+    public var configDir: String?
+    public init(provider: Provider = .claude, model: String = "sonnet", configDir: String? = nil) {
+        self.provider = provider; self.model = model; self.configDir = configDir
+    }
 
     public static let systemPrompt = """
     You are the analyst inside Vane, an app that shows an indie developer their App Store data.
@@ -75,7 +79,8 @@ public struct Assistant: Sendable {
             prompt = Self.systemPrompt + "\n\n" + prompt
             cmd = "codex exec --skip-git-repo-check -"
         }
-        let out = try await Self.shell(cmd, stdin: prompt)
+        let env = provider == .claude ? configDir.map { "CLAUDE_CONFIG_DIR=\(Self.quote(($0 as NSString).expandingTildeInPath)) " } ?? "" : ""
+        let out = try await Self.shell(env + cmd, stdin: prompt)
         let trimmed = out.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { throw AssistantError.failed(String(localized: "\(provider.title) returned nothing. Run `\(provider.rawValue)` once in Terminal to check you're signed in.")) }
         return trimmed

@@ -56,7 +56,7 @@ struct SalesScreen: View {
         let f = by(.firstDownloads), r = by(.redownloads), p = by(.proceeds), s = by(.sales)
         var subs: [String: Double] = [:]
         for pt in model.store.series(app, .activeSubs, from: from, to: last) { subs[g.bucket(pt.day)] = pt.value }
-        let versions = model.store.versions(app)
+        let versions = model.store.marks(app)
         let current = g.bucket(last)
         let open = g != .day && g.bucket(Day.add(1, to: last)) == current
         return Set(f.keys).union(r.keys).sorted(by: >).map { b in
@@ -208,8 +208,10 @@ struct SalesScreen: View {
         HStack(spacing: 16) {
             ForEach(cols.indices, id: \.self) { i in
                 let c = cols[i]
-                cell(i).frame(width: c.width, alignment: i == 0 || c.title == "Release" || c.title == "Total" ? .leading : .trailing)
-                    .frame(maxWidth: c.width == nil ? .infinity : nil, alignment: .leading)
+                // Fixed columns give up to 40% when the window is narrow; the same range on every row keeps them aligned.
+                cell(i).lineLimit(1)
+                    .frame(minWidth: c.width.map { $0 * 0.6 } ?? 64, maxWidth: c.width ?? .infinity,
+                           alignment: i == 0 || c.title == "Release" || c.title == "Total" ? .leading : .trailing)
             }
         }
         .padding(.horizontal, 20).frame(height: header ? 36 : 40)
@@ -221,7 +223,7 @@ struct SalesScreen: View {
         case "Redownloads": Text(Num.int(r.re)).foregroundStyle(t.label2)
         case "Total":
             HStack(spacing: 10) {
-                Text(Num.int(r.total)).fontWeight(.semibold).frame(width: 44, alignment: .trailing)
+                Text(Num.int(r.total)).fontWeight(.semibold).frame(width: 56, alignment: .trailing)
                 GeometryReader { geo in
                     Capsule().fill(t.color(.firstDownloads).opacity(r.partial ? 0.35 : 0.85))
                         .frame(width: max(3, geo.size.width * r.total / peak), height: 6).frame(maxHeight: .infinity)

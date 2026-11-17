@@ -27,6 +27,14 @@ public struct InsightEngine {
         return rules.flatMap { $0() }
     }
 
+    /// Runs the rules, stores the result, drops fixed listing issues. Returns the insights that are new.
+    @discardableResult
+    public static func refresh(store: Store, app: String) -> [Insight] {
+        let found = InsightEngine(store: store, app: app).run()
+        try? store.prune(app, kinds: Insight.liveKinds, keeping: Set(found.map(\.id)))
+        return (try? store.merge(insights: found)) ?? []
+    }
+
     private func opt(_ i: Insight?) -> [Insight] { i.map { [$0] } ?? [] }
     private func id(_ kind: String, _ key: String) -> String { "\(app)|\(kind)|\(key)" }
     private func day(_ offset: Int) -> String { Day.add(offset, to: asOf) }

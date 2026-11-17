@@ -9,6 +9,7 @@ struct MacSettingsView: View, SettingsBlocks {
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @AppStorage("aiProvider") private var provider = Assistant.Provider.claude.rawValue
     @AppStorage("aiModel") private var aiModel = "sonnet"
+    @AppStorage("aiConfigDir") private var aiConfigDir = ""
     @State private var cli: String??
     @State private var tab: Tab = Keychain.credentials().isComplete ? .general : .account
 
@@ -100,6 +101,9 @@ struct MacSettingsView: View, SettingsBlocks {
             }
             if p == .claude {
                 row(t, String(localized: "Model"), String(localized: "sonnet, opus or haiku")) { input(t, $aiModel, "sonnet", width: 140) }
+                row(t, String(localized: "Account folder"), String(localized: "Leave empty for your usual account. For another one, sign in with CLAUDE_CONFIG_DIR=<folder> claude, then enter that folder.")) {
+                    input(t, $aiConfigDir, "~/.claude", width: 200)
+                }
             }
         }
     }

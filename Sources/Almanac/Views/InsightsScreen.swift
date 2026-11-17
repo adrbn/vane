@@ -62,6 +62,13 @@ struct InsightsView: View {
                                                  set: { if $0 { model.mutedCategories.insert(c) } else { model.mutedCategories.remove(c) } }))
                 }
             }
+            if !model.mutedKinds.isEmpty {
+                Menu("Turned-Off Types") {
+                    ForEach(model.mutedKinds.sorted(), id: \.self) { k in
+                        Button(String(localized: "Show \(Insight.kindTitle(k)) Again")) { model.mutedKinds.remove(k) }
+                    }
+                }
+            }
         } label: {
             HStack(spacing: 6) {
                 Text(category?.title ?? String(localized: "All categories"))
@@ -165,6 +172,7 @@ struct InsightCardView: View {
         .themedCard(padding: lead ? 24 : 20, highlighted: highlighted || (lead && insight.needsAttention))
         .opens({ if case .openMetric(let m)? = insight.action { return { open(m) } }; return nil }())
         .opacity(insight.dismissed ? 0.55 : 1)
+        .contextMenu { InsightMenu(insight: insight) }
     }
 
     private var text: some View {
@@ -270,7 +278,7 @@ private struct LeadEvidence: View {
     var chart: InsightChart
 
     var body: some View {
-        let versions = model.store.versions(insight.appId).filter { v in
+        let versions = model.store.marks(insight.appId).filter { v in
             guard let a = chart.points.first?.day, let b = chart.points.last?.day else { return false }
             return v.day >= a && v.day <= b
         }

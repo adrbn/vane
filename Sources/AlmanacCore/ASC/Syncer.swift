@@ -144,18 +144,26 @@ public struct Syncer: Sendable {
         ("APP_USAGE", "App Crashes"),
     ]
 
+    public static func needsAdminKey(_ app: String) -> String { "analytics_needs_admin_\(app)" }
+
+    /// Turns on Apple's ongoing analytics reports for one app. Needs an Admin key, once per app, by anyone.
+    public func requestAnalytics(app: String) async throws {
+        _ = try await client.json("v1/analyticsReportRequests", method: "POST", body: ["data": [
+            "type": "analyticsReportRequests", "attributes": ["accessType": "ONGOING"],
+            "relationships": ["app": ["data": ["type": "apps", "id": app]]],
+        ]])
+        store.setMeta(Self.needsAdminKey(app), "")
+        store.setMeta("analytics_requested_\(app)", Day.today())
+    }
+
     func syncAnalytics(app: String) async throws {
         let requests = try await client.json("v1/apps/\(app)/analyticsReportRequests", query: ["filter[accessType]": "ONGOING"])
-        var requestId = (requests["data"] as? [JSON])?.first?.id
-        if requestId == nil {
-            let created = try await client.json("v1/analyticsReportRequests", method: "POST", body: ["data": [
-                "type": "analyticsReportRequests", "attributes": ["accessType": "ONGOING"],
-                "relationships": ["app": ["data": ["type": "apps", "id": app]]],
-            ]])
-            requestId = (created["data"] as? JSON)?.id
+        guard let requestId = (requests["data"] as? [JSON])?.first?.id else {
+            // Only an Admin key may turn the reports on. A Sales and Reports key gets 403: the App Store screen offers the one-time Admin step.
+            do { try await requestAnalytics(app: app) } catch ASCError.http(403, _) { store.setMeta(Self.needsAdminKey(app), "1") }
             return // Apple needs a day or two to generate the first reports.
         }
-        guard let requestId else { return }
+        store.setMeta(Self.needsAdminKey(app), "")
         let imported = Set((store.meta("analytics_instances_\(app)") ?? "").split(separator: ",").map(String.init))
         var newlyImported: [String] = []
 

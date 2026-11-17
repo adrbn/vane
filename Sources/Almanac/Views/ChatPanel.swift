@@ -13,6 +13,7 @@ struct ChatPanel: View {
     @State private var messages: [ChatMessage] = []
     @State private var input = ""
     @State private var busy = false
+    @State private var missing = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,7 +29,8 @@ struct ChatPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        if messages.isEmpty { suggestions }
+                        if missing { Label(ChatHelp.missing, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.secondary) }
+                        else if messages.isEmpty { suggestions }
                         ForEach(messages) { bubble($0).id($0.id) }
                         if busy { ProgressView().controlSize(.small).id("busy") }
                     }
@@ -46,6 +48,7 @@ struct ChatPanel: View {
             }
             .padding(12)
         }
+        .task { missing = await !AISettings.assistant.isInstalled() }
         .onAppear(perform: consumeSeed)
         .onChange(of: model.chatSeed) { consumeSeed() }
     }

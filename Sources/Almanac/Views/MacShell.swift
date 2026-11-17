@@ -30,6 +30,8 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .sheet(isPresented: Binding(get: { model.groupsOpen }, set: { model.groupsOpen = $0 })) { GroupsSheet().environment(\.theme, t) }
+        .sheet(isPresented: Binding(get: { model.eventsOpen }, set: { model.eventsOpen = $0 })) { EventsSheet().environment(\.theme, t) }
         .background(WindowChrome())
         .ignoresSafeArea()
         .foregroundStyle(t.label)
@@ -241,7 +243,7 @@ struct ThemedAppSwitcher: View {
     @Environment(\.theme) private var t
     var body: some View {
         Menu {
-            ForEach(model.apps) { app in Button(app.name) { model.appId = app.id } }
+            AppMenuItems()
         } label: {
             HStack(spacing: 10) {
                 if let app = model.app { AppIconView(app: app, size: 34) }
@@ -261,6 +263,7 @@ struct ThemedAppSwitcher: View {
 
     private var subtitle: String {
         guard let app = model.app else { return "" }
+        if model.isAggregate { return String(localized: "\(model.store.appIds(app.id).count) apps") }
         return model.store.versions(app.id).last.map { String(localized: "iOS · Version \($0.version)") } ?? "iOS"
     }
 }
@@ -324,7 +327,7 @@ struct IconRail: View {
         VStack(spacing: 8) {
             Color.clear.frame(height: 48)   // traffic lights
             Menu {
-                ForEach(model.apps) { app in Button(app.name) { model.appId = app.id } }
+                AppMenuItems()
             } label: {
                 if let app = model.app { AppIconView(app: app, size: 32) }
             }
@@ -455,7 +458,6 @@ private struct SwipeArrow: View {
             .allowsHitTesting(false)
     }
 }
-#endif
 
 /// What went wrong in the last refresh, one step per line, selectable so it can be copied into a bug report.
 private struct SyncErrorList: View {
@@ -470,3 +472,4 @@ private struct SyncErrorList: View {
         .padding(16).frame(width: 360, alignment: .leading)
     }
 }
+#endif

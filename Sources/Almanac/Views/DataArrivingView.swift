@@ -13,6 +13,7 @@ struct DataArrivingView: View {
         Screen(title: String(localized: "App Store"), subtitle: String(localized: "\(model.app?.name ?? "") · Waiting for Apple"), inspector: false) {} content: {
             VStack(alignment: .leading, spacing: 24) {
                 status(salesDays)
+                if model.needsAdmin { AdminRequestCard() }
                 section(String(localized: "Available now"), String(localized: "Sales reports go back a year, so these were imported right away")) { sales(app) }
                 section(String(localized: "Waiting for Apple"), String(localized: "Each metric fills in with the first analytics report")) { pending }
             }
@@ -26,7 +27,9 @@ struct DataArrivingView: View {
                     .frame(width: 52, height: 52).background(t.accentSoft, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text.tracked(String(localized: "Your first App Store report arrives in 24–48 hours"), -0.26).font(t.font(26, .bold))
-                    Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? String(localized: "this app")), checks for it in the background and notifies you when it lands.")
+                    (model.needsAdmin
+                        ? Text("Sales history is here. Apple’s analytics start one to two days after the one-time step below.")
+                        : Text("Apple publishes App Store analytics one to two days after each day ends. Vane requested the report for \(model.app?.name ?? String(localized: "this app")), checks for it in the background and notifies you when it lands."))
                         .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 620, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
@@ -35,7 +38,11 @@ struct DataArrivingView: View {
             HStack(alignment: .top, spacing: 16) {
                 step(String(localized: "Key verified"), model.lastSync.map { String(localized: "Last refresh \($0.formatted(.relative(presentation: .named)))") } ?? String(localized: "Connected"), .done)
                 step(String(localized: "Sales history imported"), salesDays.isEmpty ? String(localized: "Nothing yet") : String(localized: "\(salesDays.count) days, \(AppStoreData.md(salesDays.first!)) – \(AppStoreData.md(salesDays.last!))"), salesDays.isEmpty ? .wait : .done)
-                step(String(localized: "Analytics report requested"), String(localized: "Apple is preparing it"), .wait)
+                if model.needsAdmin {
+                    step(String(localized: "Analytics report"), String(localized: "Needs an Admin key once"), .todo)
+                } else {
+                    step(String(localized: "Analytics report requested"), String(localized: "Apple is preparing it"), .wait)
+                }
                 step(String(localized: "First insights"), String(localized: "After 7 days of analytics"), .todo)
             }
             .padding(.leading, 72)
@@ -140,6 +147,10 @@ struct AnalyticsPending: View {
     static let expected = String(localized: "Expected in 24–48 hours")
 
     var body: some View {
+        if model.needsAdmin { AdminRequestCard() } else { waiting }
+    }
+
+    @ViewBuilder private var waiting: some View {
         // Apple publishes each analytics report on its own schedule: sessions often land days before impressions.
         let sessions = model.store.series(model.appId ?? "", .sessions).first?.day
         let title = Text(sessions == nil ? String(localized: "App Store analytics arrive in 24–48 hours") : String(localized: "Impressions and conversion are still on their way")).font(t.font(compact ? 15 : 17, .bold))

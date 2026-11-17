@@ -62,9 +62,13 @@ final class AppModel {
     var mutedCategories = InsightCategory.muted {
         didSet { UserDefaults.standard.set(mutedCategories.map(\.rawValue).sorted(), forKey: InsightCategory.mutedKey) }
     }
-    /// The selected app's insights without the muted categories.
+    /// Single kinds the user turned off from an insight's menu ("Stop Showing…").
+    var mutedKinds = InsightCategory.mutedKinds {
+        didSet { UserDefaults.standard.set(mutedKinds.sorted(), forKey: InsightCategory.mutedKindsKey) }
+    }
+    /// The selected app's insights without the muted categories and kinds.
     func insights(includeDismissed: Bool = false) -> [Insight] {
-        store.insights(appId ?? "", includeDismissed: includeDismissed).filter { !mutedCategories.contains($0.category) }
+        store.insights(appId ?? "", includeDismissed: includeDismissed).filter { !mutedCategories.contains($0.category) && !mutedKinds.contains($0.kind) }
     }
     // Back/forward through visited screens, like Safari: ⌘[ ⌘] or a two-finger swipe.
     private var backStack: [Pane] = []
@@ -88,6 +92,7 @@ final class AppModel {
     /// First launch without a key (never in `--demo`); `--onboarding` forces it for screenshots.
     var onboardingOpen = CommandLine.arguments.contains("--onboarding")
         || (!CommandLine.arguments.contains("--demo") && !Keychain.credentials().isComplete && !UserDefaults.standard.bool(forKey: "onboarded"))
+    var eventsOpen = CommandLine.arguments.contains("--events")
     var chatContext = ""
     var chatSeed: String?               // question pre-filled by "Ask about this" buttons
     var pendingLink: AssistantLink?     // filters for the screen an assistant button opened; that screen applies and clears it
@@ -99,7 +104,22 @@ final class AppModel {
         didSet { UserDefaults.standard.set(pinned.map(\.rawValue), forKey: "pinned") }
     }
 
-    var app: AppRecord? { apps.first { $0.id == appId } }
+    /// The selected app, or a stand-in record for "All apps" and groups (their numbers are summed by the store).
+    var app: AppRecord? {
+        guard let appId else { return nil }
+        if isAggregate { return store.displayName(appId).map { AppRecord(id: appId, name: $0, bundleId: "", hue: 0.6) } }
+        return apps.first { $0.id == appId }
+    }
+    var isAggregate: Bool { appId.map(Store.isAggregate) ?? false }
+    var groups: [Store.AppGroup] { _ = revision; return store.groups() }
+    var groupsOpen = false
+    private func isValid(_ id: String?) -> Bool {
+        guard let id, !store.appIds(id).isEmpty else { return false }
+        return Store.isAggregate(id) || apps.contains { $0.id == id }
+    }
+    /// Apps whose analytics reports wait on the one-time Admin request (the key is Sales and Reports).
+    var appsNeedingAdmin: [AppRecord] { _ = revision; return apps.filter { store.meta(Syncer.needsAdminKey($0.id)) == "1" } }
+    var needsAdmin: Bool { appsNeedingAdmin.contains { $0.id == appId } }
     var isDemo: Bool { demoLaunch || store.meta("demo") == "1" }
     /// The `--demo` window: never syncs, so real data can't land in its database.
     let demoLaunch = CommandLine.arguments.contains("--demo")
@@ -118,14 +138,19 @@ final class AppModel {
         if demo && store.meta("demo") != "1" { try? store.removeAll() }
         reload()
         if apps.isEmpty && (demo || !Keychain.credentials().isComplete) { loadDemo() }
+        // `--demo --needs-admin`: the first demo app has sales only and waits on the Admin step (screenshots).
+        if demo && CommandLine.arguments.contains("--needs-admin"), let first = store.apps().first?.id {
+            try? store.db.query("DELETE FROM daily WHERE app_id=? AND metric NOT IN ('sales','proceeds','first_downloads','redownloads')", [first])
+            store.setMeta(Syncer.needsAdminKey(first), "1")
+        }
         // Re-run the engine on launch so stored insights pick up the current format (charts, wording) before the next sync.
         else { runEngine() }
-        if appId == nil || !apps.contains(where: { $0.id == appId }) { appId = apps.first?.id }
+        if !isValid(appId) { appId = apps.first?.id }
     }
 
     func reload() {
         apps = store.apps()
-        if appId == nil || !apps.contains(where: { $0.id == appId }) { appId = apps.first?.id }
+        if !isValid(appId) { appId = apps.first?.id }
         revision += 1
     }
 
@@ -138,7 +163,7 @@ final class AppModel {
     @discardableResult
     func runEngine() -> [Insight] {
         apps = store.apps()
-        return apps.flatMap { (try? store.merge(insights: InsightEngine(store: store, app: $0.id).run())) ?? [] }
+        return apps.flatMap { InsightEngine.refresh(store: store, app: $0.id) }
     }
 
     func refresh() async {
@@ -160,6 +185,7 @@ final class AppModel {
         let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
+        await DailyNumbers.notify(store)
         runEngine()
         reload()
         syncing = false; syncStatus = ""
@@ -199,6 +225,8 @@ final class AppModel {
 
 extension InsightCategory {
     static let mutedKey = "insights.muted"
+    static let mutedKindsKey = "insights.mutedKinds"
+    static var mutedKinds: Set<String> { Set(UserDefaults.standard.stringArray(forKey: mutedKindsKey) ?? []) }
     static var muted: Set<InsightCategory> {
         Set((UserDefaults.standard.stringArray(forKey: mutedKey) ?? []).compactMap(InsightCategory.init(rawValue:)))
     }

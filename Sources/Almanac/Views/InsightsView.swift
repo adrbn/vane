@@ -109,6 +109,7 @@ struct InsightCard: View {
         .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
         .card()
         .opacity(insight.dismissed ? 0.55 : 1)
+        .contextMenu { InsightMenu(insight: insight) }
     }
 
     @ViewBuilder private var footer: some View {
@@ -243,5 +244,16 @@ struct KeywordFixSheet: View {
             model.runEngine(); model.revision += 1
             done()
         } catch { self.error = error.localizedDescription }
+    }
+}
+
+/// Right-click (Mac) or long press (iPhone) on an insight.
+struct InsightMenu: View {
+    @Environment(AppModel.self) private var model
+    let insight: Insight
+
+    var body: some View {
+        if !insight.dismissed { Button("Dismiss", systemImage: "xmark") { model.dismiss(insight) } }
+        Button(String(localized: "Stop Showing \(Insight.kindTitle(insight.kind))"), systemImage: "bell.slash") { model.mutedKinds.insert(insight.kind) }
     }
 }

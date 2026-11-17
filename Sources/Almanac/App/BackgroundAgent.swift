@@ -25,12 +25,13 @@ enum BackgroundAgent {
             let before = AnalyticsArrival.apps(store)
             _ = await Syncer(client: ASCClient(credentials: creds), store: store).syncAll()
             await AnalyticsArrival.notify(store, before: before)
+            await DailyNumbers.notify(store)
             var fresh: [Insight] = []
             for app in store.apps() {
-                fresh += (try? store.merge(insights: InsightEngine(store: store, app: app.id).run())) ?? []
+                fresh += InsightEngine.refresh(store: store, app: app.id)
             }
-            let muted = InsightCategory.muted
-            await notify(fresh.filter { !muted.contains($0.category) && ($0.needsAttention || $0.category == .milestones || $0.kind == "featured") })
+            let muted = InsightCategory.muted, mutedKinds = InsightCategory.mutedKinds
+            await notify(fresh.filter { !muted.contains($0.category) && !mutedKinds.contains($0.kind) && ($0.needsAttention || $0.category == .milestones || $0.kind == "featured") })
         }
         done.wait()
     }
