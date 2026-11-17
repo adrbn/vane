@@ -94,7 +94,7 @@ La misma app, las mismas cifras. Elige uno en los ajustes; cada tema mantiene su
 **Informes y asistente**
 - Informes semanales, mensuales y anuales redactados a partir de tus cifras. Compártelos como texto o expórtalos en PDF.
 - Chat opcional sobre tus cifras a través de Claude Code o Codex en la línea de comandos, si ya los tienes en tu Mac. Puede consultar cualquier cifra sincronizada (solo lectura), conoce tus eventos y responde en tu idioma.
-- Interfaz en 10 idiomas, a elegir en Ajustes.
+- Interfaz en 25 idiomas, a elegir en Ajustes.
 
 ## Conseguirla
 

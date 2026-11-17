@@ -92,7 +92,7 @@ Same app, same numbers. Pick one in Settings; each keeps its own light or dark s
 **Reports and assistant**
 - Weekly, monthly and yearly reports written from your numbers. Share as text or export a PDF.
 - Optional chat about your numbers through the Claude Code or Codex command line already on your Mac. It can look up any synced figure (read-only), knows your events, and answers in your language.
-- Interface in 10 languages, picked in Settings.
+- Interface in 25 languages, picked in Settings.
 
 ## Get it
 

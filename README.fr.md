@@ -94,7 +94,7 @@ Même app, mêmes chiffres. Vous choisissez dans les réglages ; chaque thème g
 **Rapports et assistant**
 - Rapports hebdomadaires, mensuels et annuels rédigés à partir de vos chiffres. Partage en texte ou export PDF.
 - Discussion facultative sur vos chiffres via Claude Code ou Codex en ligne de commande, déjà installés sur votre Mac. Il peut consulter n'importe quel chiffre synchronisé (en lecture seule), connaît vos événements et répond dans votre langue.
-- Interface en 10 langues, au choix dans les Réglages.
+- Interface en 25 langues, au choix dans les Réglages.
 
 ## L'obtenir
 
