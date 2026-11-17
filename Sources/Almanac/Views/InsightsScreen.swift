@@ -111,8 +111,13 @@ struct InsightsView: View {
                     if let lead { InsightCardView(insight: lead, lead: true, asked: $asked, fixing: $fixing) }
                     grid(new.filter { $0.id != lead?.id })
                 }
-                if !week.isEmpty { group(String(localized: "Earlier this week"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
-                if !older.isEmpty { group(String(localized: "Earlier"), nil).padding(.top, 8); grid(older) }
+                // Up to three earlier cards share one row (each carries its date), so a short feed fits the window.
+                if !week.isEmpty, !older.isEmpty, week.count + older.count <= 3 {
+                    group(String(localized: "Earlier"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week + older)
+                } else {
+                    if !week.isEmpty { group(String(localized: "Earlier this week"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
+                    if !older.isEmpty { group(String(localized: "Earlier"), nil).padding(.top, 8); grid(older) }
+                }
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
