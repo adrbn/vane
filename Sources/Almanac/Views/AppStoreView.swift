@@ -247,6 +247,8 @@ private struct FunnelCard: View {
             .padding(.top, 20)
         }
         .padding(.horizontal, 8).padding(.vertical, 4)
+        // Same height as the conversion tile beside it.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .themedCard()
     }
 
