@@ -147,7 +147,7 @@ struct AnalyticsPending: View {
     static let expected = String(localized: "Expected in 24–48 hours")
 
     var body: some View {
-        if model.needsAdmin { AdminRequestCard() } else { waiting }
+        if model.needsAdmin { AdminRequestCard(fill: !compact) } else { waiting }
     }
 
     @ViewBuilder private var waiting: some View {

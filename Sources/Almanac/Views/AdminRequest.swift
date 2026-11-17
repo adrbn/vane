@@ -11,6 +11,7 @@ import UIKit
 struct AdminRequestCard: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
+    var fill = false
     @State private var sheet = false
     @State private var copied = false
 
@@ -34,7 +35,8 @@ struct AdminRequestCard: View {
             }
             .padding(.leading, 50)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // `fill`: takes its row's height when it sits beside a tile (App Store).
+        .frame(maxWidth: .infinity, maxHeight: fill ? .infinity : nil, alignment: .topLeading)
         .themedCard()
         .sheet(isPresented: $sheet) { AdminKeySheet() }
     }

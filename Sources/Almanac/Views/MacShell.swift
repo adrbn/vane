@@ -406,6 +406,24 @@ struct WindowChrome: NSViewRepresentable {
         func window(_ window: NSWindow, willUseFullScreenPresentationOptions proposed: NSApplication.PresentationOptions = []) -> NSApplication.PresentationOptions {
             proposed.union([.fullScreen, .autoHideMenuBar, .autoHideDock, .autoHideToolbar])
         }
+        /// The toolbar that slides down with the menu bar is an opaque white band over the header: clear it, so only
+        /// the traffic lights show over the page, as in a normal window.
+        func windowDidEnterFullScreen(_ n: Notification) {
+            (inner as? NSWindowDelegate)?.windowDidEnterFullScreen?(n)
+            DispatchQueue.main.async {
+                for w in NSApp.windows where String(describing: type(of: w)).contains("FullScreen") {
+                    w.isOpaque = false
+                    w.backgroundColor = .clear
+                    Self.clear(w.contentView?.superview ?? w.contentView)
+                }
+            }
+        }
+        private static func clear(_ v: NSView?) {
+            guard let v else { return }
+            let name = String(describing: type(of: v))
+            if v is NSVisualEffectView || name == "NSTitlebarBackgroundView" || name == "_NSTitlebarDecorationView" { v.isHidden = true; return }
+            v.subviews.forEach(clear)
+        }
     }
     func makeCoordinator() -> Coordinator { Coordinator() }
 
