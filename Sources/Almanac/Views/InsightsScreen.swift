@@ -19,7 +19,7 @@ struct InsightsView: View {
         let today = Day.today()
         // The quiet feed (Recent + Watching) is a fixed layout that fills the window; a long feed scrolls.
         let quiet = !shown.isEmpty && shown.count <= 3 && !shown.contains { $0.day >= Day.add(-1, to: today) }
-        Screen(title: String(localized: "Insights"), subtitle: subtitle, inspector: true, scrolls: !quiet) {
+        Screen(title: String(localized: "Insights"), subtitle: subtitle, inspector: true, scrolls: !quiet && !Self.fits(shown)) {
             GlassGroup { categoryMenu(all) }
         } content: {
             if active.isEmpty && !showDismissed {
@@ -81,6 +81,12 @@ struct InsightsView: View {
 
     // MARK: Groups
 
+    /// One new card and up to three earlier ones: a single row under it that fills the window, no scrolling.
+    static func fits(_ shown: [Insight]) -> Bool {
+        let earlier = shown.filter { $0.day < Day.add(-1, to: Day.today()) }.count
+        return shown.count - earlier == 1 && (1...3).contains(earlier)
+    }
+
     private func list(_ shown: [Insight]) -> some View {
         let today = Day.today()
         let new = shown.filter { $0.day >= Day.add(-1, to: today) }
@@ -105,19 +111,24 @@ struct InsightsView: View {
                     }
                 }
                 .frame(maxHeight: .infinity)
+            } else if Self.fits(shown) {
+                group(String(localized: "New"), String(localized: "\(new.count) since yesterday"))
+                ForEach(new) { InsightCardView(insight: $0, lead: true, asked: $asked, fixing: $fixing).fixedSize(horizontal: false, vertical: true) }
+                group(older.isEmpty ? String(localized: "Earlier this week") : String(localized: "Earlier"), nil).padding(.top, 8)
+                HStack(alignment: .top, spacing: 16) {
+                    ForEach(week + older) { InsightCardView(insight: $0, lead: false, tall: true, asked: $asked, fixing: $fixing) }
+                    // A lone earlier card keeps its grid width instead of spanning the window.
+                    if week.count + older.count == 1 { Color.clear }
+                }
+                .frame(maxHeight: .infinity)
             } else {
                 if !new.isEmpty {
                     group(String(localized: "New"), String(localized: "\(new.count) since yesterday"))
                     if let lead { InsightCardView(insight: lead, lead: true, asked: $asked, fixing: $fixing) }
                     grid(new.filter { $0.id != lead?.id })
                 }
-                // Up to three earlier cards share one row (each carries its date), so a short feed fits the window.
-                if !week.isEmpty, !older.isEmpty, week.count + older.count <= 3 {
-                    group(String(localized: "Earlier"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week + older)
-                } else {
-                    if !week.isEmpty { group(String(localized: "Earlier this week"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
-                    if !older.isEmpty { group(String(localized: "Earlier"), nil).padding(.top, 8); grid(older) }
-                }
+                if !week.isEmpty { group(String(localized: "Earlier this week"), nil).padding(.top, new.isEmpty ? 0 : 8); grid(week) }
+                if !older.isEmpty { group(String(localized: "Earlier"), nil).padding(.top, 8); grid(older) }
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -146,6 +157,8 @@ struct InsightCardView: View {
     @Environment(\.openWindow) private var openWindow
     var insight: Insight
     var lead: Bool
+    /// Sits in a row that fills the window: the chart takes the extra height.
+    var tall = false
     @Binding var asked: String?
     @Binding var fixing: Insight?
     @State private var wide = true
@@ -167,7 +180,7 @@ struct InsightCardView: View {
                     Text(insight.title).font(t.font(15, .bold)).fixedSize(horizontal: false, vertical: true)
                     Text(insight.body).font(t.font(13)).foregroundStyle(t.label2).lineLimit(4)
                         .frame(minHeight: 34, alignment: .top).fixedSize(horizontal: false, vertical: true)
-                    evidence.frame(minHeight: 56, alignment: .top)
+                    evidence.frame(minHeight: 56, alignment: .top).layoutPriority(tall ? 1 : 0)
                     Spacer(minLength: 0)
                     actions
                 }
@@ -218,10 +231,11 @@ struct InsightCardView: View {
             KeywordEvidence(appId: insight.appId, locale: locale)
         } else if let chart = insight.chart {
             if chart.isBigNumber {
-                Text(chart.headline).font(t.font(40, .bold)).monospacedDigit().foregroundStyle(t.accentText)
+                Text(chart.headline).font(t.font(tall ? 64 : 40, .bold)).monospacedDigit().foregroundStyle(t.accentText)
+                    .frame(maxHeight: tall ? .infinity : nil)
             } else {
                 MiniInsightChart(chart: chart, color: chartColor)
-                    .frame(height: 64)
+                    .frame(minHeight: 64, maxHeight: tall ? .infinity : 64)
             }
         }
     }
