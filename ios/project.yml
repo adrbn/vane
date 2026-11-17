@@ -37,7 +37,7 @@ targets:
         PRODUCT_NAME: Vane
         INFOPLIST_KEY_CFBundleDisplayName: Vane
         GENERATE_INFOPLIST_FILE: YES
-        MARKETING_VERSION: "0.1.9"
+        MARKETING_VERSION: "0.1.10"
         CURRENT_PROJECT_VERSION: 3
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -68,7 +68,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.adrbn.vane.widgets
         PRODUCT_NAME: VaneWidgets
-        MARKETING_VERSION: "0.1.9"
+        MARKETING_VERSION: "0.1.10"
         CURRENT_PROJECT_VERSION: 3
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: 5.0
