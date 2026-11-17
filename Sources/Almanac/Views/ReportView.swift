@@ -30,7 +30,11 @@ struct ReportView: View {
                         .padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 24)
                     }
                     .scrollIndicators(.never)
-                    .clipped()
+                    // Content fades out under the header instead of being cut; the body's top padding keeps it clear at rest.
+                    .mask(VStack(spacing: 0) {
+                        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 24)
+                        Color.black
+                    })
                 }
             }
         }
@@ -74,7 +78,7 @@ struct ReportView: View {
         }
         .frame(maxWidth: 880).frame(maxWidth: .infinity)
         .padding(.top, 44).padding(.horizontal, 24)
-        .frame(height: 88, alignment: .top)
+        .frame(height: 100, alignment: .top)
     }
 
     private func chevron(_ symbol: String, help: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {

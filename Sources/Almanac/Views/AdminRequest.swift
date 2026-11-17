@@ -36,7 +36,7 @@ struct AdminRequestCard: View {
             .padding(.leading, 50)
         }
         // `fill`: takes its row's height when it sits beside a tile (App Store).
-        .frame(maxWidth: .infinity, maxHeight: fill ? .infinity : nil, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: fill ? .infinity : nil, alignment: .leading)
         .themedCard()
         .sheet(isPresented: $sheet) { AdminKeySheet() }
     }
