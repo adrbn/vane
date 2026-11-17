@@ -29,6 +29,8 @@ Vane stores App Store Connect data in SQLite. Tables:
   report 'standard' is complete and per territory, with no names. report 'detailed' names the referring app (bundle id) or website in source_info,
   but Apple leaves out small rows for privacy, so it covers fewer downloads. Never add the two reports together.
   Starts when Apple's analytics reports start, often later than daily downloads.
+- ranks(app_id, day, country, term, rank): position of the app when searching each keyword of its listing, checked once a day
+  in its top countries (lowercase ISO code) through Apple's public search API. rank 0 = not in the first 200. Close to, not identical to, the App Store's order.
 - insights(id, app_id, day, json, dismissed, notified): what Vane flagged; json holds title, body, chart.
 - meta(key, value): sync bookkeeping.
 """

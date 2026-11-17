@@ -124,6 +124,7 @@ struct ListingView: View {
     private func preview(_ l: ListingLocale) -> some View {
         let words = l.keywords.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let repeats = Set(ListingCheck.repeated(l))
+        let ranks = Dictionary(grouping: model.store.ranks(l.appId), by: \.term)
         return VStack(alignment: .leading, spacing: 12) {
             Text("In search").font(t.font(11, .semibold)).foregroundStyle(t.label2)
             // App Store layout: Get on the right. Name and subtitle take two lines at most and shrink a little
@@ -143,11 +144,20 @@ struct ListingView: View {
                 Text("Keywords · \(words.count)").font(t.font(11, .semibold)).foregroundStyle(t.label2).padding(.top, 4)
                 FlowLayout(spacing: 4) {
                     ForEach(words, id: \.self) { w in
-                        Text(w).font(t.font(11)).lineLimit(1)
-                            .foregroundStyle(repeats.contains(w) ? t.warn : t.label)
-                            .padding(.horizontal, 7).frame(height: 20)
-                            .background(repeats.contains(w) ? t.warn.opacity(0.14) : t.fill, in: Capsule())
+                        let r = ranks[w.lowercased()] ?? []
+                        HStack(spacing: 4) {
+                            Text(w).foregroundStyle(repeats.contains(w) ? t.warn : t.label)
+                            if let best = Self.best(r) { rankLabel(best) }
+                        }
+                        .font(t.font(11)).lineLimit(1)
+                        .padding(.horizontal, 7).frame(height: 20)
+                        .background(repeats.contains(w) ? t.warn.opacity(0.14) : t.fill, in: Capsule())
+                        .help(r.map { "\(Territories.name($0.country.uppercased())): \(Self.position($0.rank))" + ($0.previous.map { String(localized: " (was \(Self.position($0)))") } ?? "") }.joined(separator: "\n"))
                     }
+                }
+                if let day = ranks.values.first?.first?.day {
+                    Text("Search position, best of \(Set(ranks.values.joined().map { $0.country.uppercased() }).sorted().joined(separator: ", ")) · \(AppStoreData.md(day))")
+                        .font(t.font(10)).foregroundStyle(t.label3).fixedSize(horizontal: false, vertical: true)
                 }
             }
             // What shows under the screenshots: the promotional text, else the start of the description.
@@ -174,6 +184,20 @@ struct ListingView: View {
         } else {
             label
         }
+    }
+
+    /// The best position across the checked countries; a keyword outside the top 200 everywhere reads "200+".
+    static func best(_ r: [KeywordRank]) -> KeywordRank? {
+        r.min { ($0.rank == 0 ? Int.max : $0.rank) < ($1.rank == 0 ? Int.max : $1.rank) }
+    }
+
+    static func position(_ rank: Int) -> String { rank == 0 ? "\(KeywordRanks.depth)+" : "\(rank)" }
+
+    private func rankLabel(_ r: KeywordRank) -> some View {
+        // Up in the results (a smaller number) is good.
+        let moved = r.previous.map { prev in (prev == 0 ? Int.max : prev) - (r.rank == 0 ? Int.max : r.rank) } ?? 0
+        return Text(Self.position(r.rank)).fontWeight(.bold).monospacedDigit()
+            .foregroundStyle(moved > 0 ? t.pos : moved < 0 ? t.neg : t.label2)
     }
 
     static func languageName(_ code: String) -> String { Locale.current.localizedString(forIdentifier: code) ?? code }

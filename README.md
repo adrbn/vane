@@ -86,6 +86,7 @@ Same app, same numbers. Pick one in Settings; each keeps its own light or dark s
 **Listing and reviews**
 - Edit name, subtitle, keywords, promotional text and description per language. Upload sends only what changed.
 - An "In search" preview with your icon, name, subtitle and keyword chips.
+- Keyword ranks: where your app comes up for each keyword in your top three countries, checked daily through Apple's public search, with the change since the last check.
 - Reviews by rating, country and version. Reply in place. Translation on the Mac when the language is installed.
 
 **Reports and assistant**

@@ -88,6 +88,7 @@ La misma app, las mismas cifras. Elige uno en los ajustes; cada tema mantiene su
 **Ficha y reseñas**
 - Edita el nombre, el subtítulo, las palabras clave, el texto promocional y la descripción de cada idioma. El envío solo manda lo que ha cambiado.
 - Una vista previa «In search» con tu icono, nombre, subtítulo y palabras clave.
+- Posición por palabra clave: dónde aparece tu app con cada palabra clave en tus tres países principales, comprobada a diario con la búsqueda pública de Apple, con el cambio desde la última comprobación.
 - Reseñas por valoración, país y versión. Responde ahí mismo. Traducción en el Mac cuando el idioma está instalado.
 
 **Informes y asistente**

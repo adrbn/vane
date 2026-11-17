@@ -317,3 +317,19 @@ final class StubASC: URLProtocol, @unchecked Sendable {
     #expect(october.sections[0].paragraphs[0].contains("analytics for this app start on"))
     #expect(ReportBuilder(store: s, app: "a").build(.month, start: "2026-11-01").hasAnalytics)
 }
+
+@Test func keywordRanksParseAndKeepThePreviousCheck() throws {
+    #expect(KeywordRanks.terms("flac, ALAC,flac,,hifi ") == ["flac", "alac", "hifi"])
+    let json = Data(#"{"results":[{"trackId":1},{"trackId":42},{"trackId":7}]}"#.utf8)
+    #expect(KeywordRanks.rank(of: "42", in: json) == 2)
+    #expect(KeywordRanks.rank(of: "9", in: json) == 0)
+
+    let store = try Store(path: NSTemporaryDirectory() + "ranks-\(UUID()).sqlite")
+    try store.save(ranks: [KeywordRank(term: "flac", country: "us", day: "2026-11-15", rank: 30)], app: "a")
+    try store.save(ranks: [KeywordRank(term: "flac", country: "us", day: "2026-11-16", rank: 12),
+                           KeywordRank(term: "hifi", country: "us", day: "2026-11-16", rank: 0)], app: "a")
+    let r = store.ranks("a")
+    #expect(r.map(\.term) == ["flac", "hifi"])
+    #expect(r[0].rank == 12 && r[0].previous == 30)
+    #expect(r[1].rank == 0 && r[1].previous == nil)
+}

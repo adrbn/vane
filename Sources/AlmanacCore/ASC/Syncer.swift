@@ -36,6 +36,10 @@ public struct Syncer: Sendable {
         for (app, _) in apps {
             await attempt(String(localized: "Analytics · \(app.name)")) { try await syncAnalytics(app: app.id) }
         }
+        // Last: a few dozen public searches, paced, once a day.
+        for (app, _) in apps {
+            await attempt(String(localized: "Keyword ranks · \(app.name)")) { try await syncRanks(app: app.id) }
+        }
         store.setMeta("last_sync", ISO8601DateFormatter().string(from: Date()))
         return errors
     }

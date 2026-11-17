@@ -31,6 +31,7 @@ public final class Store: @unchecked Sendable {
         CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY, app_id TEXT, day TEXT, title TEXT);
         CREATE TABLE IF NOT EXISTS sources(app_id TEXT, report TEXT, day TEXT, territory TEXT, download_type TEXT, source_type TEXT,
             source_info TEXT, value REAL, PRIMARY KEY(app_id, report, day, territory, download_type, source_type, source_info));
+        CREATE TABLE IF NOT EXISTS ranks(app_id TEXT, day TEXT, country TEXT, term TEXT, rank INTEGER, PRIMARY KEY(app_id, day, country, term));
         """)
     }
 

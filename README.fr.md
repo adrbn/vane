@@ -88,6 +88,7 @@ Même app, mêmes chiffres. Vous choisissez dans les réglages ; chaque thème g
 **Fiche et avis**
 - Modifiez le nom, le sous-titre, les mots-clés, le texte promotionnel et la description pour chaque langue. L'envoi ne transmet que ce qui a changé.
 - Un aperçu « In search » avec votre icône, votre nom, votre sous-titre et vos mots-clés.
+- Rang par mot-clé : la position de votre app pour chaque mot-clé dans vos trois premiers pays, vérifiée chaque jour via la recherche publique d'Apple, avec l'évolution depuis la dernière vérification.
 - Avis par note, par pays et par version. Réponse sur place. Traduction sur le Mac quand la langue est installée.
 
 **Rapports et assistant**
