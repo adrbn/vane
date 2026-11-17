@@ -265,6 +265,8 @@ struct Change {
     var text: String
     var up: Bool
     var flat: Bool
+    /// No earlier figure to compare with (whatever the text says).
+    var none = false
 
     init(_ metric: Metric, value: Double, previous: Double, arrows: Bool = true) {
         // A rate of exactly 0 means no analytics for that period (Apple's reports start later), not 0 %.
@@ -278,14 +280,14 @@ struct Change {
             up = r >= 0; flat = abs(r) < 0.0005
             text = flat ? String(localized: "No change") : "\(arrows ? (up ? "↑ " : "↓ ") : (up ? "+" : "−"))\(String(format: "%.1f", abs(r) * 100))%"
         } else {
-            up = true; flat = true; text = String(localized: "No earlier data")
+            up = true; flat = true; none = true; text = String(localized: "No earlier data")
         }
     }
 
     /// The earlier period isn't fully covered by history: say so instead of a misleading percentage.
     static let noHistory: Change = {
         var c = Change(.downloads, value: 0, previous: 0)
-        c.text = String(localized: "No earlier data")
+        c.text = String(localized: "No earlier data"); c.none = true
         return c
     }()
 

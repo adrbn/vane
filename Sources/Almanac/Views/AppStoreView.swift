@@ -49,7 +49,13 @@ struct AppStoreData {
     func value(_ m: Metric) -> Double { store.total(app, m, from: from, to: to) }
     func previous(_ m: Metric) -> Double { store.total(app, m, from: pFrom, to: pTo) }
     func change(_ m: Metric, arrows: Bool = true) -> Change {
-        has(m) && hasPrevious(m) ? Change(m, value: value(m), previous: previous(m), arrows: arrows) : .noHistory
+        if has(m) && hasPrevious(m) { return Change(m, value: value(m), previous: previous(m), arrows: arrows) }
+        var c = Change.noHistory
+        // Apple's analytics can start inside the period: say from when the figure counts.
+        if has(m), let first = store.series(app, m, from: from, to: to).first?.day, Day.between(from, first) > 1 {
+            c.text = String(localized: "Since \(Self.md(first))")
+        }
+        return c
     }
     /// History reaches back to the start of the previous period.
     func hasPrevious(_ m: Metric) -> Bool {
@@ -136,7 +142,7 @@ private struct Hero: View {
                     Text.tracked(Num.int(d.value(.firstDownloads)), t.heroTracking).font(t.heroFont).monospacedDigit()
                         .foregroundStyle(t.heroFg).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 10).padding(.leading, -4)
                     (Text(c.text).foregroundStyle(t.heroBackground == nil ? c.color(t) : t.heroFg).fontWeight(.bold)
-                        + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.heroFg2).fontWeight(.medium))
+                        + Text(c.none ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.heroFg2).fontWeight(.medium))
                         .font(t.font(17)).monospacedDigit().padding(.top, 10)
                     if let b = d.best, b.value > 0 {
                         Text("Best day: \(Num.int(b.value)) on \(AppStoreData.md(b.day))").font(t.font(13)).foregroundStyle(t.heroFg2).monospacedDigit().padding(.top, 2)
@@ -298,10 +304,10 @@ private struct TickerOverview: View {
                 Spark(values: d.spark(m), color: c.flat ? t.label2 : t.color(m, up: c.up), width: 1.5).frame(width: 72, height: 28).opacity(d.has(m) ? 1 : 0)
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(d.shown(m)).font(t.font(16, .semibold)).monospacedDigit().foregroundStyle(d.has(m) ? t.label : t.label3)
-                    Text(c.text == Change.noHistory.text ? "—" : c.flat ? (m.isRate ? String(localized: "0.0 pts") : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
+                    Text(c.none ? "—" : c.flat ? (m.isRate ? String(localized: "0.0 pts") : "0.0%") : c.text).font(t.font(13, .bold)).monospacedDigit()
                         .foregroundStyle(.black).padding(.horizontal, 8).frame(minWidth: 72, alignment: .trailing).frame(height: 24)
                         .background(c.flat ? Color(css: "#8E8E93") : c.up ? t.pos : t.neg, in: RoundedRectangle(cornerRadius: 6))
-                        .opacity(d.has(m) && c.text != Change.noHistory.text ? 1 : 0)
+                        .opacity(d.has(m) && !c.none ? 1 : 0)
                 }
                 .frame(width: 92, alignment: .trailing)
             }
@@ -321,7 +327,7 @@ private struct TickerOverview: View {
         return VStack(alignment: .leading, spacing: 0) {
             Text(MetricCard.label(m)).font(t.font(17)).foregroundStyle(t.label2)
             Text.tracked(d.shown(m), t.heroTracking).font(t.heroFont).monospacedDigit().lineLimit(1).frame(height: 84)
-            (Text(d.has(m) ? c.text : AnalyticsPending.expected).foregroundStyle(d.has(m) ? c.color(t) : t.label2) + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.label2).fontWeight(.regular))
+            (Text(d.has(m) ? c.text : AnalyticsPending.expected).foregroundStyle(d.has(m) ? c.color(t) : t.label2) + Text(c.none ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.label2).fontWeight(.regular))
                 .font(t.font(17, .semibold)).monospacedDigit()
             GeometryReader { g in
                 ZStack(alignment: .topTrailing) {
