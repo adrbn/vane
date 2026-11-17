@@ -256,3 +256,49 @@ private func demoStore() throws -> Store {
     #expect(s.reviews("group:Pair").count == s.reviews(ids[0]).count + s.reviews(ids[1]).count)
     #expect(s.listing(Store.allApps).isEmpty)
 }
+
+/// Answers App Store Connect calls without the network: no request exists yet, and the POST that creates one gets `postStatus`.
+final class StubASC: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var postStatus = 403
+    nonisolated(unsafe) static var posts = 0
+    override class func canInit(with request: URLRequest) -> Bool { request.url?.host == "api.appstoreconnect.apple.com" }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let post = request.httpMethod == "POST"
+        if post { Self.posts += 1 }
+        let code = post ? Self.postStatus : 200
+        let body = post ? (code == 403 ? #"{"errors":[{"detail":"forbidden"}]}"# : #"{"data":{"id":"r1"}}"#) : #"{"data":[]}"#
+        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: code, httpVersion: nil, headerFields: nil)!, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
+@Test func salesKeyAsksForAdminThenAdminKeyClearsIt() async throws {
+    URLProtocol.registerClass(StubASC.self)
+    defer { URLProtocol.unregisterClass(StubASC.self) }
+    let store = try Store(path: NSTemporaryDirectory() + "admin-\(UUID().uuidString).sqlite")
+    let creds = ASCCredentials(issuerId: "issuer", keyId: "KEY", privateKeyPEM: P256.Signing.PrivateKey().pemRepresentation, vendorNumber: "1")
+    let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
+
+    StubASC.postStatus = 403
+    try await syncer.syncAnalytics(app: "42")   // a 403 must not fail the whole refresh
+    #expect(store.meta(Syncer.needsAdminKey("42")) == "1")
+
+    StubASC.postStatus = 201
+    try await syncer.requestAnalytics(app: "42")
+    #expect(store.meta(Syncer.needsAdminKey("42")) == "")
+    #expect(store.meta("analytics_requested_42") == Day.today())
+    #expect(StubASC.posts == 2)
+}
+
+@Test func dailyNotificationOnlyForANewDay() throws {
+    let s = try demoStore()
+    #expect(DailySummary.newDay(s) == nil)            // first sync: remember, don't announce history
+    #expect(DailySummary.newDay(s) == nil)            // same day again: nothing
+    let last = DailySummary.lastDay(s)!
+    s.setMeta("notified_sales_day", Day.add(-1, to: last))
+    #expect(DailySummary.newDay(s) == last)           // a day later: announce it, once
+    #expect(DailySummary.newDay(s) == nil)
+}

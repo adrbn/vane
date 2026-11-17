@@ -3,6 +3,16 @@ import Foundation
 /// One day's downloads and proceeds across apps: the "new day arrived" notification.
 public enum DailySummary {
     /// The newest day the sales reports cover, across apps.
+    /// The sales day to announce, if a new one arrived since the last call. The first call only remembers the day:
+    /// no notification for a year of imported history.
+    public static func newDay(_ store: Store) -> String? {
+        guard let day = lastDay(store) else { return nil }
+        let previous = store.meta("notified_sales_day")
+        store.setMeta("notified_sales_day", day)
+        guard let previous, !previous.isEmpty, day > previous else { return nil }
+        return day
+    }
+
     public static func lastDay(_ store: Store) -> String? { store.apps().compactMap { store.lastDay($0.id, .firstDownloads) }.max() }
 
     /// Title and body for `day`, biggest apps first. Nil when nothing was downloaded or sold.

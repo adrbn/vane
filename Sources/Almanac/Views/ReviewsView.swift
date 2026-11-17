@@ -156,7 +156,7 @@ struct ReplySheet: View {
 enum ChatHelp {
     static var missing: String {
         #if os(macOS)
-        String(localized: "Chat runs your own \(AISettings.provider.title), and Vane can't find it on this Mac. Install it, sign in once in Terminal, then reopen this panel. You can switch to Codex in Settings › Assistant.")
+        String(localized: "Chat runs your own \(AISettings.provider.title), and Vane can't find it on this Mac. Install it, sign in once in Terminal, then reopen this panel. You can pick Claude Code or Codex in Settings › Assistant.")
         #else
         String(localized: "Chat runs in the Mac app, with your own Claude Code or Codex. Your numbers are all here; ask from your Mac.")
         #endif
