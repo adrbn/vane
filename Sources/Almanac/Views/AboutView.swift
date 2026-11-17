@@ -5,7 +5,7 @@ import AppKit
 import UIKit
 #endif
 
-/// About: the icon, the version, then three links (source, Ko-fi, issues). Same cards and buttons as Settings, in every look.
+/// About: the icon, the version, then Ko-fi and GitHub pills, like the README's, and the issue link. Same cards and buttons as Settings, in every look.
 struct AboutView: View {
     @Environment(\.theme) private var t
     @Environment(\.openURL) private var openURL
@@ -26,13 +26,14 @@ struct AboutView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
 
+            HStack(spacing: 10) {
+                Pill(symbol: "cup.and.saucer.fill", title: String(localized: "Buy me a coffee"), detail: String(localized: "Support Vane on Ko-fi"),
+                     fill: Color(red: 1, green: 0.369, blue: 0.357), ink: .white) { openURL(Self.kofi) }
+                Pill(symbol: "chevron.left.forwardslash.chevron.right", title: String(localized: "View on GitHub"), detail: String(localized: "Source code, MIT"),
+                     fill: Color(white: 0.07), ink: .white) { openURL(Self.repo) }
+            }
+
             VStack(spacing: 0) {
-                link(symbol: "chevron.left.forwardslash.chevron.right", section: .appstore, title: String(localized: "Source code"),
-                     detail: "github.com/adrbn/vane", button: String(localized: "Open"), url: Self.repo)
-                t.sep.frame(height: 1).padding(.leading, 56)
-                link(symbol: "cup.and.saucer.fill", section: .insights, title: String(localized: "Support Vane"),
-                     detail: String(localized: "Vane is free. A coffee on Ko-fi keeps it going."), button: "Ko-fi", url: Self.kofi, prominent: true)
-                t.sep.frame(height: 1).padding(.leading, 56)
                 link(symbol: "exclamationmark.bubble", section: .reviews, title: String(localized: "Report a problem"),
                      detail: String(localized: "Or suggest a feature on GitHub."), button: String(localized: "New Issue"), url: Self.issues)
             }
@@ -62,6 +63,38 @@ struct AboutView: View {
         let v = i?["CFBundleShortVersionString"] as? String ?? "–"
         let b = i?["CFBundleVersion"] as? String
         return b.map { "\(v) (\($0))" } ?? v
+    }
+}
+
+/// A capsule like the README buttons: icon in a soft circle, two lines, a chevron.
+private struct Pill: View {
+    @Environment(\.theme) private var t
+    let symbol: String, title: String, detail: String, fill: Color, ink: Color
+    let action: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol).font(.system(size: 13, weight: .bold))
+                    .frame(width: 32, height: 32).background(ink.opacity(0.2), in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).font(t.font(14, .bold)).lineLimit(1)
+                    Text(detail).font(t.font(11, .medium)).opacity(0.85).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).opacity(0.85)
+            }
+            .foregroundStyle(ink)
+            .padding(.leading, 8).padding(.trailing, 16).frame(height: 48)
+            .background(fill, in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.08)))
+            .brightness(hover ? 0.05 : 0)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .animation(.easeOut(duration: 0.15), value: hover)
     }
 }
 
