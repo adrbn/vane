@@ -230,7 +230,9 @@ struct InsightCardView: View {
         if case .fixKeywords(let locale, _)? = insight.action {
             KeywordEvidence(appId: insight.appId, locale: locale)
         } else if let chart = insight.chart {
-            if chart.isBigNumber {
+            if insight.kind == "milestone" {
+                MilestoneEvidence(insight: insight, headline: chart.headline, tall: tall)
+            } else if chart.isBigNumber {
                 Text(chart.headline).font(t.font(tall ? 64 : 40, .bold)).monospacedDigit().foregroundStyle(t.accentText)
                     .frame(maxHeight: tall ? .infinity : nil)
             } else {
@@ -372,6 +374,50 @@ struct MiniInsightChart: View {
             }
         }
         return out
+    }
+}
+
+/// Cumulative downloads crossing the milestone line, then how far the next one is at the current pace.
+private struct MilestoneEvidence: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    var insight: Insight
+    var headline: String
+    var tall: Bool
+
+    var body: some View {
+        let daily = model.store.series(insight.appId, .downloads)
+        let total = daily.reduce(into: [(date: Date, value: Double)]()) { acc, p in acc.append((Day.date(p.day), (acc.last?.value ?? 0) + p.value)) }
+        let mark = Double(headline.filter(\.isNumber)) ?? 0
+        let crossed = total.first { $0.value >= mark }
+        let now = total.last?.value ?? 0
+        let next = InsightEngine.downloadMarks.first { Double($0) > now }
+        let pace = daily.suffix(28).reduce(0) { $0 + $1.value } / 28
+        VStack(alignment: .leading, spacing: 6) {
+            Text(headline).font(t.font(40, .bold)).monospacedDigit().foregroundStyle(t.accentText)
+            Chart {
+                ForEach(total, id: \.date) { p in
+                    AreaMark(x: .value("Day", p.date), y: .value("Downloads", p.value))
+                        .foregroundStyle(.linearGradient(colors: [t.accent.opacity(0.25), t.accent.opacity(0)], startPoint: .top, endPoint: .bottom))
+                    LineMark(x: .value("Day", p.date), y: .value("Downloads", p.value))
+                        .foregroundStyle(t.accent).lineStyle(.init(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                }
+                RuleMark(y: .value("Milestone", mark)).foregroundStyle(t.label3).lineStyle(.init(lineWidth: 1, dash: [3, 3]))
+                if let c = crossed {
+                    PointMark(x: .value("Day", c.date), y: .value("Downloads", mark))
+                        .symbol { Circle().fill(t.accent).frame(width: 10, height: 10).overlay(Circle().strokeBorder(t.card, lineWidth: 2)) }
+                        .annotation(position: .topLeading, spacing: 4) {
+                            Text(c.date.formatted(.dateTime.month(.abbreviated).day())).font(t.font(10, .semibold)).foregroundStyle(t.label2)
+                        }
+                }
+            }
+            .chartXAxis(.hidden).chartYAxis(.hidden).chartLegend(.hidden)
+            .frame(minHeight: 64, maxHeight: tall ? .infinity : 64)
+            if let next, pace > 0 {
+                let weeks = max(1, Int(((Double(next) - now) / pace / 7).rounded()))
+                Text("Next: \(next.formatted()), about \(weeks) weeks at this pace").font(t.font(12)).foregroundStyle(t.label2)
+            }
+        }
     }
 }
 

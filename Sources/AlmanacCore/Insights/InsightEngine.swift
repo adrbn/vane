@@ -55,10 +55,12 @@ public struct InsightEngine {
                                                       baselineLabel: String(localized: "Previous best: \(Int(previousBest).formatted(.number.locale(enUS)))"), baseline: previousBest, headline: Int(last.value).formatted(.number.locale(enUS))))
     }
 
+    public static let downloadMarks = [1_000, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000]
+
     func downloadMilestones() -> [Insight] {
         let s = store.series(app, .downloads)
         guard !s.isEmpty else { return [] }
-        let marks = [1_000, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000]
+        let marks = Self.downloadMarks
         var running = 0.0, out: [Insight] = []
         var next = marks.makeIterator(), target = next.next()
         for p in s {
