@@ -75,9 +75,7 @@ struct ListingView: View {
         let sets = live.map { Set(ListingCheck(drafts[$0.locale] ?? $0).issues) }
         let shared = sets.dropFirst().reduce(sets.first ?? []) { $0.intersection($1) }
         let sel = live.first { $0.locale == selected }.map { drafts[$0.locale] ?? $0 }
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Localizations").font(t.font(13, .semibold))
-            VStack(spacing: 2) {
+        let list = VStack(spacing: 2) {
                 ForEach(live) { l in
                     let d = drafts[l.locale] ?? l
                     let own = ListingCheck(d).issues.filter { !shared.contains($0) || live.count == 1 }
@@ -103,7 +101,11 @@ struct ListingView: View {
                 }
             }
             .padding(6)
-            .themedCard(padding: 0, radius: t.rS) // same corner as the fields beside it
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Localizations").font(t.font(13, .semibold))
+            // Many languages would make the column taller than the window, which pushes the whole screen under the title bar.
+            ViewThatFits(in: .vertical) { list; ScrollView { list }.scrollIndicators(.automatic) }
+                .themedCard(padding: 0, radius: t.rS) // same corner as the fields beside it
             if live.count > 1, let issue = shared.sorted().first {
                 Label("\(issue) in every language", systemImage: "exclamationmark.circle")
                     .font(t.font(11)).foregroundStyle(t.warn).padding(.horizontal, 4)
