@@ -1,7 +1,6 @@
 import AlmanacCore
 import Foundation
 import Observation
-import SwiftUI
 #if os(iOS)
 import UIKit
 #endif
@@ -189,12 +188,12 @@ final class AppModel {
         #endif
         let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
-        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; withAnimation(.smooth(duration: 0.6)) { self.reload() } } }
+        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
         await DailyNumbers.notify(store)
         runEngine()
-        withAnimation(.smooth(duration: 0.6)) { reload() }
+        reload()
         syncing = false; syncStatus = ""
     }
 

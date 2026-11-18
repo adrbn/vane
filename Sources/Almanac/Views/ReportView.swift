@@ -60,7 +60,8 @@ struct ReportView: View {
             Spacer(minLength: 12)
             GlassSegments(options: ReportPeriod.allCases.map { ($0, $0.title) }, selection: Binding(
                 get: { ref.period },
-                set: { p in ref = complete(ReportRef(appId: ref.appId, period: p, start: Self.start(p, ref.start))); section = "Summary" }))
+                // Always the latest complete period: anchoring on the shown period's start drifted back a step on every switch.
+                set: { p in ref = complete(ReportRef(appId: ref.appId, period: p, start: Self.start(p, model.store.lastDay(ref.appId) ?? ref.start))); section = "Summary" }))
             GlassGroup {
                 chevron("chevron.left", help: String(localized: "Previous"), enabled: span.map { ref.start > $0.lowerBound } ?? false) { ref = shifted(ref, -1) }
                 chevron("chevron.right", help: String(localized: "Next"), enabled: span.map { end(next) <= $0.upperBound } ?? false) { ref = next }
