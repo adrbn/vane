@@ -60,11 +60,17 @@ extension Syncer {
                 var q = URLComponents(string: "https://itunes.apple.com/search")!
                 q.queryItems = [.init(name: "term", value: term), .init(name: "country", value: country),
                                 .init(name: "entity", value: "software"), .init(name: "limit", value: "\(KeywordRanks.depth)")]
-                let (data, response) = try await URLSession.shared.data(from: q.url!)
-                guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
+                // Apple throttles past about 20 searches a minute: one retry after a pause before giving up.
+                var data = Data()
+                for attempt in 0..<2 {
+                    let (d, response) = try await URLSession.shared.data(from: q.url!)
+                    if (response as? HTTPURLResponse)?.statusCode == 200 { data = d; break }
+                    if attempt == 1 { throw URLError(.badServerResponse) }
+                    try await Task.sleep(for: .seconds(30))
+                }
                 out.append(KeywordRank(term: term, country: country, day: today, rank: KeywordRanks.rank(of: app, in: data)))
-                // ponytail: Apple allows about 20 searches a minute; a fixed pause keeps a few dozen keywords under it.
-                try await Task.sleep(for: .seconds(3))
+                // ponytail: fixed pause, 15 searches a minute; a few dozen keywords per app take a few minutes.
+                try await Task.sleep(for: .seconds(4))
             }
         }
         try store.save(ranks: out, app: app)

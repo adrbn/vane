@@ -23,7 +23,9 @@ enum BackgroundAgent {
             let creds = Keychain.credentials()
             guard creds.isComplete, let store = try? Store(), store.meta("demo") != "1" else { return }
             let before = AnalyticsArrival.apps(store)
-            _ = await Syncer(client: ASCClient(credentials: creds), store: store).syncAll()
+            let errors = await Syncer(client: ASCClient(credentials: creds), store: store).syncAll()
+            // launchd keeps stderr in the unified log; also lets `Vane --sync` in Terminal show what failed.
+            for e in errors { FileHandle.standardError.write(Data("\(e.step): \(e.message)\n".utf8)) }
             await AnalyticsArrival.notify(store, before: before)
             await DailyNumbers.notify(store)
             var fresh: [Insight] = []
