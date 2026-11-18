@@ -57,6 +57,13 @@ public struct Assistant: Sendable {
     Never mention tables, SQL, queries or tools in your answer: speak about the data itself.
     """
 
+    /// The whole chat as plain text, to paste into another AI by hand: the instructions, the data, every message.
+    public static func handoff(context: String, history: [(role: String, text: String)]) -> String {
+        var out = "# Instructions\n\n\(systemPrompt)\n\n# Data\n\n<data>\n\(context)\n</data>\n\n# Conversation\n"
+        for h in history { out += "\n\(h.role == "user" ? "Developer" : "Assistant"): \(h.text)\n" }
+        return out
+    }
+
     /// `database`: give the assistant read-only SQL access to that Vane database (Claude only; slower, so chats only).
     public func ask(_ question: String, context: String, history: [(role: String, text: String)] = [], database: String? = nil) async throws -> String {
         guard await isInstalled() else { throw AssistantError.notInstalled(provider.rawValue) }

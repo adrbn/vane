@@ -22,6 +22,10 @@ struct InspectorPanel: View {
                     Text("\(AISettings.provider.title) · \(model.section.title)").font(t.font(11)).foregroundStyle(t.label2).lineLimit(1)
                 }
                 Spacer()
+                iconButton("doc.on.doc", help: String(localized: "Copy the whole chat, with its data and instructions, to paste into another AI")) {
+                    let text = Assistant.handoff(context: context, history: messages.filter { $0.role != "error" }.map { (role: $0.role, text: $0.text) })
+                    NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
+                }
                 if !messages.isEmpty {
                     iconButton("square.and.pencil", help: String(localized: "New chat")) { messages = [] }
                 }
@@ -129,6 +133,9 @@ struct InspectorPanel: View {
         }
     }
 
+    /// What the AI receives with each question.
+    private var context: String { "App: \(model.app?.name ?? "") (id \(model.appId ?? ""))\nToday: \(Day.today())\n\(model.chatContext)" }
+
     private func consumeSeed() {
         guard let q = model.chatSeed else { return }
         model.chatSeed = nil
@@ -142,7 +149,6 @@ struct InspectorPanel: View {
         messages.append(ChatMessage(role: "user", text: q))
         input = ""
         busy = true
-        let context = "App: \(model.app?.name ?? "") (id \(model.appId ?? ""))\nToday: \(Day.today())\n\(model.chatContext)"
         Task {
             do { messages.append(ChatMessage(role: "assistant", text: try await AISettings.assistant.ask(q, context: context, history: history, database: model.store.path))) }
             catch { messages.append(ChatMessage(role: "error", text: error.localizedDescription)) }

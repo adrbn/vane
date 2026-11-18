@@ -41170,6 +41170,154 @@
         }
       }
     },
+    "Copy the whole chat, with its data and instructions, to paste into another AI": {
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia tot el xat, amb les dades i les instruccions, per enganxar-lo en una altra IA"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den ganzen Chat mit Daten und Anweisungen kopieren, um ihn in eine andere KI einzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar todo el chat, con sus datos e instrucciones, para pegarlo en otra IA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier tout le chat, avec ses données et ses instructions, pour le coller dans une autre IA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia tutta la chat, con dati e istruzioni, da incollare in un'altra IA"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De hele chat kopiëren, met gegevens en instructies, om in een andere AI te plakken"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar todo o chat, com dados e instruções, para colar em outra IA"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar todo o chat, com dados e instruções, para colar noutra IA"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать весь чат с данными и инструкциями, чтобы вставить в другой ИИ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm sohbeti verileri ve talimatlarıyla kopyala, başka bir yapay zekâya yapıştırmak için"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiera hela chatten med data och instruktioner för att klistra in i en annan AI"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopier hele chatten med data og instruksjoner for å lime inn i en annen KI"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiér hele chatten med data og instruktioner for at indsætte den i en anden AI"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopioi koko keskustelu tietoineen ja ohjeineen liitettäväksi toiseen tekoälyyn"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skopiuj cały czat z danymi i instrukcjami, aby wkleić go do innej AI"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zkopírovat celý chat s daty a pokyny pro vložení do jiné AI"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiază tot chatul, cu date și instrucțiuni, pentru a-l lipi în altă IA"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопіювати весь чат із даними та інструкціями, щоб вставити в інший ШІ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αντιγραφή όλης της συνομιλίας, με δεδομένα και οδηγίες, για επικόλληση σε άλλη ΤΝ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制整个对话（含数据和指令），粘贴到其他 AI"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製整段對話（含資料與指令），貼到其他 AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データと指示を含むチャット全体をコピーして、別の AI に貼り付ける"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "데이터와 지침을 포함한 전체 채팅을 복사해 다른 AI에 붙여 넣기"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คัดลอกแชตทั้งหมดพร้อมข้อมูลและคำสั่ง เพื่อวางใน AI อื่น"
+          }
+        }
+      }
+    },
     "Couldn't find the %@ command. Install it and sign in, then try again.": {
       "localizations": {
         "ca": {

@@ -344,3 +344,11 @@ final class StubASC: URLProtocol, @unchecked Sendable {
     #expect(r[0].rank == 12 && r[0].previous == 30)
     #expect(r[1].rank == 0 && r[1].previous == nil)
 }
+
+@Test func theChatHandoffHoldsInstructionsDataAndEveryMessage() {
+    let history = (1...12).map { (role: $0 % 2 == 1 ? "user" : "assistant", text: "message \($0)") }
+    let text = Assistant.handoff(context: "Downloads: 447", history: history)
+    #expect(text.contains(Assistant.systemPrompt))
+    #expect(text.contains("<data>\nDownloads: 447\n</data>"))
+    #expect(text.contains("Developer: message 1\n") && text.contains("Assistant: message 12\n"))
+}
