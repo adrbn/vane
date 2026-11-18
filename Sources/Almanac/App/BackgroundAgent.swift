@@ -1,7 +1,6 @@
 import AlmanacCore
 import Foundation
 import ServiceManagement
-import UserNotifications
 
 /// The same binary, launched by launchd with `--sync` every 6 hours
 /// (Contents/Library/LaunchAgents/dev.almanac.agent.plist). Visible and switchable in
@@ -32,22 +31,8 @@ enum BackgroundAgent {
             for app in store.apps() {
                 fresh += InsightEngine.refresh(store: store, app: app.id)
             }
-            let muted = InsightCategory.muted, mutedKinds = InsightCategory.mutedKinds
-            await notify(fresh.filter { !muted.contains($0.category) && !mutedKinds.contains($0.kind) && ($0.needsAttention || $0.category == .milestones || $0.kind == "featured") })
+            await InsightNotifier.post(fresh)
         }
         done.wait()
-    }
-
-    static func notify(_ insights: [Insight]) async {
-        guard UserDefaults.standard.object(forKey: "notifyInsights") as? Bool ?? true else { return }
-        let center = UNUserNotificationCenter.current()
-        guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return }
-        for i in insights.prefix(5) {
-            let c = UNMutableNotificationContent()
-            c.title = i.title
-            c.body = i.body
-            c.sound = .default
-            try? await center.add(UNNotificationRequest(identifier: i.id, content: c, trigger: nil))
-        }
     }
 }

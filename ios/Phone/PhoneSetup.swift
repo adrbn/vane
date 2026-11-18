@@ -252,6 +252,17 @@ struct PhoneSettings: View {
             PhoneKeyForm()
             PhoneSectionTitle(title: String(localized: "Look"))
             PhoneThemeGrid()
+            PhoneSectionTitle(title: String(localized: "Language"))
+            // iOS keeps a per-app language in its own Settings, with every language Vane ships.
+            Button { if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) } } label: {
+                HStack {
+                    Text(Locale.current.localizedString(forIdentifier: Bundle.main.preferredLocalizations.first ?? "en")?.localizedCapitalized ?? "").font(t.font(15))
+                    Spacer()
+                    Text("Change in iOS Settings").font(t.font(14, .semibold)).foregroundStyle(t.accentText)
+                }
+                .phoneCard(padding: 14)
+            }
+            .buttonStyle(.plain)
             PhoneSectionTitle(title: String(localized: "Insights"), detail: String(localized: "Fixed rules, no AI"))
             @Bindable var m = model
             VStack(spacing: 0) {

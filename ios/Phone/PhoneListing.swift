@@ -40,6 +40,7 @@ struct PhoneListing: View {
                 field(String(localized: "Name"), l.name, ListingView.limits.name)
                 field(String(localized: "Subtitle"), l.subtitle, ListingView.limits.subtitle)
                 field(String(localized: "Keywords"), l.keywords, ListingView.limits.keywords)
+                ranks(l.wrappedValue)
                 field(String(localized: "Promotional text"), l.promoText, ListingView.limits.promo, lines: 4)
                 field(String(localized: "Description"), l.description, ListingView.limits.description, lines: 10)
                 if let status { Text(status.text).font(t.font(12)).foregroundStyle(status.error ? t.neg : t.label2) }
@@ -92,6 +93,39 @@ struct PhoneListing: View {
                 .font(t.font(15)).lineLimit(lines == 1 ? 1...3 : lines...max(lines, 30))
         }
         .phoneCard(padding: 14)
+    }
+
+    /// Each keyword's best search position across the checked countries; long-press a chip for each country.
+    @ViewBuilder private func ranks(_ l: ListingLocale) -> some View {
+        let all = Dictionary(grouping: model.store.ranks(l.appId), by: \.term)
+        let words = KeywordRanks.terms(l.keywords).filter { all[$0] != nil }
+        if !words.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Search position").font(t.font(13, .semibold)).foregroundStyle(t.label2)
+                FlowLayout(spacing: 6) {
+                    ForEach(words, id: \.self) { w in
+                        let r = all[w] ?? []
+                        HStack(spacing: 4) {
+                            Text(w)
+                            if let best = ListingView.best(r) { ListingView.rankLabel(best, t) }
+                        }
+                        .font(t.font(13)).lineLimit(1)
+                        .padding(.horizontal, 9).frame(height: 26)
+                        .background(t.fill, in: Capsule())
+                        .contextMenu {
+                            ForEach(r, id: \.self) { k in
+                                Text("\(Territories.name(k.country.uppercased())): \(ListingView.position(k.rank))" + (k.previous.map { String(localized: " (was \(ListingView.position($0)))") } ?? ""))
+                            }
+                        }
+                    }
+                }
+                if let day = all.values.first?.first?.day {
+                    Text("Search position, best of \(Set(all.values.joined().map { $0.country.uppercased() }).sorted().joined(separator: ", ")) · \(AppStoreData.md(day))")
+                        .font(t.font(11)).foregroundStyle(t.label3).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .phoneCard(padding: 14)
+        }
     }
 
     private func save(_ old: ListingLocale, _ new: ListingLocale) async {

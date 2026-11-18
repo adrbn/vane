@@ -37,6 +37,7 @@ struct AppStoreTab: View {
                       caption: Text(c.text).fontWeight(.bold) + Text(c.text == Change.noHistory.text ? "" : String(localized: " on the previous \(d.per)")),
                       spark: d.spark(.firstDownloads))
         }
+        if !d.pending { PhoneFunnel(d: d) }
         grid {
             ForEach([Metric.impressions, .pageViews, .ttr, .pageCR, .redownloads], id: \.self) { m in
                 link(m) { tile(d, m) }
@@ -263,5 +264,48 @@ struct PhoneTerritories: View {
             Text(detail ?? "").font(t.font(14, .semibold)).monospacedDigit()
         }
         .padding(.horizontal, 16).frame(height: 56)
+    }
+}
+
+/// Seen, opened, downloaded: the Mac's funnel, stacked for a phone.
+struct PhoneFunnel: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    let d: AppStoreData
+
+    var body: some View {
+        // Downloads on the days the impressions cover, so the three numbers describe the same people.
+        let imp = d.value(.impressions), pv = d.value(.pageViews), dl = imp * d.value(.pageCR)
+        let ttr = d.change(.ttr), conv = d.change(.pageCR)
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("From seen to downloaded").font(t.font(17, .bold))
+                Text("Of every 1,000 people who saw \(model.app?.name ?? "your app"), \(imp > 0 ? Num.int(pv / imp * 1000) : "0") opened its page and \(Num.int(d.value(.pageCR) * 1000)) downloaded it.")
+                    .font(t.font(13)).foregroundStyle(t.label2).monospacedDigit().fixedSize(horizontal: false, vertical: true)
+            }
+            stage(Num.k(imp), Text("saw it in the App Store"), share: 1, color: color(.impressions))
+            stage(Num.k(pv), Text("opened the page · ") + Text(Num.pct(d.value(.ttr))).foregroundStyle(ttr.color(t)).fontWeight(.bold), share: imp > 0 ? pv / imp : 0, color: color(.pageViews))
+            stage(Num.int(dl), Text("downloaded · ") + Text(Num.pct(d.value(.pageCR))).foregroundStyle(conv.color(t)).fontWeight(.bold), share: d.value(.pageCR), color: color(.firstDownloads))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .phoneCard()
+    }
+
+    private func color(_ m: Metric) -> Color { t.colorByDirection ? (m == .firstDownloads ? t.pos : t.label) : t.color(m) }
+
+    private func stage(_ value: String, _ caption: Text, share: Double, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(value).font(t.font(26, t.numWeight)).monospacedDigit().lineLimit(1)
+                caption.font(t.font(13)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+            }
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(t.fill)
+                    Capsule().fill(color).frame(width: max(10, g.size.width * share))
+                }
+            }
+            .frame(height: 10)
+        }
     }
 }

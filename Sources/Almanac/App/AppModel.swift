@@ -192,7 +192,13 @@ final class AppModel {
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
         await DailyNumbers.notify(store)
-        runEngine()
+        let fresh = runEngine()
+        #if os(iOS)
+        // On the phone the background refresh is what notifies; in the app the insights are already on screen.
+        if UIApplication.shared.applicationState != .active { await InsightNotifier.post(fresh) }
+        #else
+        _ = fresh
+        #endif
         reload()
         syncing = false; syncStatus = ""
     }

@@ -28,6 +28,8 @@ targets:
       path: Info.plist
       properties:
         NSCameraUsageDescription: Scans the setup code that Vane shows on your Mac.
+        BGTaskSchedulerPermittedIdentifiers: [com.adrbn.vane.refresh]
+        UIBackgroundModes: [fetch]
         CFBundleURLTypes:
           - CFBundleURLName: com.adrbn.vane.setup
             CFBundleURLSchemes: [vane]

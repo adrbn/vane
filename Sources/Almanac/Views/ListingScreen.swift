@@ -148,7 +148,7 @@ struct ListingView: View {
                         let r = ranks[w.lowercased()] ?? []
                         HStack(spacing: 4) {
                             Text(w).foregroundStyle(repeats.contains(w) ? t.warn : t.label)
-                            if let best = Self.best(r) { rankLabel(best) }
+                            if let best = Self.best(r) { Self.rankLabel(best, t) }
                         }
                         .font(t.font(11)).lineLimit(1)
                         .padding(.horizontal, 7).frame(height: 20)
@@ -194,7 +194,7 @@ struct ListingView: View {
 
     static func position(_ rank: Int) -> String { rank == 0 ? "\(KeywordRanks.depth)+" : "\(rank)" }
 
-    private func rankLabel(_ r: KeywordRank) -> some View {
+    static func rankLabel(_ r: KeywordRank, _ t: AlmanacTheme) -> Text {
         // Up in the results (a smaller number) is good.
         let moved = r.previous.map { prev in (prev == 0 ? Int.max : prev) - (r.rank == 0 ? Int.max : r.rank) } ?? 0
         return Text(Self.position(r.rank)).fontWeight(.bold).monospacedDigit()
