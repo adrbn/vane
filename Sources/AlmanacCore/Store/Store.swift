@@ -276,9 +276,12 @@ public final class Store: @unchecked Sendable {
     public func insights(_ app: String, includeDismissed: Bool = false) -> [Insight] {
         let dec = JSONDecoder()
         let sql = "SELECT json, dismissed FROM insights WHERE app_id IN (SELECT value FROM json_each(?))" + (includeDismissed ? "" : " AND dismissed=0") + " ORDER BY day DESC"
+        // A country's surge comes back each week it keeps growing: only the newest one shows (rows are newest first).
+        var surging = Set<String>()
         return ((try? db.query(sql, [scope(app)])) ?? []).compactMap { r in
             guard var i = try? dec.decode(Insight.self, from: Data(r.s(0).utf8)) else { return nil }
             i.dismissed = r.i(1) == 1
+            if i.kind == "surge", !surging.insert(i.appId + (i.id.split(separator: "|").last?.prefix(2) ?? "")).inserted { return nil }
             return i
         }
     }

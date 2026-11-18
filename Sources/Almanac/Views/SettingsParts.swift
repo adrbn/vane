@@ -232,6 +232,7 @@ struct RefreshSettings: View, SettingsBlocks {
     @AppStorage(AlmanacTheme.storageKey) private var themeId = AlmanacTheme.blocks.id
     @AppStorage("notifyInsights") private var notify = true
     @AppStorage("notifyDaily") private var notifyDaily = true
+    @AppStorage(SyncLine.key) private var syncLine = false
     @State private var agentOn = BackgroundAgent.isEnabled
     @State private var error: String?
     var title = String(localized: "Refresh")
@@ -250,6 +251,9 @@ struct RefreshSettings: View, SettingsBlocks {
             }
             row(t, String(localized: "Notify me when a new day arrives"), String(localized: "That day's downloads and proceeds, as soon as Apple publishes them.")) {
                 Toggle("", isOn: $notifyDaily).labelsHidden().toggleStyle(.switch).disabled(!agentOn)
+            }
+            row(t, String(localized: "Line under the title while refreshing"), String(localized: "A thin line glides under each screen's title until the refresh ends.")) {
+                Toggle("", isOn: $syncLine).labelsHidden().toggleStyle(.switch)
             }
         }
     }

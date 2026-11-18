@@ -139,7 +139,7 @@ private struct Hero: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     Text("First-time downloads, last \(d.per)").font(t.font(15, .semibold)).foregroundStyle(t.heroFg2)
-                    Text.tracked(Num.int(d.value(.firstDownloads)), t.heroTracking).font(t.heroFont).monospacedDigit()
+                    Text.tracked(Num.int(d.value(.firstDownloads)), t.heroTracking).font(t.heroFont).monospacedDigit().contentTransition(.numericText())
                         .foregroundStyle(t.heroFg).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 10).padding(.leading, -4)
                     (Text(c.text).foregroundStyle(t.heroBackground == nil ? c.color(t) : t.heroFg).fontWeight(.bold)
                         + Text(c.none ? "" : String(localized: " on the previous \(d.per)")).foregroundStyle(t.heroFg2).fontWeight(.medium))
@@ -197,7 +197,7 @@ struct MetricCard: View {
                     Text(Self.label(metric)).font(t.font(14, .semibold)).foregroundStyle(fg2).lineLimit(1)
                 }
                 if let caption { Text(caption).font(t.font(13)).foregroundStyle(fg2).padding(.top, 6) }
-                Text.tracked(d.shown(metric), -0.9).font(t.numFont).monospacedDigit()
+                Text.tracked(d.shown(metric), -0.9).font(t.numFont).monospacedDigit().contentTransition(.numericText())
                     .lineLimit(1).minimumScaleFactor(0.6).padding(.top, 14)
                 (Text(d.has(metric) ? c.text : "").foregroundStyle(fl?.fg ?? c.color(t)).fontWeight(.bold) + Text((d.has(metric) ? " " : "") + d.was(metric)).foregroundStyle(fg2))
                     .font(t.font(13)).monospacedDigit().lineLimit(1).padding(.top, 4)
@@ -257,7 +257,7 @@ private struct FunnelCard: View {
 
     private func stage(_ value: String, _ caption: Text, share: Double, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text.tracked(value, -1).font(t.font(36, t.numWeight)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text.tracked(value, -1).font(t.font(36, t.numWeight)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6).contentTransition(.numericText())
             caption.font(t.font(13)).foregroundStyle(t.label2).monospacedDigit().lineLimit(1)
             GeometryReader { g in
                 ZStack(alignment: .leading) {

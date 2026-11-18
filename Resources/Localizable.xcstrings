@@ -4680,6 +4680,154 @@
         }
       }
     },
+    "%@ downloads so far": {
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ descàrregues fins ara"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher %@ Downloads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ descargas hasta ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ téléchargements à ce jour"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ download finora"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ downloads tot nu toe"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ downloads até agora"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ transferências até agora"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всего загрузок: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdiye kadar %@ indirme"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nedladdningar hittills"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nedlastinger så langt"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ downloads indtil nu"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ latausta tähän mennessä"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dotąd pobrań: %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatím stažení: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ descărcări până acum"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усього завантажень: %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ λήψεις μέχρι στιγμής"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "迄今下载 %@ 次"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "迄今下載 %@ 次"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これまでのダウンロード数：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금까지 다운로드 %@회"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ดาวน์โหลดแล้ว %@ ครั้ง"
+          }
+        }
+      }
+    },
     "%@ downloads · %@ of all": {
       "localizations": {
         "ca": {
@@ -23749,6 +23897,154 @@
           "stringUnit": {
             "state": "translated",
             "value": "Um %@ forte em receitas."
+          }
+        }
+      }
+    },
+    "A thin line glides under each screen's title until the refresh ends.": {
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una línia fina llisca sota el títol de cada pantalla fins que acaba l'actualització."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine dünne Linie gleitet unter dem Titel jedes Bildschirms, bis die Aktualisierung endet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una línea fina se desliza bajo el título de cada pantalla hasta que termina la actualización."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fine ligne glisse sous le titre de chaque écran jusqu'à la fin de l'actualisation."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una linea sottile scorre sotto il titolo di ogni schermata finché l'aggiornamento non finisce."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een dunne lijn glijdt onder de titel van elk scherm tot het verversen klaar is."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma linha fina desliza sob o título de cada tela até a atualização terminar."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma linha fina desliza sob o título de cada ecrã até a atualização terminar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонкая линия скользит под заголовком каждого экрана, пока идёт обновление."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenileme bitene kadar her ekranın başlığının altında ince bir çizgi kayar."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tunn linje glider under varje skärms rubrik tills uppdateringen är klar."
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tynn linje glir under tittelen på hver skjerm til oppdateringen er ferdig."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tynd linje glider under hver skærms titel, indtil opdateringen er færdig."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohut viiva liukuu jokaisen näkymän otsikon alla, kunnes päivitys päättyy."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cienka linia przesuwa się pod tytułem każdego ekranu do końca odświeżania."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pod názvem každé obrazovky klouže tenká čára, dokud obnovování neskončí."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O linie subțire alunecă sub titlul fiecărui ecran până se termină reîmprospătarea."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонка лінія ковзає під заголовком кожного екрана, доки триває оновлення."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια λεπτή γραμμή κυλά κάτω από τον τίτλο κάθε οθόνης μέχρι να τελειώσει η ανανέωση."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新结束前，每个页面标题下会有一条细线滑动。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理結束前，每個畫面標題下會有一條細線滑動。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新が終わるまで、各画面のタイトルの下を細いラインが流れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 고침이 끝날 때까지 각 화면 제목 아래로 가는 선이 움직입니다."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เส้นบางๆ เลื่อนอยู่ใต้ชื่อของแต่ละหน้าจนกว่าการรีเฟรชจะเสร็จ"
           }
         }
       }
@@ -63197,6 +63493,154 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claro"
+          }
+        }
+      }
+    },
+    "Line under the title while refreshing": {
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línia sota el títol durant l'actualització"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linie unter dem Titel beim Aktualisieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea bajo el título al actualizar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligne sous le titre pendant l'actualisation"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linea sotto il titolo durante l'aggiornamento"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lijn onder de titel tijdens verversen"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha sob o título ao atualizar"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha sob o título durante a atualização"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Линия под заголовком при обновлении"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenilerken başlığın altında çizgi"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linje under rubriken vid uppdatering"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linje under tittelen ved oppdatering"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linje under titlen ved opdatering"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viiva otsikon alla päivityksen aikana"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linia pod tytułem podczas odświeżania"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čára pod názvem při obnovování"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linie sub titlu în timpul reîmprospătării"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лінія під заголовком під час оновлення"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Γραμμή κάτω από τον τίτλο κατά την ανανέωση"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新时在标题下显示线条"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理時在標題下顯示線條"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新中にタイトルの下にラインを表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 고치는 동안 제목 아래에 선 표시"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เส้นใต้ชื่อขณะรีเฟรช"
           }
         }
       }

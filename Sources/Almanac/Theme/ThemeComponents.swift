@@ -6,6 +6,7 @@ import SwiftUI
 struct Screen<Controls: View, Content: View>: View {
     @Environment(\.theme) private var t
     @Environment(AppModel.self) private var model
+    @AppStorage(SyncLine.key) private var syncLine = false
     var title: String
     var subtitle: String
     var inspector = false
@@ -33,6 +34,10 @@ struct Screen<Controls: View, Content: View>: View {
                 }
                 .padding(.top, 20).padding(.leading, 28).padding(.trailing, 20).padding(.bottom, 4)
             }
+            .overlay(alignment: .bottom) {
+                if syncLine, model.syncing { SyncLine().padding(.leading, 28).padding(.trailing, 20).transition(.opacity) }
+            }
+            .animation(.easeOut(duration: 0.3), value: model.syncing)
             Group {
                 if scrolls {
                     ScrollView { content.padding(.top, 12).padding(.leading, 28).padding([.trailing, .bottom], 24) }
@@ -382,5 +387,25 @@ struct Pending: View {
             Text("—").font(t.numFont).foregroundStyle(t.label3)
             Text(expected).font(t.font(12)).foregroundStyle(t.label2)
         }
+    }
+}
+
+/// A short accent stroke gliding under the header while a refresh runs; the numbers then roll to their new values.
+struct SyncLine: View {
+    static let key = "syncLine"  // off by default, Settings > Refresh
+    @Environment(\.theme) private var t
+    var body: some View {
+        TimelineView(.animation) { tl in
+            GeometryReader { g in
+                // 1.6 s per pass, eased so it slows at both ends instead of bouncing.
+                let p = tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6
+                let x = (1 - cos(p * .pi)) / 2, w = g.size.width * 0.28
+                Capsule().fill(LinearGradient(colors: [t.accent.opacity(0), t.accent, t.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: w, height: 2)
+                    .offset(x: -w + x * (g.size.width + w))
+            }
+        }
+        .frame(height: 2).clipped()
+        .allowsHitTesting(false)
     }
 }

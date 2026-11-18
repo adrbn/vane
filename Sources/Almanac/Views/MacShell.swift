@@ -43,6 +43,8 @@ struct RootView: View {
         .animation(.easeOut(duration: 0.18), value: model.settingsOpen)
         .animation(.easeInOut(duration: 0.35), value: model.onboardingOpen)
         .task { openLaunchReport(); SwipeNavigation.install(model) }
+        .task { await model.refreshIfStale() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in Task { await model.refreshIfStale() } }
         .onChange(of: model.chatOpen) { _, open in ChatRoom.fit(open: open) }
     }
 

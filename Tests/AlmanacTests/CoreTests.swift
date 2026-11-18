@@ -70,6 +70,17 @@ private func demoStore() throws -> Store {
     #expect(s.insights(app).count == all.count - 1)      // dismissal survives
 }
 
+@Test func aNewerCountrySurgeReplacesTheOlderOne() throws {
+    let s = try demoStore()
+    let app = "6448120002"
+    func surge(_ code: String, _ day: String) -> Insight {
+        Insight(id: "\(app)|surge|\(code)\(day)", appId: app, kind: "surge", category: .markets, title: code, body: "", day: day)
+    }
+    _ = try s.merge(insights: [surge("DE", "2026-11-09"), surge("DE", "2026-11-16"), surge("FR", "2026-11-09")])
+    let shown = s.insights(app).filter { $0.kind == "surge" }
+    #expect(shown.map(\.id).sorted() == ["\(app)|surge|DE2026-11-16", "\(app)|surge|FR2026-11-09"])
+}
+
 @Test func weeklyReportNumbersMatchStore() throws {
     let s = try demoStore()
     let r = ReportBuilder(store: s, app: "6448120001").build(.week, start: "2026-11-02")

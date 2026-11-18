@@ -413,6 +413,7 @@ private struct MilestoneEvidence: View {
             }
             .chartXAxis(.hidden).chartYAxis(.hidden).chartLegend(.hidden)
             .frame(minHeight: 64, maxHeight: tall ? .infinity : 64)
+            Text("\(Int(now).formatted()) downloads so far").font(t.font(12, .semibold)).foregroundStyle(t.label).monospacedDigit()
             if let next, pace > 0 {
                 let weeks = max(1, Int(((Double(next) - now) / pace / 7).rounded()))
                 Text("Next: \(next.formatted()), about \(weeks) weeks at this pace").font(t.font(12)).foregroundStyle(t.label2)

@@ -1,6 +1,7 @@
 import AlmanacCore
 import Foundation
 import Observation
+import SwiftUI
 #if os(iOS)
 import UIKit
 #endif
@@ -166,6 +167,12 @@ final class AppModel {
         return apps.flatMap { InsightEngine.refresh(store: store, app: $0.id) }
     }
 
+    /// On launch and when the window comes back: a refresh if the last one is over 15 minutes old.
+    func refreshIfStale() async {
+        guard (lastSync.map { Date().timeIntervalSince($0) > 15 * 60 } ?? true) else { return }
+        await refresh()
+    }
+
     func refresh() async {
         let creds = Keychain.credentials()
         guard creds.isComplete, !demoLaunch else {
@@ -182,12 +189,12 @@ final class AppModel {
         #endif
         let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
-        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
+        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; withAnimation(.smooth(duration: 0.6)) { self.reload() } } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
         await DailyNumbers.notify(store)
         runEngine()
-        reload()
+        withAnimation(.smooth(duration: 0.6)) { reload() }
         syncing = false; syncStatus = ""
     }
 
