@@ -134,6 +134,7 @@ final class AppModel {
     @ObservationIgnored private var backgroundTask = UIBackgroundTaskIdentifier.invalid
     /// iOS suspended a sync before it ended: it resumes when the app comes back (done steps are skipped).
     @ObservationIgnored private var interrupted = false
+    @ObservationIgnored private let continued = ContinuedSync()
     var resumePending = false
     #endif
 
@@ -187,11 +188,12 @@ final class AppModel {
     /// The refresh button: the app on screen only. Sales come along for every app (one report covers the account).
     func refreshCurrent() async {
         guard let appId else { return await refresh() }
-        await refresh(only: Set(store.appIds(appId)))
+        await refresh(only: Set(store.appIds(appId)), visible: true)
     }
 
     /// Everything, the app on screen first. `only` limits the per-app steps to those apps.
-    func refresh(only: Set<String>? = nil) async {
+    /// `visible`: started by the user, so on iPhone iOS may keep it running in the background, with its progress shown.
+    func refresh(only: Set<String>? = nil, visible: Bool = false) async {
         let creds = Keychain.credentials()
         guard creds.isComplete, !demoLaunch else {
             if isDemo { loadDemo() }
@@ -209,11 +211,26 @@ final class AppModel {
             self?.endBackgroundTask()
         }
         defer { endBackgroundTask() }
+        if visible {
+            continued.onExpire = { [weak self] in self?.interrupted = true }
+            // Steps as Syncer counts them: apps, 3 per app, sales and subscriptions, then analytics and ranks per app.
+            continued.start(steps: 3 + 5 * (only?.count ?? max(1, apps.count)), title: String(localized: "Refreshing \(app?.name ?? "Vane")"))
+        }
         #endif
         let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
-        let errors = await syncer.syncAll(only: only, first: appId.flatMap { store.appIds($0).first }) { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
+        let errors = await syncer.syncAll(only: only, first: appId.flatMap { store.appIds($0).first }) { step in
+            Task { @MainActor in
+                self.syncStatus = step; self.reload()
+                #if os(iOS)
+                self.continued.step(step)
+                #endif
+            }
+        }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
+        #if os(iOS)
+        continued.finish(success: errors.isEmpty)
+        #endif
         await AnalyticsArrival.notify(store, before: before)
         await DailyNumbers.notify(store)
         let fresh = runEngine()
@@ -229,7 +246,7 @@ final class AppModel {
         if interrupted {
             interrupted = false
             // Requests cut by the suspension failed: run again now if the app is back, else on return.
-            if UIApplication.shared.applicationState == .active { await refresh(only: only) } else { resumePending = true }
+            if UIApplication.shared.applicationState == .active { await refresh(only: only, visible: visible) } else { resumePending = true }
         }
         #endif
     }
