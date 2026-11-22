@@ -326,6 +326,7 @@ struct MetricData {
         switch m {
         case .sessions, .crashes: return s.lastDay(app, .sessions) ?? latest
         case .activeSubs, .ratingsTotal, .newRatings, .sales, .proceeds: return s.lastDay(app, m) ?? latest
+        case .firstDownloads, .redownloads, .downloads: return s.lastDay(app, .firstDownloads) ?? latest
         default: return s.lastDay(app, .impressions) ?? s.lastDay(app, .firstDownloads) ?? latest
         }
     }

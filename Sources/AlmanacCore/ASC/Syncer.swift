@@ -11,7 +11,10 @@ public struct Syncer: Sendable {
 
     public struct StepError: Sendable { public var step: String; public var message: String }
 
-    public func syncAll(progress: @Sendable (String) -> Void = { _ in }) async -> [StepError] {
+    /// `only`: the apps whose own steps run (ratings, reviews, listing, analytics, ranks); nil = every app.
+    /// Sales and subscriptions are one report for the whole account, so they always run, for every app.
+    /// `first` goes first, so the app on screen is fresh before the others.
+    public func syncAll(only: Set<String>? = nil, first: String? = nil, progress: @Sendable (String) -> Void = { _ in }) async -> [StepError] {
         var errors: [StepError] = []
         func attempt(_ step: String, _ body: () async throws -> Void) async {
             progress(step)
@@ -20,6 +23,8 @@ public struct Syncer: Sendable {
 
         var apps: [(AppRecord, String)] = []  // (app, sku)
         await attempt(String(localized: "Apps")) { apps = try await syncApps() }
+        let allApps = apps
+        apps = apps.filter { only?.contains($0.0.id) ?? true }.sorted { $0.0.id == first && $1.0.id != first }
         // Quick steps first: a first sales and analytics import takes minutes, and iOS may suspend the app before it ends.
         for (app, _) in apps {
             await attempt(String(localized: "Ratings · \(app.name)")) { try await syncRatings(app: app.id) }
@@ -28,8 +33,8 @@ public struct Syncer: Sendable {
         }
         let fx = await ExchangeRates.load()
         if !client.credentials.vendorNumber.isEmpty {
-            await attempt(String(localized: "Sales")) { try await syncSales(apps: apps, fx: fx) }
-            await attempt(String(localized: "Subscriptions")) { try await syncSubscriptions(apps: apps.map(\.0)) }
+            await attempt(String(localized: "Sales")) { try await syncSales(apps: allApps, fx: fx) }
+            await attempt(String(localized: "Subscriptions")) { try await syncSubscriptions(apps: allApps.map(\.0)) }
         } else {
             errors.append(StepError(step: String(localized: "Sales"), message: String(localized: "Add your vendor number in Settings to import sales.")))
         }
@@ -40,7 +45,9 @@ public struct Syncer: Sendable {
         for (app, _) in apps {
             await attempt(String(localized: "Keyword ranks · \(app.name)")) { try await syncRanks(app: app.id) }
         }
-        store.setMeta("last_sync", ISO8601DateFormatter().string(from: Date()))
+        let now = ISO8601DateFormatter().string(from: Date())
+        for (app, _) in apps { store.setMeta("last_sync_\(app.id)", now) }
+        if only == nil { store.setMeta("last_sync", now) }
         return errors
     }
 

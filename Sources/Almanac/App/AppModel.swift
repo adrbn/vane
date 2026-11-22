@@ -124,6 +124,18 @@ final class AppModel {
     /// The `--demo` window: never syncs, so real data can't land in its database.
     let demoLaunch = CommandLine.arguments.contains("--demo")
     var lastSync: Date? { store.meta("last_sync").flatMap { ISO8601DateFormatter().date(from: $0) } }
+    /// When the app on screen was last refreshed, alone or with the others.
+    var updatedAt: Date? {
+        _ = revision
+        let own = appId.flatMap { id in store.appIds(id).compactMap { store.meta("last_sync_\($0)") }.min() }
+        return [lastSync, own.flatMap { ISO8601DateFormatter().date(from: $0) }].compactMap { $0 }.max()
+    }
+    #if os(iOS)
+    @ObservationIgnored private var backgroundTask = UIBackgroundTaskIdentifier.invalid
+    /// iOS suspended a sync before it ended: it resumes when the app comes back (done steps are skipped).
+    @ObservationIgnored private var interrupted = false
+    var resumePending = false
+    #endif
 
     init() {
         // `--demo` opens a throwaway database with the demo apps (screenshots), never touching the real one.
@@ -172,7 +184,14 @@ final class AppModel {
         await refresh()
     }
 
-    func refresh() async {
+    /// The refresh button: the app on screen only. Sales come along for every app (one report covers the account).
+    func refreshCurrent() async {
+        guard let appId else { return await refresh() }
+        await refresh(only: Set(store.appIds(appId)))
+    }
+
+    /// Everything, the app on screen first. `only` limits the per-app steps to those apps.
+    func refresh(only: Set<String>? = nil) async {
         let creds = Keychain.credentials()
         guard creds.isComplete, !demoLaunch else {
             if isDemo { loadDemo() }
@@ -182,13 +201,18 @@ final class AppModel {
         if isDemo { try? store.removeAll() }
         syncing = true; syncErrors = []
         #if os(iOS)
-        // A few more minutes if the user leaves the app mid-sync.
-        let bg = UIApplication.shared.beginBackgroundTask(withName: "sync")
-        defer { UIApplication.shared.endBackgroundTask(bg) }
+        // About 30 more seconds if the user leaves the app mid-sync. When they run out, the task is ended
+        // (iOS kills an app that overstays) and the sync picks up again on return.
+        resumePending = false
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "sync") { [weak self] in
+            self?.interrupted = true
+            self?.endBackgroundTask()
+        }
+        defer { endBackgroundTask() }
         #endif
         let before = AnalyticsArrival.apps(store)
         let syncer = Syncer(client: ASCClient(credentials: creds), store: store)
-        let errors = await syncer.syncAll { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
+        let errors = await syncer.syncAll(only: only, first: appId.flatMap { store.appIds($0).first }) { step in Task { @MainActor in self.syncStatus = step; self.reload() } }
         syncErrors = errors.map { "\($0.step): \($0.message)" }
         await AnalyticsArrival.notify(store, before: before)
         await DailyNumbers.notify(store)
@@ -201,7 +225,22 @@ final class AppModel {
         #endif
         reload()
         syncing = false; syncStatus = ""
+        #if os(iOS)
+        if interrupted {
+            interrupted = false
+            // Requests cut by the suspension failed: run again now if the app is back, else on return.
+            if UIApplication.shared.applicationState == .active { await refresh(only: only) } else { resumePending = true }
+        }
+        #endif
     }
+
+    #if os(iOS)
+    private func endBackgroundTask() {
+        guard backgroundTask != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTask)
+        backgroundTask = .invalid
+    }
+    #endif
 
     func dismiss(_ insight: Insight) {
         try? store.dismiss(insight: insight.id)

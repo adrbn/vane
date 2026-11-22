@@ -156,7 +156,7 @@ struct RefreshButton: View {
     @Environment(AppModel.self) private var model
     @Environment(\.theme) private var t
     var body: some View {
-        GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : String(localized: "Refresh Now (⌘R)")) { Task { await model.refresh() } }
+        GlassIconButton(symbol: "", help: model.syncing ? model.syncStatus : String(localized: "Refresh Now (⌘R)")) { Task { await model.refreshCurrent() } }
             .overlay {
                 // The system rotate effect turns the arrow around its arc's center; rotationEffect turns the glyph's box, which wobbles.
                 Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold)).foregroundStyle(t.label)

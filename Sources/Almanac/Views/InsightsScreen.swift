@@ -527,7 +527,7 @@ private struct NothingToFlag: View {
                 }
             }
             Spacer(minLength: 0)
-            SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
+            SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refreshCurrent() } }
         }
         .themedCard(padding: 28)
     }

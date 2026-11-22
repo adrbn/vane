@@ -52,7 +52,7 @@ struct PhoneScreen<Trailing: View, Content: View>: View {
         }
         .scrollIndicators(.hidden)
         // Starts the sync and lets go: the small line under the title shows its progress, not the big spinner.
-        .refreshable { if !model.syncing { Task { await model.refresh() } } }
+        .refreshable { if !model.syncing { Task { await model.refreshCurrent() } } }
         .foregroundStyle(t.label)
         .background(ThemeBackground().ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -271,6 +271,11 @@ struct PhoneSyncLine: View {
                     .font(t.font(12, .semibold)).foregroundStyle(t.warn)
             }
             .buttonStyle(.plain)
+        } else if !model.isDemo, let d = model.updatedAt {
+            // Says when the numbers on screen were fetched, so the end of a refresh is visible.
+            TimelineView(.periodic(from: .now, by: 30)) { _ in
+                Text("Updated \(d.formatted(.relative(presentation: .named)))").font(t.font(12)).foregroundStyle(t.label3)
+            }
         }
     }
 }

@@ -231,12 +231,12 @@ struct PhoneSettings: View {
                     .font(.system(size: 18)).foregroundStyle(connected ? t.pos : t.label3)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(connected ? String(localized: "Connected") : model.isDemo ? String(localized: "Showing demo data") : String(localized: "Not connected")).font(t.font(15, .semibold))
-                    Text(model.lastSync.map { String(localized: "Updated \($0.formatted(.relative(presentation: .named).locale(.current)))") } ?? String(localized: "Scan the code from your Mac, or add a key below"))
+                    Text(model.updatedAt.map { String(localized: "Updated \($0.formatted(.relative(presentation: .named).locale(.current)))") } ?? String(localized: "Scan the code from your Mac, or add a key below"))
                         .font(t.font(12)).foregroundStyle(t.label2)
                 }
                 Spacer()
                 if connected {
-                    Button { Task { await model.refresh() } } label: {
+                    Button { Task { await model.refreshCurrent() } } label: {
                         if model.syncing { ProgressView() } else { Text("Refresh").font(t.font(14, .semibold)).foregroundStyle(t.accentText) }
                     }
                     .disabled(model.syncing)

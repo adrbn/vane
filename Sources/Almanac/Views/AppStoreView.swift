@@ -31,55 +31,70 @@ struct AppStoreView: View {
 /// Everything the overview shows, computed once per period.
 struct AppStoreData {
     let store: Store, app: String, days: Int
-    let from: String, to: String, pFrom: String, pTo: String
+    /// The period ends on the latest day with data: sales reports come a day or two before Apple's analytics.
+    let from: String, to: String
+    /// Analytics end (views, page views, rates); sales metrics end on `to`. Each period is compared with the one before it.
+    let analyticsTo: String
     /// Sales reports are in, Apple's analytics report isn't yet.
     let pending: Bool
+
+    static let salesMetrics: Set<Metric> = [.firstDownloads, .redownloads, .downloads, .sales, .proceeds]
 
     init(store: Store, app: String, days: Int) {
         self.store = store; self.app = app; self.days = days
         pending = store.lastDay(app, .impressions) == nil
-        to = store.lastDay(app, .impressions) ?? store.lastDay(app, .firstDownloads) ?? Day.today()
+        let sales = store.lastDay(app, .firstDownloads), views = store.lastDay(app, .impressions)
+        to = [sales, views].compactMap { $0 }.max() ?? Day.today()
+        analyticsTo = views ?? to
         from = Day.add(-(days - 1), to: to)
-        pTo = Day.add(-1, to: from)
-        pFrom = Day.add(-(days - 1), to: pTo)
+    }
+
+    /// This metric's period and the one before, both `days` long.
+    func window(_ m: Metric) -> (from: String, to: String, pFrom: String, pTo: String) {
+        let end = Self.salesMetrics.contains(m) ? to : analyticsTo
+        let start = Day.add(-(days - 1), to: end), pTo = Day.add(-1, to: start)
+        return (start, end, Day.add(-(days - 1), to: pTo), pTo)
     }
 
     /// False for analytics metrics while the first report is pending: show "Expected", never a fake 0.
     func has(_ m: Metric) -> Bool { !pending || [.firstDownloads, .redownloads, .downloads, .sales, .proceeds].contains(m) }
-    func value(_ m: Metric) -> Double { store.total(app, m, from: from, to: to) }
-    func previous(_ m: Metric) -> Double { store.total(app, m, from: pFrom, to: pTo) }
+    func value(_ m: Metric) -> Double { let w = window(m); return store.total(app, m, from: w.from, to: w.to) }
+    func previous(_ m: Metric) -> Double { let w = window(m); return store.total(app, m, from: w.pFrom, to: w.pTo) }
     func change(_ m: Metric, arrows: Bool = true) -> Change {
         if has(m) && hasPrevious(m) { return Change(m, value: value(m), previous: previous(m), arrows: arrows) }
         var c = Change.noHistory
         // Apple's analytics can start inside the period: say from when the figure counts.
-        if has(m), let first = store.series(app, m, from: from, to: to).first?.day, Day.between(from, first) > 1 {
+        if has(m), let first = store.series(app, m, from: window(m).from, to: window(m).to).first?.day, Day.between(window(m).from, first) > 1 {
             c.text = String(localized: "Since \(Self.md(first))")
         }
         return c
     }
     /// History reaches back to the start of the previous period.
     func hasPrevious(_ m: Metric) -> Bool {
-        guard let first = store.series(app, m, from: pFrom, to: pTo).first?.day else { return false }
-        return Day.between(pFrom, first) <= 1
+        let w = window(m)
+        guard let first = store.series(app, m, from: w.pFrom, to: w.pTo).first?.day else { return false }
+        return Day.between(w.pFrom, first) <= 1
     }
     /// Daily, or weekly sums past 90 days.
     func spark(_ m: Metric) -> [Double] { points(m).map(\.value) }
     /// Daily, or weekly past 90 days with complete weeks only: a partial first or last week would read as a drop.
     func points(_ m: Metric) -> [Point] {
-        let p = store.series(app, m, from: from, to: to)
+        let r = window(m)
+        let p = store.series(app, m, from: r.from, to: r.to)
         guard days > 90 else { return p }
         var w = p.bucketed(.week, average: m.isGauge)
-        if Day.weekStart(from) != from, !w.isEmpty { w.removeFirst() }
-        if Day.add(6, to: Day.weekStart(to)) != to, !w.isEmpty { w.removeLast() }
+        if Day.weekStart(r.from) != r.from, !w.isEmpty { w.removeFirst() }
+        if Day.add(6, to: Day.weekStart(r.to)) != r.to, !w.isEmpty { w.removeLast() }
         return w
     }
     var daily: [Point] { store.series(app, .firstDownloads, from: from, to: to) }
     var best: Point? { daily.max { $0.value < $1.value } }
 
     var range: String {
-        guard days == 365 else { return "\(Self.md(from)) – \(Self.md(to))" }
-        let f = Date.FormatStyle.dateTime.month(.abbreviated).day().year().locale(Locale.current)
-        return "\(Day.date(from).formatted(f)) – \(Day.date(to).formatted(f))"
+        let f = days == 365 ? Date.FormatStyle.dateTime.month(.abbreviated).day().year().locale(Locale.current) : .dateTime.month(.abbreviated).day()
+        let r = "\(Day.date(from).formatted(f)) – \(Day.date(to).formatted(f))"
+        // Says why views and rates stop a day or two earlier, instead of letting it read as a drop.
+        return pending || analyticsTo >= to ? r : r + " · " + String(localized: "views to \(Self.md(analyticsTo))")
     }
     var per: String { days == 365 ? String(localized: "year") : String(localized: "\(days) days") }
     static func md(_ d: String) -> String { Day.date(d).formatted(.dateTime.month(.abbreviated).day()) }
@@ -88,7 +103,7 @@ struct AppStoreData {
     func was(_ m: Metric) -> String { !has(m) ? AnalyticsPending.expected : hasPrevious(m) ? String(localized: "was \(Num.value(m, previous(m)))") : "" }
 
     func chatContext(_ name: String) -> String {
-        "Screen: App Store overview for \(name), \(from) to \(to) vs \(pFrom) to \(pTo)\n" +
+        "Screen: App Store overview for \(name), \(from) to \(to) (Apple's analytics: views, page views, rates, through \(analyticsTo)), each metric vs the \(days) days before\n" +
             [Metric.impressions, .pageViews, .ttr, .firstDownloads, .redownloads, .pageCR].map {
                 "- \($0.title): \(Num.value($0, value($0))) (previous: \(Num.value($0, previous($0))))"
             }.joined(separator: "\n")
@@ -367,7 +382,7 @@ private struct TickerOverview: View {
         let releases = model.store.versions(d.app).filter { $0.day >= d.from && $0.day <= d.to }.map(\.version)
         let cells: [(String, String)] = [
             (String(localized: "Best day"), peak.map { "\(Num.value(selected, $0.value)) · \(AppStoreData.md($0.day))" } ?? "—"),
-            (String(localized: "Daily average"), selected.isRate ? Num.pct(d.value(selected)) : Num.int(d.value(selected) / Double(max(1, d.store.series(d.app, selected, from: d.from, to: d.to).count)))),
+            (String(localized: "Daily average"), selected.isRate ? Num.pct(d.value(selected)) : Num.int(d.value(selected) / Double(max(1, d.store.series(d.app, selected, from: d.window(selected).from, to: d.window(selected).to).count)))),
             (String(localized: "From App Store search"), d.pending ? "—" : imp > 0 ? Num.pct(search / imp).replacingOccurrences(of: ".0%", with: "%") : "—"),
             (String(localized: "Tap-through"), d.shown(.ttr)),
             (String(localized: "Conversion"), d.shown(.pageCR)),

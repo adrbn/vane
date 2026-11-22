@@ -22,7 +22,7 @@ struct AlmanacApp: App {
                 Button("Settings…") { model.settingsOpen = true }.keyboardShortcut(",")
             }
             CommandGroup(after: .newItem) {
-                Button("Refresh") { Task { await model.refresh() } }.keyboardShortcut("r")
+                Button("Refresh") { Task { await model.refreshCurrent() } }.keyboardShortcut("r")
                 Button("Events…") { model.eventsOpen = true }.keyboardShortcut("e")
             }
             CommandGroup(after: .sidebar) {

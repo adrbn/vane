@@ -33,7 +33,7 @@ struct DataArrivingView: View {
                         .font(t.font(14)).foregroundStyle(t.label2).frame(maxWidth: 620, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
+                SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refreshCurrent() } }
             }
             HStack(alignment: .top, spacing: 16) {
                 step(String(localized: "Key verified"), model.lastSync.map { String(localized: "Last refresh \($0.formatted(.relative(presentation: .named)))") } ?? String(localized: "Connected"), .done)
@@ -158,7 +158,7 @@ struct AnalyticsPending: View {
             ? String(localized: "Downloads come from your sales reports. Impressions, conversion, sessions and crashes fill in with Apple’s first analytics report.")
             : String(localized: "Apple’s sessions report has arrived and is in Usage. Its App Store engagement report, which holds impressions and page views, usually follows within a few days."))
             .font(t.font(13)).foregroundStyle(t.label2)
-        let check = SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refresh() } }
+        let check = SmallButton(label: model.syncing ? String(localized: "Checking…") : String(localized: "Check Now"), busy: model.syncing) { Task { await model.refreshCurrent() } }
         let icon = Image(systemName: "clock").font(.system(size: 15, weight: .semibold)).foregroundStyle(t.accentText)
             .frame(width: 36, height: 36).background(t.accentSoft, in: RoundedRectangle(cornerRadius: t.inner(14), style: .continuous))
         if compact {

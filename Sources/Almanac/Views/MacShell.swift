@@ -278,8 +278,11 @@ struct ThemedSyncFooter: View {
         VStack(alignment: .leading, spacing: 0) {
             if model.syncing {
                 Text(model.syncStatus).foregroundStyle(t.label2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            } else if !model.isDemo, let d = model.lastSync {
-                Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
+            } else if !model.isDemo, let d = model.updatedAt {
+                // Re-drawn every 30 s so "just now" doesn't stay on screen for an hour.
+                TimelineView(.periodic(from: .now, by: 30)) { _ in
+                    Text("Updated \(d.formatted(.relative(presentation: .named)))").foregroundStyle(t.label2)
+                }
                 Text("Refreshes automatically").foregroundStyle(t.label3).lineLimit(1)
             }
             if !model.syncErrors.isEmpty {
@@ -292,7 +295,7 @@ struct ThemedSyncFooter: View {
         }
         .font(t.font(11))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .contextMenu { Button("Refresh Now") { Task { await model.refresh() } } }
+        .contextMenu { Button("Refresh Now") { Task { await model.refreshCurrent() } } }
     }
 }
 
@@ -487,7 +490,7 @@ private struct SyncErrorList: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Problems with the last refresh").font(.headline)
             ForEach(errors, id: \.self) { Text($0).font(.callout).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) }
-            Button("Refresh Now") { Task { await model.refresh() } }.disabled(model.syncing)
+            Button("Refresh Now") { Task { await model.refreshCurrent() } }.disabled(model.syncing)
         }
         .padding(16).frame(width: 360, alignment: .leading)
     }
