@@ -70,6 +70,7 @@ public struct Syncer: Sendable {
         let byId = Set(apps.map(\.0.id))
         let yesterday = Day.add(-1, to: Day.today())
         let done = Set((store.meta("sales_days") ?? "").split(separator: ",").map(String.init))
+        let analyticsDays = Dictionary(uniqueKeysWithValues: byId.map { ($0, store.analyticsDownloadDays($0)) })
         var imported = done
         // Saved every 10 days, so an import cut short (iOS suspends apps) resumes instead of starting over.
         func save() { store.setMeta("sales_days", imported.sorted().suffix(400).joined(separator: ",")) }
@@ -89,7 +90,9 @@ public struct Syncer: Sendable {
             let tally = Self.tallySales(rows, appIds: byId, bySku: bySku, fx: fx)
             var samples: [Store.Sample] = []
             for app in byId {
-                for m in [Metric.sales, .proceeds, .firstDownloads, .redownloads] {
+                // Days Apple's analytics report already covers keep its downloads: they match App Store Connect's Analytics.
+                let metrics: [Metric] = analyticsDays[app]?.contains(day) == true ? [.sales, .proceeds] : [.sales, .proceeds, .firstDownloads, .redownloads]
+                for m in metrics {
                     let byCountry = tally[app]?[m] ?? [:]
                     samples.append(.init(app, day, m, "", byCountry.values.reduce(0, +)))
                     if m != .proceeds { for (c, v) in byCountry { samples.append(.init(app, day, m, c, v)) } }
@@ -168,16 +171,31 @@ public struct Syncer: Sendable {
     }
 
     func syncAnalytics(app: String) async throws {
-        let requests = try await client.json("v1/apps/\(app)/analyticsReportRequests", query: ["filter[accessType]": "ONGOING"])
-        guard let requestId = (requests["data"] as? [JSON])?.first?.id else {
+        let requests = (try await client.json("v1/apps/\(app)/analyticsReportRequests")["data"] as? [JSON]) ?? []
+        guard let requestId = requests.first(where: { $0.attr("accessType") == "ONGOING" })?.id else {
             // Only an Admin key may turn the reports on. A Sales and Reports key gets 403: the App Store screen offers the one-time Admin step.
             do { try await requestAnalytics(app: app) } catch ASCError.http(403, _) { store.setMeta(Self.needsAdminKey(app), "1") }
             return // Apple needs a day or two to generate the first reports.
         }
         store.setMeta(Self.needsAdminKey(app), "")
+        // The ongoing reports start the day they were requested. A one-time snapshot (one per month, Apple's rule) brings the weeks before.
+        var requestIds = [requestId]
+        if let snapshot = requests.first(where: { $0.attr("accessType") == "ONE_TIME_SNAPSHOT" })?.id {
+            requestIds.append(snapshot)
+        } else if store.meta("analytics_snapshot_\(app)") == nil {
+            _ = try? await client.json("v1/analyticsReportRequests", method: "POST", body: ["data": [
+                "type": "analyticsReportRequests", "attributes": ["accessType": "ONE_TIME_SNAPSHOT"],
+                "relationships": ["app": ["data": ["type": "apps", "id": app]]],
+            ]])
+            store.setMeta("analytics_snapshot_\(app)", Day.today())
+        }
         let imported = Set((store.meta("analytics_instances_\(app)") ?? "").split(separator: ",").map(String.init))
         var newlyImported: [String] = []
+        // Bump when accumulate() reads new columns: imported downloads and sessions reports are read again once.
+        let rereadVersion = "2"
+        let reread = store.meta("analytics_reread_\(app)") != rereadVersion
 
+        for requestId in requestIds {
         for spec in Self.reports {
             let reports = try await client.all("v1/analyticsReportRequests/\(requestId)/reports", query: ["filter[category]": spec.category]).data
             guard let report = reports.first(where: { $0.attr("name") == spec.name }) else { continue }
@@ -188,11 +206,13 @@ public struct Syncer: Sendable {
             default: nil
             }
             // Sources came after the other metrics: re-read already imported reports once to fill them (metrics are rewritten as-is).
-            let backfill = sourceReport.map { !store.hasSources(app, report: $0) } ?? false
+            let backfill = (sourceReport.map { !store.hasSources(app, report: $0) } ?? false)
+                || (reread && ["App Downloads Standard", "App Sessions Standard"].contains(spec.name))
             for inst in instances where backfill || !imported.contains(inst.id) {
                 let segments = try await client.all("v1/analyticsReportInstances/\(inst.id)/segments").data
                 var acc: [String: Double] = [:] // "day|metric|territory"
                 var sources: [String: Double] = [:]
+                var cohorts: [String: Double] = [:] // "download day|active_dN"
                 for seg in segments {
                     guard let url = URL(string: seg.attr("url")) else { continue }
                     let (raw, _) = try await URLSession.shared.data(from: url) // presigned, no auth header
@@ -200,9 +220,15 @@ public struct Syncer: Sendable {
                     for r in rows {
                         Self.accumulate(r, report: spec.name, into: &acc)
                         if sourceReport != nil { Self.accumulateSource(r, into: &sources) }
+                        if spec.name == "App Sessions Standard" { Self.accumulateCohort(r, into: &cohorts) }
                     }
                 }
                 if let sourceReport { try store.writeSources(app, report: sourceReport, sources) }
+                if spec.name == "App Downloads Standard" {
+                    // Replaces the sales report's downloads for these days, country rows included.
+                    try store.clear(app, [.firstDownloads, .redownloads], days: Set(acc.keys.map { String($0.prefix(10)) }))
+                }
+                try store.writeCohorts(app, cohorts)
                 try store.write(acc.map { k, v in
                     let p = k.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
                     return Store.Sample(app, p[0], Metric(rawValue: p[1])!, p[2], v)
@@ -212,6 +238,18 @@ public struct Syncer: Sendable {
                 store.setMeta("analytics_instances_\(app)", (Array(imported) + newlyImported).suffix(2000).joined(separator: ","))
             }
         }
+        }
+        store.setMeta("analytics_reread_\(app)", rereadVersion)
+    }
+
+    /// One App Sessions row -> devices active N days after their download day, keyed "download day|active_dN".
+    /// Apple fills App Download Date only for downloads of the previous 30 days, enough for day 28.
+    static func accumulateCohort(_ r: [String: String], into acc: inout [String: Double]) {
+        guard let day = r["Date"], let downloaded = r["App Download Date"], downloaded.count >= 10, day.count >= 10 else { return }
+        let age = Day.between(String(downloaded.prefix(10)), String(day.prefix(10)))
+        guard ([0] + Store.retentionDays).contains(age) else { return }
+        // ponytail: unique devices summed across rows (device, version, territory) overcount a little, the same way at every age
+        acc["\(downloaded.prefix(10))|active_d\(age)", default: 0] += Double(r["Unique Devices"] ?? "") ?? 0
     }
 
     /// Maps one analytics CSV row to metrics. Column names follow Apple's report docs;
@@ -240,6 +278,7 @@ public struct Syncer: Sendable {
             let type = (r["Download Type"] ?? "").lowercased()
             if type.contains("first") { add(.firstDownloads, count) }
             else if type.contains("redownload") { add(.redownloads, count) }
+            else if type.contains("update") { add(.updates, count, territorial: false) } // manual and automatic
         case "App Sessions Standard":
             add(.sessions, Double(r["Sessions"] ?? "") ?? count, territorial: false)
         case "App Crashes":
@@ -283,14 +322,33 @@ public struct Syncer: Sendable {
 
     // MARK: listing
 
+    /// States of a version that reached the App Store. One waiting for or in review is not a release.
+    static let liveStates: Set<String> = ["READY_FOR_SALE", "READY_FOR_DISTRIBUTION", "REPLACED_WITH_NEW_VERSION",
+                                          "DEVELOPER_REMOVED_FROM_SALE", "REMOVED_FROM_SALE"]
+
+    /// Chart markers: released versions only, every platform, newest first. Markers of versions that never shipped are removed.
+    func syncVersionMarks(app: String, _ versions: [JSON]) throws {
+        let stored = Dictionary(store.versions(app).map { ($0.version, $0.day) }, uniquingKeysWith: { a, _ in a })
+        var kept: [String] = []
+        for v in versions where Self.liveStates.contains(v.attr("appStoreState")) || Self.liveStates.contains(v.attr("appVersionState")) {
+            let name = v.attr("versionString")
+            guard !kept.contains(name) else { continue }
+            kept.append(name)
+            let created = String(v.attr("createdDate").prefix(10))
+            // ponytail: Apple gives no release date. A version first seen live within a week of its creation is dated the day Vane sees it,
+            // older ones keep their creation day. Exact if Vane syncs daily; read the version history API if that ever matters.
+            let day = stored[name] ?? (Day.add(7, to: created) >= Day.today() ? Day.today() : created)
+            let platform = ["MAC_OS": "macOS", "TV_OS": "tvOS", "VISION_OS": "visionOS"][v.attr("platform")] ?? ""
+            try store.upsert(version: VersionMark(day: day, version: name, title: platform), app: app)
+        }
+        try store.removeVersions(app, except: kept)
+    }
+
     func syncListing(app: String) async throws {
         var byLocale: [String: ListingLocale] = [:]
         let versions = try await client.all("v1/apps/\(app)/appStoreVersions", query: ["limit": "50"], maxPages: 1).data
             .sorted { $0.attr("createdDate") > $1.attr("createdDate") }
-        for v in versions {
-            // ponytail: createdDate approximates the release day; good enough for chart markers
-            try store.upsert(version: VersionMark(day: String(v.attr("createdDate").prefix(10)), version: v.attr("versionString"), title: ""), app: app)
-        }
+        try syncVersionMarks(app: app, versions)
         if let latest = versions.first {
             for l in try await client.all("v1/appStoreVersions/\(latest.id)/appStoreVersionLocalizations").data {
                 byLocale[l.attr("locale")] = ListingLocale(appId: app, locale: l.attr("locale"), name: "", subtitle: "",

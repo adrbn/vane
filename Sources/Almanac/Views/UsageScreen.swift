@@ -28,6 +28,14 @@ struct UsageScreen: View {
                 }
                 .frame(height: analytics ? nil : 132)
                 .frame(maxHeight: analytics ? .infinity : nil)
+                if analytics {
+                    HStack(spacing: 16) {
+                        UsageCard(metric: .updates, from: from, to: to, days: days,
+                                  pending: model.store.lastDay(app, .updates) == nil ? String(localized: "Counted from Apple's next analytics report") : nil)
+                        RetentionCard(from: from, to: to)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
                 HStack(spacing: 16) {
                     RatingsCard()
                     if subs { UsageCard(metric: .activeSubs, from: from, to: to, days: days, pending: nil) }
@@ -37,12 +45,14 @@ struct UsageScreen: View {
         }
         .onAppear {
             model.chatContext = "Screen: Usage for \(model.app?.name ?? ""), \(from) to \(to)\n"
-                + [Metric.sessions, .crashes, .activeSubs].map { m in
+                + [Metric.sessions, .crashes, .updates, .activeSubs].map { m in
                     // A metric with no rows at all hasn't arrived from Apple yet: say so instead of passing a misleading 0.
                     model.store.series(app, m).isEmpty ? "- \(m.title): not available yet (waiting for Apple's first analytics report)"
                         : "- \(m.title): \(m.format(model.store.total(app, m, from: from, to: to)))"
                 }.joined(separator: "\n")
                 + "\n- Ratings on the App Store: \(model.store.series(app, .ratingsTotal).last.map { Num.int($0.value) } ?? "not available yet")"
+                + "\n- Retention (opt-in users who open the app again N days after downloading it): "
+                + model.store.retention(app, from: from, to: to).map { "day \($0.day) \($0.rate.map(Num.pct) ?? "not enough data")" }.joined(separator: ", ")
                 + "\n- Written reviews: \(model.store.reviews(app).count), average \(String(format: "%.1f", ReviewInfo.average(model.store.reviews(app))))"
         }
     }
@@ -98,9 +108,46 @@ private struct UsageCard: View {
         switch metric {
         case .sessions: "play.circle.fill"
         case .crashes: "exclamationmark.triangle.fill"
+        case .updates: "arrow.triangle.2.circlepath"
         case .ratingsTotal: "star.fill"
         default: "creditcard.fill"
         }
+    }
+}
+
+/// Day 1, 7, 14 and 28 retention as bars, like App Store Connect's Analytics.
+private struct RetentionCard: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.theme) private var t
+    let from: String, to: String
+
+    var body: some View {
+        let points = model.store.retention(model.appId ?? "", from: from, to: to)
+        let top = max(points.compactMap(\.rate).max() ?? 0, 0.0001)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                IconSquare(symbol: "person.2.fill", style: t.square(.sessions), size: 26)
+                Text("Retention").font(t.font(14, .semibold)).foregroundStyle(t.label2)
+            }
+            Text.tracked(points.first?.rate.map(Num.pct) ?? "—", -0.9).font(t.numFont).monospacedDigit().padding(.top, 14)
+            Text("Open the app again the day after downloading it").font(t.font(13)).foregroundStyle(t.label2).padding(.top, 4)
+            HStack(alignment: .bottom, spacing: 14) {
+                ForEach(points, id: \.day) { p in
+                    VStack(spacing: 6) {
+                        Text(p.rate.map(Num.pct) ?? "—").font(t.font(11, .semibold)).monospacedDigit().foregroundStyle(t.label2)
+                        GeometryReader { g in
+                            VStack { Spacer(minLength: 0); RoundedRectangle(cornerRadius: 3).fill(t.accent).frame(height: g.size.height * (p.rate ?? 0) / top) }
+                        }
+                        Text("Day \(p.day)").font(t.font(11)).foregroundStyle(t.label2)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.top, 16)
+            Text("Opt-in users only, as in App Store Connect").font(t.font(11)).foregroundStyle(t.label3).padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .themedCard()
     }
 }
 

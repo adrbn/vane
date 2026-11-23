@@ -111,6 +111,47 @@ public final class Store: @unchecked Sendable {
         ((try? db.query("SELECT 1 FROM sources WHERE app_id=? AND report=? LIMIT 1", [app, report])) ?? []).isEmpty == false
     }
 
+    /// Days Apple's analytics report counted downloads for: there, its numbers replace the sales report's.
+    public func analyticsDownloadDays(_ app: String) -> Set<String> {
+        Set(((try? db.query("SELECT DISTINCT day FROM sources WHERE app_id=? AND report='standard'", [app])) ?? []).map { $0.s(0) })
+    }
+
+    /// Removes every row (all territories) of these metrics on these days.
+    public func clear(_ app: String, _ metrics: [Metric], days: Set<String>) throws {
+        for day in days {
+            for m in metrics { try db.query("DELETE FROM daily WHERE app_id=? AND metric=? AND day=?", [app, m.rawValue, day]) }
+        }
+    }
+
+    /// Ages at which retention is read, in days after the download, like App Store Connect.
+    public static let retentionDays = [1, 7, 14, 28]
+
+    /// "download day|active_dN" -> devices. Stored in `daily` under the download day, worldwide only.
+    public func writeCohorts(_ app: String, _ cohorts: [String: Double]) throws {
+        try db.insertMany("INSERT OR REPLACE INTO daily VALUES(?,?,?,?,?)", cohorts.map { k, v in
+            let p = k.split(separator: "|").map(String.init)
+            return [app, p[0], p[1], "", v]
+        })
+    }
+
+    /// Retention on day N: of the people who opened the app on their download day, the share who opened it again N days later.
+    /// Counts the downloads whose day N falls in [from, to]. nil when none is old enough yet. Opt-in users only, like Apple's.
+    public func retention(_ app: String, from: String, to: String) -> [(day: Int, rate: Double?)] {
+        let rows = (try? db.query("SELECT day, metric, SUM(value) FROM daily WHERE app_id IN (SELECT value FROM json_each(?)) AND metric LIKE 'active_d%' AND territory='' AND day BETWEEN ? AND ? GROUP BY day, metric",
+                                  [scope(app), Day.add(-(Self.retentionDays.last ?? 28), to: from), to])) ?? []
+        var active: [String: [String: Double]] = [:] // metric -> download day -> devices
+        for r in rows { active[r.s(1), default: [:]][r.s(0)] = r.d(2) }
+        let base = active["active_d0"] ?? [:]
+        // A day N after Apple's last sessions report isn't known yet; one before it with no row means nobody came back.
+        let last = min(to, lastDay(app, .sessions) ?? to)
+        return Self.retentionDays.map { n in
+            let cohorts = base.filter { $0.value > 0 && from <= last && (from...last).contains(Day.add(n, to: $0.key)) }
+            let total = cohorts.values.reduce(0, +)
+            guard total > 0 else { return (n, nil) }
+            return (n, cohorts.keys.reduce(0) { $0 + (active["active_d\(n)"]?[$1] ?? 0) } / total)
+        }
+    }
+
     public func write(_ samples: [Sample]) throws {
         try db.insertMany("INSERT OR REPLACE INTO daily VALUES(?,?,?,?,?)", samples.map { [$0.app, $0.day, $0.metric.rawValue, $0.territory, $0.value] })
     }
@@ -199,6 +240,12 @@ public final class Store: @unchecked Sendable {
 
     public func upsert(version v: VersionMark, app: String) throws {
         try db.query("INSERT OR REPLACE INTO versions VALUES(?,?,?,?)", [app, v.day, v.version, v.title])
+    }
+
+    /// Drops the markers of versions that never reached the App Store.
+    public func removeVersions(_ app: String, except kept: [String]) throws {
+        let json = String(decoding: try JSONSerialization.data(withJSONObject: kept), as: UTF8.self)
+        try db.query("DELETE FROM versions WHERE app_id=? AND version NOT IN (SELECT value FROM json_each(?))", [app, json])
     }
 
     public func versions(_ app: String) -> [VersionMark] {

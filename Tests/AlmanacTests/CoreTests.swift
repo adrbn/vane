@@ -352,3 +352,26 @@ final class StubASC: URLProtocol, @unchecked Sendable {
     #expect(text.contains("<data>\nDownloads: 447\n</data>"))
     #expect(text.contains("Developer: message 1\n") && text.contains("Assistant: message 12\n"))
 }
+
+@Test func updatesAndRetentionComeFromAnalyticsRows() throws {
+    var acc: [String: Double] = [:]
+    Syncer.accumulate(["Date": "2026-11-01", "Download Type": "Auto-update", "Territory": "IT", "Counts": "7"], report: "App Downloads Standard", into: &acc)
+    Syncer.accumulate(["Date": "2026-11-01", "Download Type": "Manual update", "Territory": "IT", "Counts": "2"], report: "App Downloads Standard", into: &acc)
+    #expect(acc == ["2026-11-01|updates|": 9])
+
+    var cohorts: [String: Double] = [:]
+    for (day, devices) in [("2026-11-01", "10"), ("2026-11-02", "3"), ("2026-11-08", "1"), ("2026-11-05", "9")] {
+        Syncer.accumulateCohort(["Date": day, "App Download Date": "2026-11-01", "Unique Devices": devices], into: &cohorts)
+    }
+    #expect(cohorts == ["2026-11-01|active_d0": 10, "2026-11-01|active_d1": 3, "2026-11-01|active_d7": 1]) // day 4 is not read
+
+    let store = try Store(path: ":memory:")
+    try store.writeCohorts("a", cohorts)
+    let r = store.retention("a", from: "2026-11-01", to: "2026-11-30")
+    #expect(r.map(\.day) == Store.retentionDays)
+    #expect(r[0].rate == 0.3)
+    #expect(abs((r[1].rate ?? 0) - 0.1) < 1e-9)
+    #expect(r[2].rate == 0) // day 14 falls in the period but nobody came back
+    // Day 1 of a Nov 1 download is Nov 2: a period that starts later doesn't count it.
+    #expect(store.retention("a", from: "2026-11-03", to: "2026-11-30")[0].rate == nil)
+}

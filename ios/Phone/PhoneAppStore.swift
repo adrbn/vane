@@ -85,6 +85,12 @@ struct AppStoreTab: View {
                     PhoneTile(metric: nil, label: String(localized: "Ratings"), value: model.store.series(app, .ratingsTotal).last.map { Num.int($0.value) } ?? "—", change: nil, note: String(localized: "All time"))
                 }
                 link(.newRatings) { tile(d, .newRatings) }
+                link(.updates) {
+                    PhoneTile(metric: nil, label: String(localized: "Updates"), value: Num.int(model.store.total(app, .updates, from: from!, to: to!)), change: nil, note: String(localized: "Last \(d.per)"))
+                }
+                let r = model.store.retention(app, from: from!, to: to!)
+                PhoneTile(metric: nil, label: String(localized: "Retention"), value: r.first?.rate.map(Num.pct) ?? "—", change: nil,
+                          note: r.dropFirst().map { "D\($0.day) \($0.rate.map(Num.pct) ?? "—")" }.joined(separator: " · "))
             }
         }
     }

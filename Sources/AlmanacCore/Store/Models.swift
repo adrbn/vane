@@ -16,7 +16,7 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
     case browseImpressions = "browse_impressions", searchImpressions = "search_impressions"
     case firstDownloads = "first_downloads", redownloads
     case sales, proceeds, activeSubs = "active_subs"
-    case sessions, crashes, ratingsTotal = "ratings_total"
+    case sessions, crashes, ratingsTotal = "ratings_total", updates
     // Derived (computed from the above, never stored)
     case downloads, ttr, pageCR = "page_cr", newRatings = "new_ratings"
 
@@ -37,6 +37,7 @@ public enum Metric: String, CaseIterable, Identifiable, Sendable {
         case .activeSubs: String(localized: "Active subscriptions")
         case .sessions: String(localized: "Sessions")
         case .crashes: String(localized: "Crashes")
+        case .updates: String(localized: "Updates")
         case .ratingsTotal: String(localized: "Total ratings")
         case .newRatings: String(localized: "New ratings")
         case .ttr: String(localized: "Tap-through rate")

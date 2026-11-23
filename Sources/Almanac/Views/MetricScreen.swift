@@ -20,7 +20,7 @@ struct MetricDetailView: View {
         let d = MetricData(store: model.store, app: model.appId ?? "", metric: metric, days: days, territory: territory)
         let up = Change(metric, value: d.value, previous: d.previous).up
         let color = t.color(metric, up: up)
-        let kind = metric.isAppStore ? String(localized: "App Store") : [.sessions, .crashes].contains(metric) ? String(localized: "Usage") : String(localized: "Sales")
+        let kind = metric.isAppStore ? String(localized: "App Store") : [.sessions, .crashes, .updates].contains(metric) ? String(localized: "Usage") : String(localized: "Sales")
         Screen(title: metric.title, subtitle: "\(model.app?.name ?? "") · \(kind)", inspector: true) {
             GlassSegments(options: [(7, String(localized: "7 Days")), (28, String(localized: "28 Days")), (90, String(localized: "90 Days")), (365, String(localized: "Year"))], selection: $days)
             GlassGroup {
@@ -325,6 +325,7 @@ struct MetricData {
         let latest = s.lastDay(app) ?? Day.today()
         switch m {
         case .sessions, .crashes: return s.lastDay(app, .sessions) ?? latest
+        case .updates: return s.lastDay(app, .updates) ?? latest
         case .activeSubs, .ratingsTotal, .newRatings, .sales, .proceeds: return s.lastDay(app, m) ?? latest
         case .firstDownloads, .redownloads, .downloads: return s.lastDay(app, .firstDownloads) ?? latest
         default: return s.lastDay(app, .impressions) ?? s.lastDay(app, .firstDownloads) ?? latest
