@@ -13,6 +13,8 @@ struct ListingView: View {
     @State private var busy = false
     @SceneStorage("listing.message") private var messageText = ""
     @SceneStorage("listing.messageIsError") private var messageIsError = false
+    /// Last upload succeeded and nothing was edited since: the button says so in green.
+    @SceneStorage("listing.saved") private var saved = false
     private var message: (text: String, error: Bool)? {
         get { messageText.isEmpty ? nil : (messageText, messageIsError) }
         nonmutating set { messageText = newValue?.text ?? ""; messageIsError = newValue?.error ?? false }
@@ -30,11 +32,13 @@ struct ListingView: View {
                 GlassItem(label: String(localized: "Discard Changes")) { drafts = [:]; message = nil }
                     .disabled(changed.isEmpty).opacity(changed.isEmpty ? 0.45 : 1)
             }
-            SmallButton(label: busy ? String(localized: "Uploading…") : model.isDemo ? String(localized: "Upload (demo)") : String(localized: "Upload to App Store Connect"), prominent: true, busy: busy) {
+            let showSaved = saved && changed.isEmpty && !busy
+            SmallButton(label: busy ? String(localized: "Uploading…") : showSaved ? String(localized: "Saved") : model.isDemo ? String(localized: "Upload (demo)") : String(localized: "Upload to App Store Connect"), symbol: showSaved ? "checkmark" : nil, prominent: true, busy: busy, tint: showSaved ? t.pos : nil) {
                 Task { await upload(changed) }
             }
             .disabled(!busy && (changed.isEmpty || changed.contains { ListingCheck(drafts[$0.locale]!).overBudget }))
-            .opacity(!busy && changed.isEmpty ? 0.5 : 1)
+            .opacity(!busy && changed.isEmpty && !showSaved ? 0.5 : 1)
+            .onChange(of: changed.isEmpty) { if !changed.isEmpty { saved = false } }
         } content: {
             if let l = selected {
                 HStack(alignment: .top, spacing: 24) {
@@ -272,7 +276,7 @@ struct ListingView: View {
     // MARK: Upload
 
     private func upload(_ changed: [ListingLocale]) async {
-        busy = true; defer { busy = false }
+        busy = true; saved = false; defer { busy = false }
         var done = 0
         for old in changed {
             guard let new = drafts[old.locale] else { continue }
@@ -288,6 +292,7 @@ struct ListingView: View {
         }
         _ = model.runEngine()
         model.revision += 1
+        saved = true
         message = (model.isDemo ? String(localized: "Uploaded \(done) languages (demo, nothing left this Mac).") : String(localized: "Uploaded \(done) languages."), false)
     }
 }

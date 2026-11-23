@@ -236,6 +236,8 @@ struct SmallButton: View {
     var prominent = false
     /// Shows a spinning arc in place of the symbol and ignores clicks, without the disabled dimming.
     var busy = false
+    /// Replaces the accent fill of a prominent button (a green "Saved" after an upload).
+    var tint: Color? = nil
     var action: () -> Void
     var body: some View {
         Button { if !busy { action() } } label: {
@@ -247,7 +249,7 @@ struct SmallButton: View {
             .font(t.font(13, .semibold))
             .foregroundStyle(prominent ? t.onAccent : t.label)
             .padding(.horizontal, 12).frame(height: 28)
-            .background(prominent ? t.accent : t.fill, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
+            .background(prominent ? tint ?? t.accent : t.fill, in: RoundedRectangle(cornerRadius: t.rS, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
